@@ -4,9 +4,9 @@ use Doctrine\ORM\Mapping as ORM;
 
 /**
  * @ORM\Entity
- * @ORM\Table(name="month_ly_consumptive")
+ * @ORM\Table(name="monthly_consumptive")
  */
-class month_lyConsumptive
+class MonthlyConsumptive
 {
     /** 
      * @ORM\Id

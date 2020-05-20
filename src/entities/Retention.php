@@ -4,9 +4,9 @@ use Doctrine\ORM\Mapping as ORM;
 
 /**
  * @ORM\Entity
- * @ORM\Table(name="leaving_members")
+ * @ORM\Table(name="retentions")
  */
-class LeavingMembers
+class Retentions
 {
     /** 
      * @ORM\Id

@@ -6,7 +6,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Entity
  * @ORM\Table(name="new_members")
  */
-class Members
+class NewMembers
 {
     /** 
      * @ORM\Id

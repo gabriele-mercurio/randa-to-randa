@@ -26,16 +26,7 @@ class Rana
      */
     private $randa;
 
-     /** @ORM\Column(type="string", length=2) */
-    // T0 | T1 | T2 | T3 | T4
-    private $current_timeslot;
-
-
-    /** @ORM\Column(type="string", length=8, options={"default"="TODO"}) */
-    // TODO | PROPOSED | APPROVED | REFUSED
-    private $current_status;
-
-
+     
     /**
      * Get the value of id
      */
@@ -85,26 +76,7 @@ class Rana
         return $this;
     }
 
-    /**
-     * Get the value of current_timeslot
-     */
-    public function getCurrent_timeslot()
-    {
-        return $this->current_timeslot;
-    }
-
-    /**
-     * Set the value of current_timeslot
-     *
-     * @return  self
-     */
-    public function setCurrent_timeslot($current_timeslot)
-    {
-        $this->current_timeslot = $current_timeslot;
-
-        return $this;
-    }
-
+    
     /**
      * Get the value of current_status
      */

@@ -26,6 +26,12 @@ class Randa
 
 
     /**
+     * @ORM\Column(type="string", options={"default":"T0"})
+     */
+    private $current_timeslot;
+
+
+    /**
      * Get the value of id
      */
     public function getId()
@@ -72,4 +78,25 @@ class Randa
 
         return $this;
     }
+
+    /**
+     * Get the value of current_timeslot
+     */
+    public function getCurrent_timeslot()
+    {
+        return $this->current_timeslot;
+    }
+
+    /**
+     * Set the value of current_timeslot
+     *
+     * @return  self
+     */
+    public function setCurrent_timeslot($current_timeslot)
+    {
+        $this->current_timeslot = $current_timeslot;
+
+        return $this;
+    }
+
 }

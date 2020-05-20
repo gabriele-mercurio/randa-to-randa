@@ -17,11 +17,6 @@ class Region
     /** @ORM\Column(type="string", length=32) */
     private $name;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="Director", cascade={"all"}, fetch="LAZY")
-     * @ORM\JoinColumn(nullable=false)
-     */
-    private $executive_director;
 
     /** @ORM\Column(type="text", nullable=true) */
     private $notes;
@@ -51,26 +46,6 @@ class Region
     public function setName($name)
     {
         $this->name = $name;
-
-        return $this;
-    }
-
-    /**
-     * Get the value of executive_director
-     */
-    public function getExecutive_director()
-    {
-        return $this->executive_director;
-    }
-
-    /**
-     * Set the value of executive_director
-     *
-     * @return  self
-     */
-    public function setExecutive_director($executive_director)
-    {
-        $this->executive_director = $executive_director;
 
         return $this;
     }

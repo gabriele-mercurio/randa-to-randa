@@ -11,7 +11,7 @@ class Director
     /** 
      * @ORM\Id
      * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue(strategy="IDENTITY") */     
+     * @ORM\GeneratedValue(strategy="IDENTITY") */
     private $id;
 
     /**
@@ -25,8 +25,13 @@ class Director
     private $role;
 
     /**
-    * @ORM\ManyToOne(targetEntity="Director", fetch="LAZY")
-    */
+     * @ORM\ManyToOne(targetEntity="Region")
+     */
+    private $region;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="Director", fetch="LAZY")
+     */
     private $supervisor;
 
     /** @ORM\Column(type="string", length=8) */
@@ -55,7 +60,7 @@ class Director
 
     /**
      * Get the value of id
-     */ 
+     */
     public function getId()
     {
         return $this->id;
@@ -64,7 +69,7 @@ class Director
 
     /**
      * Get the value of user
-     */ 
+     */
     public function getUser()
     {
         return $this->user;
@@ -74,7 +79,7 @@ class Director
      * Set the value of user
      *
      * @return  self
-     */ 
+     */
     public function setUser($user)
     {
         $this->user = $user;
@@ -84,7 +89,7 @@ class Director
 
     /**
      * Get the value of role
-     */ 
+     */
     public function getRole()
     {
         return $this->role;
@@ -94,7 +99,7 @@ class Director
      * Set the value of role
      *
      * @return  self
-     */ 
+     */
     public function setRole($role)
     {
         $this->role = $role;
@@ -104,7 +109,7 @@ class Director
 
     /**
      * Get the value of supervisor
-     */ 
+     */
     public function getSupervisor()
     {
         return $this->supervisor;
@@ -114,7 +119,7 @@ class Director
      * Set the value of supervisor
      *
      * @return  self
-     */ 
+     */
     public function setSupervisor($supervisor)
     {
         $this->supervisor = $supervisor;
@@ -124,7 +129,7 @@ class Director
 
     /**
      * Get the value of pay_type
-     */ 
+     */
     public function getPay_type()
     {
         return $this->pay_type;
@@ -134,7 +139,7 @@ class Director
      * Set the value of pay_type
      *
      * @return  self
-     */ 
+     */
     public function setPay_type($pay_type)
     {
         $this->pay_type = $pay_type;
@@ -144,7 +149,7 @@ class Director
 
     /**
      * Get the value of launch_percentage
-     */ 
+     */
     public function getLaunch_percentage()
     {
         return $this->launch_percentage;
@@ -154,7 +159,7 @@ class Director
      * Set the value of launch_percentage
      *
      * @return  self
-     */ 
+     */
     public function setLaunch_percentage($launch_percentage)
     {
         $this->launch_percentage = $launch_percentage;
@@ -164,7 +169,7 @@ class Director
 
     /**
      * Get the value of green_light_percentage
-     */ 
+     */
     public function getGreen_light_percentage()
     {
         return $this->green_light_percentage;
@@ -174,7 +179,7 @@ class Director
      * Set the value of green_light_percentage
      *
      * @return  self
-     */ 
+     */
     public function setGreen_light_percentage($green_light_percentage)
     {
         $this->green_light_percentage = $green_light_percentage;
@@ -184,7 +189,7 @@ class Director
 
     /**
      * Get the value of yellow_light_percentage
-     */ 
+     */
     public function getYellow_light_percentage()
     {
         return $this->yellow_light_percentage;
@@ -194,7 +199,7 @@ class Director
      * Set the value of yellow_light_percentage
      *
      * @return  self
-     */ 
+     */
     public function setYellow_light_percentage($yellow_light_percentage)
     {
         $this->yellow_light_percentage = $yellow_light_percentage;
@@ -204,7 +209,7 @@ class Director
 
     /**
      * Get the value of red_light_percentage
-     */ 
+     */
     public function getRed_light_percentage()
     {
         return $this->red_light_percentage;
@@ -214,7 +219,7 @@ class Director
      * Set the value of red_light_percentage
      *
      * @return  self
-     */ 
+     */
     public function setRed_light_percentage($red_light_percentage)
     {
         $this->red_light_percentage = $red_light_percentage;
@@ -224,7 +229,7 @@ class Director
 
     /**
      * Get the value of grey_light_percentage
-     */ 
+     */
     public function getGrey_light_percentage()
     {
         return $this->grey_light_percentage;
@@ -234,7 +239,7 @@ class Director
      * Set the value of grey_light_percentage
      *
      * @return  self
-     */ 
+     */
     public function setGrey_light_percentage($grey_light_percentage)
     {
         $this->grey_light_percentage = $grey_light_percentage;
@@ -244,7 +249,7 @@ class Director
 
     /**
      * Get the value of fixed_percentage
-     */ 
+     */
     public function getFixed_percentage()
     {
         return $this->fixed_percentage;
@@ -254,10 +259,30 @@ class Director
      * Set the value of fixed_percentage
      *
      * @return  self
-     */ 
+     */
     public function setFixed_percentage($fixed_percentage)
     {
         $this->fixed_percentage = $fixed_percentage;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of region
+     */ 
+    public function getRegion()
+    {
+        return $this->region;
+    }
+
+    /**
+     * Set the value of region
+     *
+     * @return  self
+     */ 
+    public function setRegion($region)
+    {
+        $this->region = $region;
 
         return $this;
     }

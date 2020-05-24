@@ -1,0 +1,10 @@
+{% extends "emails/base.txt.twig" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block body %}
+    Da: {{ sender }}
+    Email: {{ email }}
+    Telefono: {{ phone }}
+    Messaggio: {{ message }}
+{% endblock %}

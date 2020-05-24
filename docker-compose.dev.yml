@@ -1,0 +1,40 @@
+version: "2.3"
+services:
+  api:
+    build:
+      dockerfile: Dockerfile.dev
+    expose:
+      - 80
+    volumes:
+      - ./api/vhosts/vhost.dev.conf:/etc/apache2/sites-enabled/vhost.conf
+      - ./api/src:/var/www:delegated
+
+  # Reverse proxy - Apache
+  boundary:
+    networks:
+      default:
+        aliases:
+          - api.randa2randa.test
+    ports:
+      - 80:80
+    volumes:
+      - ./boundary/sites-enabled/site.dev.conf:/etc/apache2/sites-enabled/000-site.conf
+
+  # Database - MySQL
+  db:
+    environment:
+      - MYSQL_ROOT_PASSWORD=iocreoweb
+      - MYSQL_DATABASE=randa2randa
+      - MYSQL_USER=randa2randa
+      - MYSQL_PASSWORD=randa2randa
+    ports:
+      - 3306:3306
+
+  # Site - NuxtJs - FrontOffice
+  web:
+    build:
+      dockerfile: Dockerfile.dev
+    expose:
+      - 3000
+    volumes:
+      - ./web/src:/src:delegated

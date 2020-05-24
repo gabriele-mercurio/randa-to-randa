@@ -1,0 +1,14 @@
+{% extends "emails/base.html.twig" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block body %}
+Gentile cliente,<br>
+<br>
+Ti ringraziamo per la tua gentile richiesta. Un membro del nostro staff ti contatterà a breve per informazioni su pagamento e metodi di spedizione. Di seguito i dettagli del tuo ordine e gli estremi per il pagamento.<br>
+<br>
+<strong>Il tuo ordine</strong>:<br>
+<br>
+{{ message|nl2br }}<br>
+<br>
+{% endblock %}

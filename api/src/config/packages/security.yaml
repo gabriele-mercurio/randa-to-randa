@@ -1,0 +1,24 @@
+security:
+    providers:
+        app_user_provider:
+            entity:
+                class: App\Entity\User
+                property: username
+    encoders:
+        App\Entity\User:
+            algorithm: auto
+    
+    firewalls:
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js)/
+            security: false
+        main:
+            pattern: ^/
+            anonymous: true
+            guard:
+                authenticators:
+                    - App\Guard\TokenAuthenticator
+            stateless: true
+    access_control:
+        - { path: ^/admin/users, roles: ROLE_ADMIN }
+        - { path: ^/admin/(?!upload/), roles: ROLE_USER }

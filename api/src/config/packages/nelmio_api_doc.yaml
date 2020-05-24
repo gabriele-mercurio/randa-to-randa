@@ -1,0 +1,20 @@
+nelmio_api_doc:
+    models: { use_jms: false }
+    documentation:
+        host: api.randa2randa.test
+        schemes: [http, https]
+        info:
+            title: Randa2Randa
+            description: API docs per Randa2Randa!
+            version: 1.0.0
+        securityDefinitions:
+            Bearer:
+                type: apiKey
+                description: 'Value: Bearer {jwt}'
+                name: Authorization
+                in: header
+        security:
+            - Bearer: []
+    areas: # to filter documented areas
+        path_patterns:
+            - ^(?!(/api/.*|/_.*)$)

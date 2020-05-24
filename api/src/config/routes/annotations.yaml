@@ -1,0 +1,5 @@
+controllers:
+    resource: ../../src/Controller/
+    type: annotation
+    trailing_slash_on_root: false
+    defaults: { _format: 'json' }

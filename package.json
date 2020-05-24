@@ -1,0 +1,18 @@
+{
+  "name": "randa2randa",
+  "version": "1.0.1",
+  "description": "Server API per randa2randa",
+  "main": "index.js",
+  "scripts": {
+    "start": "dockerize-project start --",
+    "stop": "dockerize-project stop --"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gabriele-mercurio/randa-to-randa"
+  },
+  "author": "MirkoDomenici",
+  "dependencies": {
+    "dockerize-project": "git+https://git.iamdev.it/IAMdev/dockerize-project.git#v2.1.1"
+  }
+}

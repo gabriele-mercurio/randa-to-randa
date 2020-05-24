@@ -20,6 +20,10 @@ class NewMembers
      */
     private $rana;
 
+    /** @ORM\Column(type="string", length=2) */
+    // T0 | T1 | T2 | T3 | T4
+    private $timeslot;
+
     /** @ORM\Column(type="string", length=4) */
     private $value_type;
 
@@ -346,6 +350,26 @@ class NewMembers
     public function setM12($m12)
     {
         $this->m12 = $m12;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of timeslot
+     */ 
+    public function getTimeslot()
+    {
+        return $this->timeslot;
+    }
+
+    /**
+     * Set the value of timeslot
+     *
+     * @return  self
+     */ 
+    public function setTimeslot($timeslot)
+    {
+        $this->timeslot = $timeslot;
 
         return $this;
     }

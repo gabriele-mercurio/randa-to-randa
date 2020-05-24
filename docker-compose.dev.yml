@@ -1,0 +1,10 @@
+version: "2.3"
+services:
+  api:
+    build:
+      dockerfile: Dockerfile.dev
+    expose:
+      - 80
+    volumes:
+      - ./api/vhosts/vhost.dev.conf:/etc/apache2/sites-enabled/vhost.conf
+      - ./api/src:/var/www:delegated

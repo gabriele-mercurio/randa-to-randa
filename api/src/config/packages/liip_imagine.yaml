@@ -1,0 +1,26 @@
+# See dos how to configure the bundle: https://symfony.com/doc/current/bundles/LiipImagineBundle/basic-usage.html
+liip_imagine:
+  # valid drivers options include "gd" or "gmagick" or "imagick"
+  driver: "gd"
+  resolvers:
+    # setup the default resolver
+    default:
+      # use the default web path
+      web_path: ~
+  filter_sets:
+    # name our filter set "my_thumb_filter"
+    media_thumb:
+      filters:
+        # use and setup the "thumbnail" filter
+        thumbnail:
+          # set the thumbnail size to "32x32" pixels
+          size: [210, 210]
+          # crop the input image, if required
+          mode: outbound
+    original:
+      post_processors:
+        jpegoptim: { strip_all: true, max: 70, progressive: true }
+        pngquant: { quality: "100" }
+parameters:
+  liip_imagine.jpegoptim.binary: /usr/local/optimizers/jpegoptim
+  liip_imagine.pngquant.binary: /usr/local/optimizers/pngquant

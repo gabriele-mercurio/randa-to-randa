@@ -1,0 +1,18 @@
+version: "2.3"
+services:
+  # API - PHP 7.2
+  api:
+    build:
+      context: api
+    environment:
+      HTTPD__DocumentRoot: "/var/www/public"
+      HTTPD_a2enmod: "rewrite"
+      PHP__date.timezone: '"Europe/Rome"'
+      PHP__memory_limit: "512M"
+      PHP__post_max_size: "64M"
+      PHP__short_open_tag: "off"
+      PHP__upload_max_filesize: "64M"
+      PHP_php5enmod: "gd mysqli pdo_mysql zip mbstring intl opcache exif"
+    restart: always
+    volumes:
+      - ./api/sessions:/sessions:delegated

@@ -1,0 +1,17 @@
+FROM alterway/php:7.2-apache
+
+RUN apt-get update \
+ && apt-get upgrade -y \
+ && docker-php-ext-install exif \
+ && apt-get install -y \
+    zip unzip imagemagick gcc nasm \
+    build-essential make wget git vim \
+ && rm -r /var/lib/apt/lists/*
+
+# Composer
+RUN wget https://get.symfony.com/cli/installer -O - | bash
+RUN mv /root/.symfony/bin/symfony /usr/local/bin/symfony
+
+ENV COMPOSER_MEMORY_LIMIT=-1
+ENV APP_ENV=dev
+ENV APP_DEBUG=1

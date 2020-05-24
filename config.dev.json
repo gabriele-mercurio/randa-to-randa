@@ -1,7 +1,8 @@
 {
-    "hosts": {
-        "127.0.0.1": [
-            "api.randa2randa.test"
-        ]
-    }
+  "hosts": {
+    "127.0.0.1": [
+      "randa2randa.test",
+      "api.randa2randa.test"
+    ]
+  }
 }

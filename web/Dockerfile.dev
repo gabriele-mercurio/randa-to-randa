@@ -1,0 +1,15 @@
+FROM node:12
+
+WORKDIR /src
+
+# Environment
+ENV RANDA2RANDA_WEB_URL=http://randa2randa.test
+ENV WS_API_URL=http://api.randa2randa.test
+#ENV GMAP_API_KEY=
+#ENV IUBENDA_SITE_ID=
+#ENV IUBENDA_COOKIE_POLICY_ID=
+#ENV IUBENDA_ACCEPT_BUTTON_COLOR=
+
+#ENV RECAPTCHA_KEY=
+
+CMD [ "bash", "-c", "npm install && npm run dev" ]

@@ -16,3 +16,30 @@ services:
     restart: always
     volumes:
       - ./api/sessions:/sessions:delegated
+
+  # Reverse proxy - Apache
+  boundary:
+    depends_on:
+      - api
+      - web
+    environment:
+      - HTTPD_a2enmod=rewrite proxy proxy_http proxy_html ssl headers
+    image: alterway/php:7.2-apache
+    restart: always
+
+  # Database - MySQL
+  db:
+    image: mysql:5.7
+    restart: always
+    volumes:
+      - ./db/data:/var/lib/mysql:delegated
+
+  # Nuxt - NodeJS - FrontOffice
+  web:
+    build:
+      context: web
+    depends_on:
+      - api
+    environment:
+      - HOST=0.0.0.0
+    restart: always

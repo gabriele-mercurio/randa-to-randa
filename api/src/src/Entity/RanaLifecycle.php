@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Entity;
+
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -8,10 +10,10 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class RanaLifecycle
 {
-    /** 
+    /**
      * @ORM\Id
      * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue(strategy="IDENTITY") 
+     * @ORM\GeneratedValue(strategy="IDENTITY")
      */
     private $id;
 
@@ -22,83 +24,57 @@ class RanaLifecycle
     private $rana;
 
 
-    /** @ORM\Column(type="string", length=2) */
+    /** @ORM\Column(name="current_timeslot", type="string", length=2) */
     // T0 | T1 | T2 | T3 | T4
-    private $current_timeslot;
+    private $currentTimeslot;
 
 
-    /** @ORM\Column(type="string", length=8, options={"default"="TODO"}) */
+    /** @ORM\Column(name="current_status", type="string", length=8, options={"default"="TODO"}) */
     // TODO | PROPOSED | APPROVED | REFUSED
-    private $current_status;
+    private $currentStatus;
 
-
-    /**
-     * Get the value of id
-     */
+    /** Get the value of id */
     public function getId()
     {
         return $this->id;
     }
 
-    /**
-     * Get the value of rana
-     */
+    /** Get the value of rana */
     public function getRana()
     {
         return $this->rana;
     }
 
-    /**
-     * Set the value of rana
-     *
-     * @return  self
-     */
-    public function setRana($rana)
+    /** Set the value of rana */
+    public function setRana($rana): self
     {
         $this->randa = $rana;
-
         return $this;
     }
 
-    
-
-    /**
-     * Get the value of current_timeslot
-     */ 
-    public function getCurrent_timeslot()
+    /** Get the value of currentTimeslot */
+    public function getCurrentTimeslot()
     {
-        return $this->current_timeslot;
+        return $this->currentTimeslot;
     }
 
-    /**
-     * Set the value of current_timeslot
-     *
-     * @return  self
-     */ 
-    public function setCurrent_timeslot($current_timeslot)
+    /** Set the value of currentTimeslot */
+    public function setCurrentTimeslot($currentTimeslot): self
     {
-        $this->current_timeslot = $current_timeslot;
-
+        $this->currentTimeslot = $currentTimeslot;
         return $this;
     }
 
-    /**
-     * Get the value of current_status
-     */ 
-    public function getCurrent_status()
+    /** Get the value of currentStatus */
+    public function getCurrentStatus()
     {
-        return $this->current_status;
+        return $this->currentStatus;
     }
 
-    /**
-     * Set the value of current_status
-     *
-     * @return  self
-     */ 
-    public function setCurrent_status($current_status)
+    /** Set the value of currentStatus */
+    public function setCurrentStatus($currentStatus): self
     {
-        $this->current_status = $current_status;
-
+        $this->currentStatus = $currentStatus;
         return $this;
     }
 }

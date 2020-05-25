@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Entity;
+
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -8,10 +10,11 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class Rana
 {
-    /** 
+    /**
      * @ORM\Id
-     * @ORM\Column(type="integer") 
-     * @ORM\GeneratedValue(strategy="IDENTITY") */
+     * @ORM\Column(type="integer")
+     * @ORM\GeneratedValue(strategy="IDENTITY")
+     */
     private $id;
 
     /**
@@ -26,74 +29,35 @@ class Rana
      */
     private $randa;
 
-     
-    /**
-     * Get the value of id
-     */
+    /** Get the value of id */
     public function getId()
     {
         return $this->id;
     }
 
-
-    /**
-     * Get the value of chapter
-     */
+    /** Get the value of chapter */
     public function getChapter()
     {
         return $this->chapter;
     }
 
-    /**
-     * Set the value of chapter
-     *
-     * @return  self
-     */
-    public function setChapter($chapter)
+    /** Set the value of chapter */
+    public function setChapter($chapter): self
     {
         $this->chapter = $chapter;
-
         return $this;
     }
 
-    /**
-     * Get the value of randa
-     */
+    /** Get the value of randa */
     public function getRanda()
     {
         return $this->randa;
     }
 
-    /**
-     * Set the value of randa
-     *
-     * @return  self
-     */
-    public function setRanda($randa)
+    /** Set the value of randa */
+    public function setRanda($randa): self
     {
         $this->randa = $randa;
-
-        return $this;
-    }
-
-    
-    /**
-     * Get the value of current_status
-     */
-    public function getCurrent_status()
-    {
-        return $this->current_status;
-    }
-
-    /**
-     * Set the value of current_status
-     *
-     * @return  self
-     */
-    public function setCurrent_status($current_status)
-    {
-        $this->current_status = $current_status;
-
         return $this;
     }
 }

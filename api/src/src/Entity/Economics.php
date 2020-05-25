@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Entity;
+
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -8,10 +10,11 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class Economics
 {
-    /** 
+    /**
      * @ORM\Id
-     * @ORM\Column(type="integer") 
-     * @ORM\GeneratedValue(strategy="IDENTITY") */
+     * @ORM\Column(type="integer")
+     * @ORM\GeneratedValue(strategy="IDENTITY")
+     */
     private $id;
 
     /**
@@ -29,212 +32,135 @@ class Economics
     // T1 | T2 | T3 | T4
     private $timeslot;
 
-    /**
-     * @ORM\Column(type="integer")
-     */
-    private $extra_incomings;
+    /** @ORM\Column(name="extra_incomings", type="integer") */
+    private $extraIncomings;
 
-    /**
-     * @ORM\Column(type="integer")
-     */
+    /** @ORM\Column(type="integer") */
     private $deprecations;
 
-
-    /**
-     * @ORM\Column(type="integer")
-     */
+    /** @ORM\Column(type="integer") */
     private $provisions;
 
+    /** @ORM\Column(name="financial_charges", type="integer") */
+    private $financialCharges;
 
-    /**
-     * @ORM\Column(type="integer")
-     */
-    private $financial_charges;
-
-
-    /**
-     * @ORM\Column(type="integer")
-     */
+    /** @ORM\Column(type="integer") */
     private $tax;
 
-
-    /**
-     * Get the value of id
-     */ 
+    /** Get the value of id */
     public function getId()
     {
         return $this->id;
     }
 
-    /**
-     * Set the value of id
-     *
-     * @return  self
-     */ 
-    public function setId($id)
+    /** Set the value of id */
+    public function setId($id): self
     {
         $this->id = $id;
-
         return $this;
     }
 
-    /**
-     * Get the value of randa
-     */ 
+    /** Get the value of randa */
     public function getRanda()
     {
         return $this->randa;
     }
 
-    /**
-     * Set the value of randa
-     *
-     * @return  self
-     */ 
-    public function setRanda($randa)
+    /** Set the value of randa */
+    public function setRanda($randa): self
     {
         $this->randa = $randa;
-
         return $this;
     }
 
-    /**
-     * Get the value of year
-     */ 
+    /** Get the value of year */
     public function getYear()
     {
         return $this->year;
     }
 
-    /**
-     * Set the value of year
-     *
-     * @return  self
-     */ 
-    public function setYear($year)
+    /** Set the value of year */
+    public function setYear($year): self
     {
         $this->year = $year;
-
         return $this;
     }
 
-    /**
-     * Get the value of timeslot
-     */ 
+    /** Get the value of timeslot */
     public function getTimeslot()
     {
         return $this->timeslot;
     }
 
-    /**
-     * Set the value of timeslot
-     *
-     * @return  self
-     */ 
-    public function setTimeslot($timeslot)
+    /** Set the value of timeslot */
+    public function setTimeslot($timeslot): self
     {
         $this->timeslot = $timeslot;
-
         return $this;
     }
 
-    /**
-     * Get the value of extra_incomings
-     */ 
+    /** Get the value of extraIncomings */
     public function getExtra_incomings()
     {
-        return $this->extra_incomings;
+        return $this->extraIncomings;
     }
 
-    /**
-     * Set the value of extra_incomings
-     *
-     * @return  self
-     */ 
-    public function setExtra_incomings($extra_incomings)
+    /** Set the value of extraIncomings */
+    public function setExtra_incomings($extraIncomings): self
     {
-        $this->extra_incomings = $extra_incomings;
-
+        $this->extraIncomings = $extraIncomings;
         return $this;
     }
 
-    /**
-     * Get the value of deprecations
-     */ 
+    /** Get the value of deprecations */
     public function getDeprecations()
     {
         return $this->deprecations;
     }
 
-    /**
-     * Set the value of deprecations
-     *
-     * @return  self
-     */ 
-    public function setDeprecations($deprecations)
+    /** Set the value of deprecations */
+    public function setDeprecations($deprecations): self
     {
         $this->deprecations = $deprecations;
-
         return $this;
     }
 
-    /**
-     * Get the value of provisions
-     */ 
+    /** Get the value of provisions */
     public function getProvisions()
     {
         return $this->provisions;
     }
 
-    /**
-     * Set the value of provisions
-     *
-     * @return  self
-     */ 
-    public function setProvisions($provisions)
+    /** Set the value of provisions */
+    public function setProvisions($provisions): self
     {
         $this->provisions = $provisions;
-
         return $this;
     }
 
-    /**
-     * Get the value of financial_charges
-     */ 
+    /** Get the value of financialCharges */
     public function getFinancial_charges()
     {
-        return $this->financial_charges;
+        return $this->financialCharges;
     }
 
-    /**
-     * Set the value of financial_charges
-     *
-     * @return  self
-     */ 
-    public function setFinancial_charges($financial_charges)
+    /** Set the value of financialCharges */
+    public function setFinancial_charges($financialCharges): self
     {
-        $this->financial_charges = $financial_charges;
-
+        $this->financialCharges = $financialCharges;
         return $this;
     }
 
-    /**
-     * Get the value of tax
-     */ 
+    /** Get the value of tax */
     public function getTax()
     {
         return $this->tax;
     }
 
-    /**
-     * Set the value of tax
-     *
-     * @return  self
-     */ 
-    public function setTax($tax)
+    /** Set the value of tax */
+    public function setTax($tax): self
     {
         $this->tax = $tax;
-
         return $this;
     }
 }

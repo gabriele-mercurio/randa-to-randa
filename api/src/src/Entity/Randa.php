@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Entity;
+
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -8,10 +10,10 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class Randa
 {
-    /** 
+    /**
      * @ORM\Id
      * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue(strategy="IDENTITY") 
+     * @ORM\GeneratedValue(strategy="IDENTITY")
      */
     private $id;
 
@@ -24,79 +26,51 @@ class Randa
      */
     private $region;
 
+    /** @ORM\Column(name="current_timeslot", type="string", options={"default":"T0"}) */
+    private $currentTimeslot;
 
-    /**
-     * @ORM\Column(type="string", options={"default":"T0"})
-     */
-    private $current_timeslot;
-
-
-    /**
-     * Get the value of id
-     */
+    /** Get the value of id */
     public function getId()
     {
         return $this->id;
     }
 
-    /**
-     * Get the value of year
-     */
+    /** Get the value of year */
     public function getYear()
     {
         return $this->year;
     }
 
-    /**
-     * Set the value of year
-     *
-     * @return  self
-     */
-    public function setYear($year)
+    /** Set the value of year */
+    public function setYear($year): self
     {
         $this->year = $year;
-
         return $this;
     }
 
-    /**
-     * Get the value of region
-     */
+    /** Get the value of region */
     public function getRegion()
     {
         return $this->region;
     }
 
-    /**
-     * Set the value of region
-     *
-     * @return  self
-     */
-    public function setRegion($region)
+    /** Set the value of region */
+    public function setRegion($region): self
     {
         $this->region = $region;
-
         return $this;
     }
 
-    /**
-     * Get the value of current_timeslot
-     */
+    /** Get the value of currentTimeslot */
     public function getCurrent_timeslot()
     {
-        return $this->current_timeslot;
+        return $this->currentTimeslot;
     }
 
-    /**
-     * Set the value of current_timeslot
-     *
-     * @return  self
-     */
-    public function setCurrent_timeslot($current_timeslot)
+    /** Set the value of currentTimeslot */
+    public function setCurrent_timeslot($currentTimeslot): self
     {
-        $this->current_timeslot = $current_timeslot;
-
+        $this->currentTimeslot = $currentTimeslot;
         return $this;
     }
-
 }

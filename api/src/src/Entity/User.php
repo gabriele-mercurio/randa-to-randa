@@ -23,13 +23,13 @@ class User implements UserInterface
     private $id;
 
     /**
-     * @ORM\Column(name="first_name", type="string", length="255")
+     * @ORM\Column(name="first_name", type="string", length=255)
      * @SWG\Property()
      */
     private $firstName;
 
     /**
-     * @ORM\Column(name="last_name", type="string", length="255")
+     * @ORM\Column(name="last_name", type="string", length=255)
      * @SWG\Property()
      */
     private $lastName;

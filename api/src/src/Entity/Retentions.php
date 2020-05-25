@@ -4,9 +4,9 @@ use Doctrine\ORM\Mapping as ORM;
 
 /**
  * @ORM\Entity
- * @ORM\Table(name="renewed_members")
+ * @ORM\Table(name="retentions")
  */
-class RenewedMembers
+class Retentions
 {
     /** 
      * @ORM\Id
@@ -20,12 +20,12 @@ class RenewedMembers
      */
     private $rana;
 
+    /** @ORM\Column(type="string", length=4) */
+    private $value_type;
+
     /** @ORM\Column(type="string", length=2) */
     // T0 | T1 | T2 | T3 | T4
     private $timeslot;
-
-    /** @ORM\Column(type="string", length=4) */
-    private $value_type;
 
     /** @ORM\Column(type="integer", nullable=true) */
     private $m1;

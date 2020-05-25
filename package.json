@@ -13,6 +13,7 @@
   },
   "author": "MirkoDomenici",
   "dependencies": {
+    "axios": "^0.19.2",
     "dockerize-project": "git+https://git.iamdev.it/IAMdev/dockerize-project.git#v2.1.1"
   }
 }

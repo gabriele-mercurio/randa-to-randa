@@ -7,7 +7,7 @@ security:
     encoders:
         App\Entity\User:
             algorithm: auto
-    
+
     firewalls:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
@@ -20,5 +20,4 @@ security:
                     - App\Guard\TokenAuthenticator
             stateless: true
     access_control:
-        - { path: ^/admin/users, roles: ROLE_ADMIN }
-        - { path: ^/admin/(?!upload/), roles: ROLE_USER }
+        - { path: ^/admin/users, roles: ROLE_USER }

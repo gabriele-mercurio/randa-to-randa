@@ -2,194 +2,161 @@
 
 namespace App\Entity;
 
+use App\Util\Util;
 use Doctrine\ORM\Mapping as ORM;
-use Swagger\Annotations as SWG;
-use Symfony\Component\Security\Core\User\UserInterface;
+use Ramsey\Uuid\Uuid;
+use Ramsey\Uuid\UuidInterface;
 use RuntimeException;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\UserRepository")
  * @ORM\Table(name="users")
- * @SWG\Definition()
  */
-class User implements UserInterface
+class User
 {
     /**
      * @ORM\Id()
-     * @ORM\GeneratedValue()
-     * @ORM\Column(type="integer")
-     * @SWG\Property()
+     * @ORM\Column(type="uuid", unique=true)
+     * @ORM\GeneratedValue(strategy="CUSTOM")
+     * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
     private $id;
 
     /**
-     * @ORM\Column(name="first_name", type="string", length=255)
-     * @SWG\Property()
+     * @ORM\Column(name="first_name", type="string")
      */
     private $firstName;
 
-    /**
-     * @ORM\Column(name="last_name", type="string", length=255)
-     * @SWG\Property()
-     */
+    /** @ORM\Column(name="last_name", type="string") */
     private $lastName;
 
-    /**
-     * @ORM\Column(type="string", length=180, unique=true)
-     * @SWG\Property()
-     */
-    private $username;
+    /** @ORM\Column(type="string", unique=true) */
+    private $email;
 
-    /**
-     * @ORM\Column(type="json")
-     * @SWG\Property(type="array", @SWG\Items(type="string"))
-     */
-    private $roles = [];
-
-    /**
-     * @var string The hashed password
-     * @ORM\Column(type="string")
-     * @SWG\Property()
-     */
-    private $password;
-
-    /**
-     * @var string|null
-     */
+    /** @ORM\Column(type="string", length=32) */
     protected $salt;
 
-    public function getId(): ?int
+    /** @ORM\Column(type="string", length=32) */
+    private $password;
+
+    /** @ORM\Column(type="json") */
+    private $roles = [];
+
+    /** @ORM\Column(name="is_admin", type="boolean", options={"default":false}) */
+    private $isAdmin;
+
+    /**
+     * User constructor.
+     *
+     * @throws Exception
+     */
+    public function __construct()
+    {
+        $this->id = Uuid::uuid4();
+    }
+
+    public function getId(): UuidInterface
     {
         return $this->id;
     }
 
-    /**
-     * A visual identifier that represents this user.
-     *
-     * @see UserInterface
-     */
-    public function getFirstName(): string
+    public function getFirstName(): ?string
     {
-        return (string) $this->firstName;
+        return $this->firstName;
     }
 
     public function setFirstName(string $firstName): self
     {
         $this->firstName = $firstName;
-
         return $this;
     }
 
-    /**
-     * A visual identifier that represents this user.
-     *
-     * @see UserInterface
-     */
-    public function getLastName(): string
+    public function getLastName(): ?string
     {
-        return (string) $this->lastName;
+        return $this->lastName;
     }
 
     public function setLastName(string $lastName): self
     {
         $this->lastName = $lastName;
-
         return $this;
     }
 
-    /**
-     * A visual identifier that represents this user.
-     *
-     * @see UserInterface
-     */
-    public function getUsername(): string
+    public function getEmail(): string
     {
-        return (string) $this->username;
+        return $this->email;
     }
 
-    public function setUsername(string $username): self
+    public function setEmail(string $email): self
     {
-        $this->username = $username;
-
+        $this->email = $email;
         return $this;
     }
 
-    /**
-     * @see UserInterface
-     */
+    private function getSalt(): string
+    {
+        return $this->salt;
+    }
+
+    private function setSalt(string $salt): self
+    {
+        $this->salt = $salt;
+        return $this;
+    }
+
+    public function getPassword(): string
+    {
+        return $this->password;
+    }
+
+    private function setPassword(string $password): self
+    {
+        $this->password = $password;
+        return $this;
+    }
+
     public function getRoles(): array
     {
         $roles = $this->roles;
         // guarantee every user at least has ROLE_USER
         $roles[] = 'ROLE_USER';
-
         return array_unique($roles);
     }
 
     public function setRoles(array $roles): self
     {
         $this->roles = $roles;
-
         return $this;
     }
 
-    /**
-     * @see UserInterface
-     */
-    public function getPassword(): string
-    {
-        return (string) $this->password;
-    }
-
-    /**
-     * @param string $password
-     *
-     * @throws RuntimeException
-     */
-    public function setPassword(string $password): self
-    {
-        $this->plainPassword = $password;
-
-        $encryptedPassword = password_hash($password, PASSWORD_BCRYPT);
-        if (false === $encryptedPassword) {
-            throw new RuntimeException('Can\'t set the new password');
-        }
-        $this->password = $encryptedPassword;
-
-        return $this;
-    }
-
-    /**
-     * @see UserInterface
-     */
-    public function getSalt()
-    {
-        // not needed when using the "bcrypt" algorithm in security.yaml
-    }
-
-    /**
-     * @see UserInterface
-     */
-    public function eraseCredentials(): self
-    {
-        $this->plainPassword = null;
-
-        return $this;
-    }
-
-    /**
-     * @return bool
-     */
     public function isAdmin(): bool
     {
-        return in_array("admin", $this->roles);
+        return !!$this->isAdmin;
     }
 
-    /**
-     * @return string
-     */
+    public function setIsAdmin(bool $isAdmin): self
+    {
+        $this->isAdmin = !!$isAdmin;
+        return $this;
+    }
+
     public function getFullName(): string
     {
         return trim($this->firstName . " " . $this->lastName);
+    }
+
+    public function securePassword(string $password): self
+    {
+        $salt = md5(Util::generateCode());
+        $ashedPassword = md5($salt . md5($password) . $salt);
+        $this->setSalt($salt);
+        $this->setPassword($ashedPassword);
+        return $this;
+    }
+
+    public function passwordVerify(string $password): bool
+    {
+        $ashedPassword = md5($this->salt . md5($password) . $this->salt);
+        return $this->password == $ashedPassword;
     }
 }

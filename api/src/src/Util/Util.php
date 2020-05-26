@@ -102,6 +102,21 @@ class Util
     }
 
     /**
+     * Generate a string of random chars of a given length
+     *
+     * @param int $length The length of the returned string;
+     * @return string
+     */
+    public static function generateCode(int $length = 12): string
+    {
+        $o = "";
+        for($i = 0; $i < ceil($length / 2); $i++) {
+            $o .= dechex(mt_rand(0, 255));
+        }
+        return substr($o, 0, $length);
+    }
+
+    /**
      * @return string[]
      */
     public static function getAllowedContactTypes()

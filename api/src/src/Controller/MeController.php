@@ -25,22 +25,24 @@ class MeController extends AbstractController
 
     /**
      * Get me
-     * 
+     *
      * @Route(path="/me", methods={"GET"})
      * @IsGranted("ROLE_USER")
-     * 
+     *
      * @SWG\Response(
      *     response=200,
      *     description="Returns a User object representing me",
      *     @SWG\Schema(
      *         type="object",
+     *         @SWG\Property(property="email", type="string"),
+     *         @SWG\Property(property="fullName", type="string"),
      *         @SWG\Property(property="id", type="integer"),
-     *         @SWG\Property(property="username", type="string")
+     *         @SWG\Property(property="isAdmin", type="boolean")
      *     )
      * )
      * @SWG\Tag(name="Users")
      * @Security(name="Bearer")
-     * 
+     *
      * @return Response
      */
     public function getMeAction(): Response

@@ -56,7 +56,7 @@ class OAuthController extends AbstractController
      *     required=true
      * )
      * @SWG\Parameter(
-     *     name="username",
+     *     name="email",
      *     in="formData",
      *     type="string",
      *     description="The identifyier of the user that is requiring the token",

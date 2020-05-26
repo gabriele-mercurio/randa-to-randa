@@ -86,6 +86,7 @@ class OAuthController extends AbstractController
      */
     public function tokenAction(): void
     {
+
         $response = new OAuth2Response([], 200, ['Access-Control-Allow-Origin' => '*']);
 
         /** @var OAuth2Response $response */

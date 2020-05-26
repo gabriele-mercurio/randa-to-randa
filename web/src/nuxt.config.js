@@ -41,6 +41,8 @@ export default {
   ** Nuxt.js modules
   */
   modules: [
+    '@nuxtjs/axios',
+    '@nuxtjs/auth'
   ],
   /*
   ** vuetify module configuration
@@ -71,6 +73,22 @@ export default {
     ** You can extend webpack config here
     */
     extend (config, ctx) {
+    }
+  },
+  env: {
+    base_url: "http://api.randa2randa.test",
+    client_id: "Randa2RandaAppClient",
+    client_secret: "FwPMFRlCa78GPQrO9zRWVRbjPCoPmaBQP254nx3g"
+  },
+  auth: {
+    strategies: {
+      local: {
+        endpoints: {
+          login: { url: 'http://api.randa2randa.test/token', method: 'post', propertyName: 'access_token' },
+          user: { url: 'http://api.randa2randa.test/me', method: 'get', propertyName: false}
+          //todo logout
+        }
+      }
     }
   }
 }

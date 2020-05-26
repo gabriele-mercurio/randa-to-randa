@@ -5,15 +5,16 @@
     :items-per-page="15"
     class="elevation-3"
   >
-    <template v-slot:item.core_group_launch="{ date }">
-      <span>{{date.prev}}</span>
-      <span>{{date.actual}}</span>
+    <!-- <template v-slot:item.core_group_launch="{ item }">
+      {{item}}
+      <span>{{item.prev}}</span>
+      <span>{{item.actual}}</span>
     </template>
 
-    <template v-slot:item.chapter_launch="{ date }">
-      <span>{{date.prev}}</span>
-      <span>{{date.actual}}</span>
-    </template>
+    <template v-slot:item.chapter_launch="{ item }">
+      <span>{{item.prev}}</span>
+      <span>{{item.actual}}</span>
+    </template> -->
   </v-data-table>
 </template>
 
@@ -34,15 +35,14 @@ export default {
       chapters: []
     };
   },
+  middleware: 'auth',
   created() {
-    alert("ciao");d
     this.fetchChapters();
   },
   methods: {
     async fetchChapters() {
-      let test = await ApiServer.get("chapters?region=1");
-      console.log(test);
-      debugger;
+      this.chapters = await ApiServer.get("chapters?region=1");
+      console.log(this.chapters);
     }
   }
 };

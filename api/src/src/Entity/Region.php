@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Entity;
+
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -8,7 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class Region
 {
-    /** 
+    /**
      * @ORM\Id
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="IDENTITY") */
@@ -20,7 +22,6 @@ class Region
 
     /** @ORM\Column(type="text", nullable=true) */
     private $notes;
-
 
     /**
      * Get the value of id

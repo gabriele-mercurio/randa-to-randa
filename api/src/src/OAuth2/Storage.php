@@ -42,23 +42,19 @@ class Storage implements AccessTokenInterface, ClientCredentialsInterface, UserC
      *
      * @return bool
      */
-    public function checkUserCredentials($username, $password): bool
+    public function checkUserCredentials($email, $password): bool
     {
         $repository = $this->entityManager->getRepository(User::class);
         /** @var User|null $user */
         $user = $repository->findOneBy([
-            'username'  => $username,
+            'email'  => $email
         ]);
 
         if (null === $user) {
             return false;
         }
 
-        if (!password_verify($password, $user->getPassword())) {
-            return false;
-        }
-
-        return true;
+        return $user->passwordVerify($password);
     }
 
     /**
@@ -70,7 +66,9 @@ class Storage implements AccessTokenInterface, ClientCredentialsInterface, UserC
     {
         $repository = $this->entityManager->getRepository(User::class);
         /** @var User|null $user */
-        $user = $repository->findOneBy(['username' => $username]);
+        $user = $repository->findOneBy([
+            'username' => $username
+        ]);
 
         if (null === $user) {
             return false;
@@ -78,10 +76,6 @@ class Storage implements AccessTokenInterface, ClientCredentialsInterface, UserC
 
         $userDetails = [];
         $userDetails['user_id'] = $user->getId();
-
-        // if (User::STATUS_PENDING === $user->getStatus()) {
-        //     $userDetails['need_activation'] = true;
-        // }
 
         return $userDetails;
     }
@@ -98,12 +92,10 @@ class Storage implements AccessTokenInterface, ClientCredentialsInterface, UserC
     public function setAccessToken($token, $clientId, $userId, $expires, $scope = null): void
     {
         $accessTokenRepository = $this->entityManager->getRepository(OAuth2AccessToken::class);
-        $accessToken           = $accessTokenRepository->findOneBy(
-            [
-                'token'    => $token,
-                'idClient' => (string) $clientId,
-            ]
-        );
+        $accessToken = $accessTokenRepository->findOneBy([
+            'token'    => $token,
+            'idClient' => (string) $clientId
+        ]);
 
         if (null === $accessToken) {
             $accessToken = new OAuth2AccessToken();
@@ -120,8 +112,6 @@ class Storage implements AccessTokenInterface, ClientCredentialsInterface, UserC
 
         $this->entityManager->persist($accessToken);
         $this->entityManager->flush();
-
-        
     }
 
     /**
@@ -132,12 +122,10 @@ class Storage implements AccessTokenInterface, ClientCredentialsInterface, UserC
     {
         $accessTokenRepository = $this->entityManager->getRepository(OAuth2AccessToken::class);
         /** @var OAuth2AccessToken|null $accessToken */
-        $accessToken           = $accessTokenRepository->findOneBy(
-            [
-                'token'    => $token,
-                'idClient' => $clientId,
-            ]
-        );
+        $accessToken = $accessTokenRepository->findOneBy([
+            'token'    => $token,
+            'idClient' => $clientId
+        ]);
 
         if (null === $accessToken) {
             return;
@@ -158,11 +146,9 @@ class Storage implements AccessTokenInterface, ClientCredentialsInterface, UserC
     {
         $accessTokenRepository = $this->entityManager->getRepository(OAuth2AccessToken::class);
         /** @var OAuth2AccessToken|null $accessToken */
-        $accessToken = $accessTokenRepository->findOneBy(
-            [
-                'token' => $token,
-            ]
-        );
+        $accessToken = $accessTokenRepository->findOneBy([
+            'token' => $token
+        ]);
 
         if (null === $accessToken) {
             return null;
@@ -173,7 +159,7 @@ class Storage implements AccessTokenInterface, ClientCredentialsInterface, UserC
             'client_id'    => $accessToken->getIdClient(),
             'user_id'      => $accessToken->getIdUser(),
             'expires'      => $accessToken->getExpires()->format('U'),
-            'scope'        => $accessToken->getScope(),
+            'scope'        => $accessToken->getScope()
         ];
     }
 
@@ -190,12 +176,10 @@ class Storage implements AccessTokenInterface, ClientCredentialsInterface, UserC
     {
         $refreshTokenRepository = $this->entityManager->getRepository(OAuth2RefreshToken::class);
         /** @var OAuth2RefreshToken|null $refreshToken */
-        $refreshToken           = $refreshTokenRepository->findOneBy(
-            [
-                'token'    => $token,
-                'idClient' => $clientId,
-            ]
-        );
+        $refreshToken = $refreshTokenRepository->findOneBy([
+            'token'    => $token,
+            'idClient' => $clientId
+        ]);
 
         if (null === $refreshToken) {
             $refreshToken = new OAuth2RefreshToken();
@@ -220,11 +204,9 @@ class Storage implements AccessTokenInterface, ClientCredentialsInterface, UserC
     {
         $refreshTokenRepository = $this->entityManager->getRepository(OAuth2RefreshToken::class);
         /** @var OAuth2RefreshToken|null $refreshToken */
-        $refreshToken           = $refreshTokenRepository->findOneBy(
-            [
-                'token' => $token,
-            ]
-        );
+        $refreshToken = $refreshTokenRepository->findOneBy([
+            'token' => $token
+        ]);
 
         if (null === $refreshToken) {
             return;
@@ -243,11 +225,9 @@ class Storage implements AccessTokenInterface, ClientCredentialsInterface, UserC
     {
         $refreshTokenRepository = $this->entityManager->getRepository(OAuth2RefreshToken::class);
         /** @var OAuth2RefreshToken|null $refreshToken */
-        $refreshToken = $refreshTokenRepository->findOneBy(
-            [
-                'token' => $token,
-            ]
-        );
+        $refreshToken = $refreshTokenRepository->findOneBy([
+            'token' => $token
+        ]);
 
         if (null === $refreshToken) {
             return null;
@@ -258,7 +238,7 @@ class Storage implements AccessTokenInterface, ClientCredentialsInterface, UserC
             'client_id'     => $refreshToken->getIdClient(),
             'user_id'       => $refreshToken->getIdUser(),
             'expires'       => $refreshToken->getExpires()->format('U'),
-            'scope'         => $refreshToken->getScope(),
+            'scope'         => $refreshToken->getScope()
         ];
     }
 
@@ -271,11 +251,9 @@ class Storage implements AccessTokenInterface, ClientCredentialsInterface, UserC
     {
         $clientRepository = $this->entityManager->getRepository(OAuth2Client::class);
         /** @var OAuth2Client|null $client */
-        $client = $clientRepository->findOneBy(
-            [
-                'idClient' => $clientId,
-            ]
-        );
+        $client = $clientRepository->findOneBy([
+            'idClient' => $clientId
+        ]);
 
         if (null === $client) {
             return false;
@@ -284,7 +262,7 @@ class Storage implements AccessTokenInterface, ClientCredentialsInterface, UserC
         return [
             'client_id'     => $client->getIdClient(),
             'client_secret' => $client->getSecret(),
-            'redirect_uri'  => $client->getRedirectUri(),
+            'redirect_uri'  => $client->getRedirectUri()
         ];
     }
 

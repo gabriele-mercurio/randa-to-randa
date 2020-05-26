@@ -2,88 +2,59 @@
 
 namespace App\Util;
 
-use App\Repository\MediaRepository;
-
 class Validator
 {
-    /** @var MediaRepository */
-    private $mediaRepository;
-
-    /** @var Swift_Mailer */
-    private $swift_Mailer;
-
-    public function __construct(MediaRepository $mediaRepository)
+    public function __construct()
     {
-        $this->mediaRepository = $mediaRepository;
     }
 
     /**
      * Generic link validator
      *
      * @param string $link
-     * @return bool
      */
-    public static function validateLink(string $link)
+    public static function validateLink(string $link): bool
     {
         return !!preg_match("/^(?:http(?:s)?:\/\/)?[a-z0-9]+(?:\.[\w.\-]+)+[\w-.,:;'~\/&#@[\]\(\)\!\?\=\$\*\+]+$/mi", $link);
     }
 
-    public function validateEmail(string $email)
+    /**
+     * Generic email validator
+     *
+     * @param string $email
+     */
+    public static function validateEmail(string $email): bool
     {
         return false !== \filter_var($email, FILTER_VALIDATE_EMAIL);
     }
 
-    public function validateMedia(array $media): bool
+    /**
+     * Generic password validator
+     *
+     * @param string $password
+     */
+    public static function validatePassword(string $password): bool
     {
-        foreach ($media as $m) {
-            if (!is_array($m)) {
-                return false;
-            }
-
-            $keys = array_keys($m);
-            if (!in_array("id", $keys)) {
-                return false;
-            } else {
-                $id = $m['id'];
-                $media = $this->mediaRepository->find($id);
-                if(empty($media)) {
-                    return false;
-                }
-            }
-        }
-        return true;
+        return !!preg_match("/^(?=.{6,})(?=[^0-9]*[0-9])(?=[^a-z]*[a-z])(?=[^A-Z]*[A-Z]).*/", $password);
     }
 
     /**
      * Generic phone number validator
      *
      * @param string $phoneNumbers
-     * @return bool
      */
-    public static function validatePhoneNumber(string $phoneNumbers)
+    public static function validatePhoneNumber(string $phoneNumbers): bool
     {
         return !!preg_match("/^(?:[+]*[(]{0,1}[\d]{1,4}[)]{0,1})?[-\s\d]{4,}$/mi", $phoneNumbers);
     }
 
     /**
-     * Generic slug validator
+     * Generic username validator
      *
-     * @param string $slug
-     * @return bool
+     * @param string $username
      */
-    public static function validateSlug(string $slug)
+    public static function validateUsername(string $username): bool
     {
-        return !!preg_match("/^[\w-]{3,255}$/", $slug);
-    }
-
-    /**
-     * priceType validator
-     *
-     * @param string $priceType
-     * @return bool
-     */
-    public static function validatePriceType(string $priceType)
-    {
-        return !!preg_match("/^(unit|m)$/", $priceType);
+        return !!preg_match("/^(?=.{6,}).*/", $username);
     }
 }

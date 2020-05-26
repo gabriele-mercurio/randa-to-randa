@@ -29,16 +29,16 @@ class OAuthController extends AbstractController
     {
         $this->server = $server;
     }
-    
+
     /**
      * Request a token
-     * 
+     *
      * @Route(path="/token", name="token", methods="POST")
      * @SWG\Parameter(
      *     name="client_id",
      *     in="formData",
      *     type="string",
-     *     description="The idefyier of the OAuth client",
+     *     description="The identifyier of the OAuth client",
      *     required=true
      * )
      * @SWG\Parameter(
@@ -59,7 +59,7 @@ class OAuthController extends AbstractController
      *     name="username",
      *     in="formData",
      *     type="string",
-     *     description="The identifier of the user that is requiring the token",
+     *     description="The identifyier of the user that is requiring the token",
      *     required=true
      * )
      * @SWG\Parameter(
@@ -96,10 +96,10 @@ class OAuthController extends AbstractController
 
     /**
      * Revoke a token
-     * 
+     *
      * @Route(path="/revoke", name="revoke", methods={"POST"})
      * @IsGranted("ROLE_USER")
-     * 
+     *
      * @SWG\Parameter(
      *     name="oauth_access_token",
      *     in="formData",

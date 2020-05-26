@@ -14,7 +14,8 @@ export default {
       { hid: 'description', name: 'description', content: process.env.npm_package_description || '' }
     ],
     link: [
-      { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
+      { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+      { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Muli:wght@200;400&display=swap'}
     ]
   },
   /*
@@ -44,6 +45,9 @@ export default {
     '@nuxtjs/axios',
     '@nuxtjs/auth'
   ],
+  css: [
+    '@/assets/styles/style.scss'
+  ],
   /*
   ** vuetify module configuration
   ** https://github.com/nuxt-community/vuetify-module
@@ -55,8 +59,8 @@ export default {
       themes: {
         light: {
           primary:"#cf2030",
-          accent: colors.grey.darken3,
-          secondary: colors.amber.darken3,
+          accent: "#CFCA34",
+          secondary: "#4F0C11",
           info: colors.teal.lighten1,
           warning: colors.amber.base,
           error: colors.deepOrange.accent4,

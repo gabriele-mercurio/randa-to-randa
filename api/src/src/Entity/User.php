@@ -6,13 +6,13 @@ use App\Util\Util;
 use Doctrine\ORM\Mapping as ORM;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
-use RuntimeException;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\UserRepository")
  * @ORM\Table(name="users")
  */
-class User
+class User implements UserInterface
 {
     /**
      * @ORM\Id()
@@ -93,7 +93,7 @@ class User
         return $this;
     }
 
-    private function getSalt(): string
+    public function getSalt(): string
     {
         return $this->salt;
     }
@@ -158,5 +158,21 @@ class User
     {
         $ashedPassword = md5($this->salt . md5($password) . $this->salt);
         return $this->password == $ashedPassword;
+    }
+
+    /**
+     * Needed for abstract resolve
+     */
+    public function getUsername(): string
+    {
+        return $this->getEmail();
+    }
+
+    /**
+     * Needed for abstract resolve
+     */
+    public function eraseCredentials()
+    {
+        // Not needed because there are no sensitive information stored on this object.
     }
 }

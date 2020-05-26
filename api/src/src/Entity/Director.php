@@ -20,6 +20,8 @@ class Director
     /**
      * @ORM\ManyToOne(targetEntity="User")
      * @ORM\JoinColumn(nullable=false)
+     *
+     * @var User
      */
     private $user;
 
@@ -62,13 +64,13 @@ class Director
     }
 
     /** Get the value of user */
-    public function getUser()
+    public function getUser(): User
     {
         return $this->user;
     }
 
     /** Set the value of user */
-    public function setUser($user): self
+    public function setUser(User $user): self
     {
         $this->user = $user;
         return $this;
@@ -101,13 +103,13 @@ class Director
     }
 
     /** Get the value of payType */
-    public function getPay_type()
+    public function getPayType()
     {
         return $this->payType;
     }
 
     /** Set the value of payType */
-    public function setPay_type($payType): self
+    public function setPayType($payType): self
     {
         $this->payType = $payType;
         return $this;
@@ -166,13 +168,13 @@ class Director
     }
 
     /** Get the value of greyLightPercentage */
-    public function getGrey_light_percentage()
+    public function getGreyLightPercentage()
     {
         return $this->greyLightPercentage;
     }
 
     /** Set the value of greyLightPercentage */
-    public function setGrey_light_percentage($greyLightPercentage): self
+    public function setGreyLightPercentage($greyLightPercentage): self
     {
         $this->greyLightPercentage = $greyLightPercentage;
         return $this;

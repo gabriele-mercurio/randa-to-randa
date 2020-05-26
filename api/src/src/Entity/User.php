@@ -23,6 +23,18 @@ class User implements UserInterface
     private $id;
 
     /**
+     * @ORM\Column(name="first_name", type="string", length=255)
+     * @SWG\Property()
+     */
+    private $firstName;
+
+    /**
+     * @ORM\Column(name="last_name", type="string", length=255)
+     * @SWG\Property()
+     */
+    private $lastName;
+
+    /**
      * @ORM\Column(type="string", length=180, unique=true)
      * @SWG\Property()
      */
@@ -43,18 +55,46 @@ class User implements UserInterface
 
     /**
      * @var string|null
-     * @SWG\Property()
-     */
-    private $plainPassword;
-
-    /**
-     * @var string|null
      */
     protected $salt;
 
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    /**
+     * A visual identifier that represents this user.
+     *
+     * @see UserInterface
+     */
+    public function getFirstName(): string
+    {
+        return (string) $this->firstName;
+    }
+
+    public function setFirstName(string $firstName): self
+    {
+        $this->firstName = $firstName;
+
+        return $this;
+    }
+
+    /**
+     * A visual identifier that represents this user.
+     *
+     * @see UserInterface
+     */
+    public function getLastName(): string
+    {
+        return (string) $this->lastName;
+    }
+
+    public function setLastName(string $lastName): self
+    {
+        $this->lastName = $lastName;
+
+        return $this;
     }
 
     /**
@@ -120,14 +160,6 @@ class User implements UserInterface
     }
 
     /**
-     * @return string|null
-     */
-    public function getPlainPassword(): ?string
-    {
-        return $this->plainPassword;
-    }
-
-    /**
      * @see UserInterface
      */
     public function getSalt()
@@ -151,5 +183,13 @@ class User implements UserInterface
     public function isAdmin(): bool
     {
         return in_array("admin", $this->roles);
+    }
+
+    /**
+     * @return string
+     */
+    public function getFullName(): string
+    {
+        return trim($this->firstName . " " . $this->lastName);
     }
 }

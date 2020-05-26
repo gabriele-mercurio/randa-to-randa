@@ -58,7 +58,7 @@ class UserCredentialsGrant implements GrantTypeInterface
             return null;
         }
 
-        $userInfo = $this->storage->getUserDetails($request->request('username'));
+        $userInfo = $this->storage->getUserDetails($request->request('email'));
 
         if (empty($userInfo)) {
             $response->setError(400, 'invalid_grant', 'Unable to retrieve user information');

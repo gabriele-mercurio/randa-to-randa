@@ -125,7 +125,7 @@ class UserController extends AbstractController
         $errors = [];
 
         if (!Validator::validateEmail($email)) {
-            $errors['email'] = "Lo username deve essere di almeno 6 caratteri";
+            $errors['email'] = "L'email è in un formato non valido";
         } elseif (null !== $this->userRepository->getUserByEmail($email)) {
             $errors['email'] = 'Email già esistente';
         }

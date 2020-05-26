@@ -37,7 +37,7 @@ class Storage implements AccessTokenInterface, ClientCredentialsInterface, UserC
     }
 
     /**
-     * @param string $username
+     * @param string $email
      * @param string $password
      *
      * @return bool
@@ -58,16 +58,16 @@ class Storage implements AccessTokenInterface, ClientCredentialsInterface, UserC
     }
 
     /**
-     * @param string $username
+     * @param string $email
      *
      * @return array|false
      */
-    public function getUserDetails($username)
+    public function getUserDetails($email)
     {
         $repository = $this->entityManager->getRepository(User::class);
         /** @var User|null $user */
         $user = $repository->findOneBy([
-            'username' => $username
+            'email' => $email
         ]);
 
         if (null === $user) {

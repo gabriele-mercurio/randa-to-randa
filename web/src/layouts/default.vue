@@ -3,7 +3,7 @@
     <nav v-if="$auth.loggedIn">
       <v-navigation-drawer v-model="drawer" absolute temporary right>
         <v-list nav dense>
-          <v-list-item-group active-class="deep-purple--text text--accent-4">
+          <v-list-item-group active-class="secondary--text text--accent-4">
             <v-list-item to="/home">
               <v-list-item-icon>
                 <v-icon>mdi-home</v-icon>
@@ -39,8 +39,8 @@
           Economics
         </v-btn>
         <v-spacer></v-spacer>
-        <v-toolbar-title class="d-flex flex-row">
-          <div>{{ $auth.user.username }} <small>(regione)</small></div>
+        <v-toolbar-title class="d-flex flex-row align-center">
+          <div>{{ $auth.user.fullName }} <small>({{getRegion()}})</small></div>
           <v-btn icon @click="drawer = true" class="white--text">
             <v-icon>mdi-account</v-icon></v-btn
           ></v-toolbar-title
@@ -59,6 +59,11 @@ export default {
     return {
       drawer: false
     };
+  },
+  methods: {
+    getRegion() {
+      return localStorage.getItem("region");
+    }
   },
   created() {
     localStorage.setItem("TEST_MODE", true);

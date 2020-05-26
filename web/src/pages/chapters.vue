@@ -41,7 +41,7 @@ export default {
   },
   methods: {
     async fetchChapters() {
-      this.chapters = await ApiServer.get("chapters?region=1");
+      this.chapters = await ApiServer.get("chapters");
       console.log(this.chapters);
     }
   }

@@ -2,12 +2,13 @@
 
 namespace App\Entity;
 
+use DateTime;
 use Doctrine\ORM\Mapping as ORM;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
 /**
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="App\Repository\StrategyRepository")
  * @ORM\Table(name="strategies")
  */
 class Strategy
@@ -20,20 +21,17 @@ class Strategy
      */
     private $id;
 
-    /**
-     * @ORM\Column(type="string")
-     * @ORM\ManyToOne(targetEntity="Target", cascade={"all"}, fetch="LAZY")
-     */
+    /** @ORM\ManyToOne(targetEntity="Target", cascade={"all"}, fetch="LAZY") */
     private $target;
 
     /** @ORM\Column(type="text") */
     private $description;
 
     /** @ORM\Column(type="date") */
-    private $timestap;
+    private $timestamp;
 
     /**
-     * User constructor.
+     * Strategy constructor.
      *
      * @throws Exception
      */
@@ -49,41 +47,41 @@ class Strategy
     }
 
     /** Get the value of target */
-    public function getTarget()
+    public function getTarget(): Target
     {
         return $this->target;
     }
 
     /** Set the value of target */
-    public function setTarget($target): self
+    public function setTarget(Target $target): self
     {
         $this->target = $target;
         return $this;
     }
 
     /** Get the value of description */
-    public function getDescription()
+    public function getDescription(): string
     {
         return $this->description;
     }
 
     /** Set the value of description */
-    public function setDescription($description): self
+    public function setDescription(string $description): self
     {
         $this->description = $description;
         return $this;
     }
 
-    /** Get the value of timestap */
-    public function getTimestap()
+    /** Get the value of timestamp */
+    public function getTimestamp(): DateTime
     {
-        return $this->timestap;
+        return $this->timestamp;
     }
 
-    /** Set the value of timestap */
-    public function setTimestap($timestap): self
+    /** Set the value of timestamp */
+    public function setTimestamp(DateTime $timestamp): self
     {
-        $this->timestap = $timestap;
+        $this->timestamp = $timestamp;
         return $this;
     }
 }

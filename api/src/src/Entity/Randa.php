@@ -7,7 +7,7 @@ use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
 /**
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="App\Repository\RandaRepository")
  * @ORM\Table(name="randa")
  */
 class Randa
@@ -33,7 +33,7 @@ class Randa
     private $currentTimeslot;
 
     /**
-     * User constructor.
+     * Randa constructor.
      *
      * @throws Exception
      */
@@ -49,39 +49,39 @@ class Randa
     }
 
     /** Get the value of year */
-    public function getYear()
+    public function getYear(): int
     {
         return $this->year;
     }
 
     /** Set the value of year */
-    public function setYear($year): self
+    public function setYear(int $year): self
     {
         $this->year = $year;
         return $this;
     }
 
     /** Get the value of region */
-    public function getRegion()
+    public function getRegion(): Region
     {
         return $this->region;
     }
 
     /** Set the value of region */
-    public function setRegion($region): self
+    public function setRegion(Region $region): self
     {
         $this->region = $region;
         return $this;
     }
 
     /** Get the value of currentTimeslot */
-    public function getCurrent_timeslot()
+    public function getCurrentTimeslot(): string
     {
         return $this->currentTimeslot;
     }
 
     /** Set the value of currentTimeslot */
-    public function setCurrent_timeslot($currentTimeslot): self
+    public function setCurrentTimeslot(string $currentTimeslot): self
     {
         $this->currentTimeslot = $currentTimeslot;
         return $this;

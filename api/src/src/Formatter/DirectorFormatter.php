@@ -20,6 +20,7 @@ class DirectorFormatter
     {
         $details = [
             'fixedPercentage'       => $director->getFixedPercentage(),
+            'fullName'              => $director->getUser()->getFullName(),
             'greenLightPercentage'  => $director->getGreenLightPercentage(),
             'greyLightPercentage'   => $director->getGreyLightPercentage(),
             'id'                    => $director->getId(),
@@ -56,8 +57,6 @@ class DirectorFormatter
      */
     public function formatFull(Director $director): array
     {
-        $details = array_merge($this->format($director), []);
-
-        return $details;
+        return $this->format($director);
     }
 }

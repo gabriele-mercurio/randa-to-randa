@@ -7,7 +7,7 @@ use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
 /**
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="App\Repository\TargetRepository")
  * @ORM\Table(name="targets")
  */
 class Target
@@ -24,7 +24,7 @@ class Target
     private $name;
 
     /**
-     * User constructor.
+     * Target constructor.
      *
      * @throws Exception
      */
@@ -39,21 +39,14 @@ class Target
         return $this->id;
     }
 
-    /** Set the value of id */
-    public function setId($id): self
-    {
-        $this->id = $id;
-        return $this;
-    }
-
     /** Get the value of name */
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
     }
 
     /** Set the value of name */
-    public function setName($name): self
+    public function setName(string $name): self
     {
         $this->name = $name;
         return $this;

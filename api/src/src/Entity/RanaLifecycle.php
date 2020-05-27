@@ -7,7 +7,7 @@ use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
 /**
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="App\Repository\RanaLifecycleRepository")
  * @ORM\Table(name="rana_lifecycle")
  */
 class RanaLifecycle
@@ -28,16 +28,14 @@ class RanaLifecycle
 
 
     /** @ORM\Column(name="current_timeslot", type="string", length=2) */
-    // T0 | T1 | T2 | T3 | T4
     private $currentTimeslot;
 
 
     /** @ORM\Column(name="current_status", type="string", length=8, options={"default"="TODO"}) */
-    // TODO | PROPOSED | APPROVED | REFUSED
     private $currentStatus;
 
     /**
-     * User constructor.
+     * RanaLifecycle constructor.
      *
      * @throws Exception
      */
@@ -53,39 +51,39 @@ class RanaLifecycle
     }
 
     /** Get the value of rana */
-    public function getRana()
+    public function getRana(): Rana
     {
         return $this->rana;
     }
 
     /** Set the value of rana */
-    public function setRana($rana): self
+    public function setRana(Rana $rana): self
     {
         $this->randa = $rana;
         return $this;
     }
 
     /** Get the value of currentTimeslot */
-    public function getCurrentTimeslot()
+    public function getCurrentTimeslot(): string
     {
         return $this->currentTimeslot;
     }
 
     /** Set the value of currentTimeslot */
-    public function setCurrentTimeslot($currentTimeslot): self
+    public function setCurrentTimeslot(string $currentTimeslot): self
     {
         $this->currentTimeslot = $currentTimeslot;
         return $this;
     }
 
     /** Get the value of currentStatus */
-    public function getCurrentStatus()
+    public function getCurrentStatus(): string
     {
         return $this->currentStatus;
     }
 
     /** Set the value of currentStatus */
-    public function setCurrentStatus($currentStatus): self
+    public function setCurrentStatus(string $currentStatus): self
     {
         $this->currentStatus = $currentStatus;
         return $this;

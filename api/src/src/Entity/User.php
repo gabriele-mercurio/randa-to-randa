@@ -22,9 +22,7 @@ class User implements UserInterface
      */
     private $id;
 
-    /**
-     * @ORM\Column(name="first_name", type="string")
-     */
+    /** @ORM\Column(name="first_name", type="string") */
     private $firstName;
 
     /** @ORM\Column(name="last_name", type="string") */

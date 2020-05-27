@@ -7,7 +7,7 @@ use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
 /**
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="App\Repository\RanaRepository")
  * @ORM\Table(name="rana")
  */
 class Rana
@@ -33,7 +33,7 @@ class Rana
     private $randa;
 
     /**
-     * User constructor.
+     * Rana constructor.
      *
      * @throws Exception
      */
@@ -49,26 +49,26 @@ class Rana
     }
 
     /** Get the value of chapter */
-    public function getChapter()
+    public function getChapter(): Chapter
     {
         return $this->chapter;
     }
 
     /** Set the value of chapter */
-    public function setChapter($chapter): self
+    public function setChapter(Chapter $chapter): self
     {
         $this->chapter = $chapter;
         return $this;
     }
 
     /** Get the value of randa */
-    public function getRanda()
+    public function getRanda(): Randa
     {
         return $this->randa;
     }
 
     /** Set the value of randa */
-    public function setRanda($randa): self
+    public function setRanda(Randa $randa): self
     {
         $this->randa = $randa;
         return $this;

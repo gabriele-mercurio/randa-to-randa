@@ -7,7 +7,7 @@ use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
 /**
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="App\Repository\RevenueCostRepository")
  * @ORM\Table(name="revenue_costs")
  */
 class RevenueCost
@@ -21,14 +21,13 @@ class RevenueCost
     private $id;
 
     /** @ORM\Column(type="string", length=32) */
-    //
     private $type;
 
     /** @ORM\Column(type="integer") */
     private $value;
 
     /**
-     * User constructor.
+     * RevenueCost constructor.
      *
      * @throws Exception
      */
@@ -44,26 +43,26 @@ class RevenueCost
     }
 
     /** Get the value of type */
-    public function getType()
+    public function getType(): string
     {
         return $this->type;
     }
 
     /** Set the value of type */
-    public function setType($type): self
+    public function setType(string $type): self
     {
         $this->type = $type;
         return $this;
     }
 
     /** Get the value of value */
-    public function getValue()
+    public function getValue(): int
     {
         return $this->value;
     }
 
     /** Set the value of value */
-    public function setValue($value): self
+    public function setValue(int $value): self
     {
         $this->value = $value;
         return $this;

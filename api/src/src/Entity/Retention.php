@@ -7,10 +7,10 @@ use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
 /**
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="App\Repository\RetentionsRepository")
  * @ORM\Table(name="retentions")
  */
-class Retentions
+class Retention
 {
     /**
      * @ORM\Id()
@@ -66,7 +66,7 @@ class Retentions
     private $m12;
 
     /**
-     * User constructor.
+     * Retention constructor.
      *
      * @throws Exception
      */
@@ -82,182 +82,182 @@ class Retentions
     }
 
     /** Get the value of rana */
-    public function getRana()
+    public function getRana(): Rana
     {
         return $this->rana;
     }
 
     /** Set the value of rana */
-    public function setRana($rana): self
+    public function setRana(Rana $rana): self
     {
         $this->rana = $rana;
         return $this;
     }
 
     /** Get the value of valueType */
-    public function getValueType()
+    public function getValueType(): string
     {
         return $this->valueType;
     }
 
     /** Set the value of valueType */
-    public function setValueType($valueType): self
+    public function setValueType(string $valueType): self
     {
         $this->valueType = $valueType;
         return $this;
     }
 
     /** Get the value of m1 */
-    public function getM1()
+    public function getM1(): int
     {
         return $this->m1;
     }
 
     /** Set the value of m1 */
-    public function setM1($m1): self
+    public function setM1(int $m1): self
     {
         $this->m1 = $m1;
         return $this;
     }
 
     /** Get the value of m2 */
-    public function getM2()
+    public function getM2(): int
     {
         return $this->m2;
     }
 
     /** Set the value of m2 */
-    public function setM2($m2): self
+    public function setM2(int $m2): self
     {
         $this->m2 = $m2;
         return $this;
     }
 
     /** Get the value of m3 */
-    public function getM3()
+    public function getM3(): int
     {
         return $this->m3;
     }
 
     /** Set the value of m3 */
-    public function setM3($m3): self
+    public function setM3(int $m3): self
     {
         $this->m3 = $m3;
         return $this;
     }
 
     /** Get the value of m4 */
-    public function getM4()
+    public function getM4(): int
     {
         return $this->m4;
     }
 
     /** Set the value of m4 */
-    public function setM4($m4): self
+    public function setM4(int $m4): self
     {
         $this->m4 = $m4;
         return $this;
     }
 
     /** Get the value of m5 */
-    public function getM5()
+    public function getM5(): int
     {
         return $this->m5;
     }
 
     /** Set the value of m5 */
-    public function setM5($m5): self
+    public function setM5(int $m5): self
     {
         $this->m5 = $m5;
         return $this;
     }
 
     /** Get the value of m6 */
-    public function getM6()
+    public function getM6(): int
     {
         return $this->m6;
     }
 
     /** Set the value of m6 */
-    public function setM6($m6): self
+    public function setM6(int $m6): self
     {
         $this->m6 = $m6;
         return $this;
     }
 
     /** Get the value of m7 */
-    public function getM7()
+    public function getM7(): int
     {
         return $this->m7;
     }
 
     /** Set the value of m7 */
-    public function setM7($m7): self
+    public function setM7(int $m7): self
     {
         $this->m7 = $m7;
         return $this;
     }
 
     /** Get the value of m8 */
-    public function getM8()
+    public function getM8(): int
     {
         return $this->m8;
     }
 
     /** Set the value of m8 */
-    public function setM8($m8): self
+    public function setM8(int $m8): self
     {
         $this->m8 = $m8;
         return $this;
     }
 
     /** Get the value of m9 */
-    public function getM9()
+    public function getM9(): int
     {
         return $this->m9;
     }
 
     /** Set the value of m9 */
-    public function setM9($m9): self
+    public function setM9(int $m9): self
     {
         $this->m9 = $m9;
         return $this;
     }
 
     /** Get the value of m10 */
-    public function getM10()
+    public function getM10(): int
     {
         return $this->m10;
     }
 
     /** Set the value of m10 */
-    public function setM10($m10): self
+    public function setM10(int $m10): self
     {
         $this->m10 = $m10;
         return $this;
     }
 
     /** Get the value of m11 */
-    public function getM11()
+    public function getM11(): int
     {
         return $this->m11;
     }
 
     /** Set the value of m11 */
-    public function setM11($m11): self
+    public function setM11(int $m11): self
     {
         $this->m11 = $m11;
         return $this;
     }
 
     /** Get the value of m12 */
-    public function getM12()
+    public function getM12(): int
     {
         return $this->m12;
     }
 
     /** Set the value of m12 */
-    public function setM12($m12): self
+    public function setM12(int $m12): self
     {
         $this->m12 = $m12;
         return $this;

@@ -7,7 +7,7 @@ use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
 /**
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="App\Repository\DirectorRepository")
  * @ORM\Table(name="directors")
  */
 class Director
@@ -23,13 +23,10 @@ class Director
     /**
      * @ORM\ManyToOne(targetEntity="User")
      * @ORM\JoinColumn(nullable=false)
-     *
-     * @var User
      */
     private $user;
 
     /** @ORM\Column(type="string", length=10) */
-    //EXECUTIVE | AREA | ASSISTANT
     private $role;
 
     /** @ORM\ManyToOne(targetEntity="Region") */
@@ -39,7 +36,6 @@ class Director
     private $supervisor;
 
     /** @ORM\Column(name="pay_type", type="string", length=8) */
-    //MONTHLY | ANNUAL
     private $payType;
 
     /** @ORM\Column(name="launch_percentage", type="float", options={"default":0}) */
@@ -61,7 +57,7 @@ class Director
     private $fixedPercentage;
 
     /**
-     * User constructor.
+     * Director constructor.
      *
      * @throws Exception
      */
@@ -90,130 +86,130 @@ class Director
     }
 
     /** Get the value of role */
-    public function getRole()
+    public function getRole(): string
     {
         return $this->role;
     }
 
     /** Set the value of role */
-    public function setRole($role): self
+    public function setRole(string $role): self
     {
         $this->role = $role;
         return $this;
     }
 
     /** Get the value of supervisor */
-    public function getSupervisor()
+    public function getSupervisor(): Director
     {
         return $this->supervisor;
     }
 
     /** Set the value of supervisor */
-    public function setSupervisor($supervisor): self
+    public function setSupervisor(Director $supervisor): self
     {
         $this->supervisor = $supervisor;
         return $this;
     }
 
     /** Get the value of payType */
-    public function getPayType()
+    public function getPayType(): string
     {
         return $this->payType;
     }
 
     /** Set the value of payType */
-    public function setPayType($payType): self
+    public function setPayType(string $payType): self
     {
         $this->payType = $payType;
         return $this;
     }
 
     /** Get the value of launchPercentage */
-    public function getLaunchPercentage()
+    public function getLaunchPercentage(): float
     {
         return $this->launchPercentage;
     }
 
     /** Set the value of launchPercentage */
-    public function setLaunchPercentage($launchPercentage): self
+    public function setLaunchPercentage(float $launchPercentage): self
     {
         $this->launchPercentage = $launchPercentage;
         return $this;
     }
 
     /** Get the value of greenLightPercentage */
-    public function getGreenLightPercentage()
+    public function getGreenLightPercentage(): float
     {
         return $this->greenLightPercentage;
     }
 
     /** Set the value of greenLightPercentage */
-    public function setGreenLightPercentage($greenLightPercentage): self
+    public function setGreenLightPercentage(float $greenLightPercentage): self
     {
         $this->greenLightPercentage = $greenLightPercentage;
         return $this;
     }
 
     /** Get the value of yellowLightPercentage */
-    public function getYellowLightPercentage()
+    public function getYellowLightPercentage(): float
     {
         return $this->yellowLightPercentage;
     }
 
     /** Set the value of yellowLightPercentage */
-    public function setYellowLightPercentage($yellowLightPercentage): self
+    public function setYellowLightPercentage(float $yellowLightPercentage): self
     {
         $this->yellowLightPercentage = $yellowLightPercentage;
         return $this;
     }
 
     /** Get the value of redLightPercentage */
-    public function getRedLightPercentage()
+    public function getRedLightPercentage(): float
     {
         return $this->redLightPercentage;
     }
 
     /** Set the value of redLightPercentage */
-    public function setRedLightPercentage($redLightPercentage): self
+    public function setRedLightPercentage(float $redLightPercentage): self
     {
         $this->redLightPercentage = $redLightPercentage;
         return $this;
     }
 
     /** Get the value of greyLightPercentage */
-    public function getGreyLightPercentage()
+    public function getGreyLightPercentage(): float
     {
         return $this->greyLightPercentage;
     }
 
     /** Set the value of greyLightPercentage */
-    public function setGreyLightPercentage($greyLightPercentage): self
+    public function setGreyLightPercentage(float $greyLightPercentage): self
     {
         $this->greyLightPercentage = $greyLightPercentage;
         return $this;
     }
 
     /** Get the value of fixedPercentage */
-    public function getFixedPercentage()
+    public function getFixedPercentage(): float
     {
         return $this->fixedPercentage;
     }
 
     /** Set the value of fixedPercentage */
-    public function setFixedPercentage($fixedPercentage): self
+    public function setFixedPercentage(float $fixedPercentage): self
     {
         $this->fixedPercentage = $fixedPercentage;
         return $this;
     }
 
     /** Get the value of region */
-    public function getRegion()
+    public function getRegion(): Region
     {
         return $this->region;
     }
 
     /** Set the value of region */
-    public function setRegion($region): self
+    public function setRegion(Region $region): self
     {
         $this->region = $region;
         return $this;

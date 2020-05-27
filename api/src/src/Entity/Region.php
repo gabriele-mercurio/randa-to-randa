@@ -7,7 +7,7 @@ use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
 /**
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="App\Repository\RegionRepository")
  * @ORM\Table(name="regions")
  */
 class Region
@@ -23,12 +23,11 @@ class Region
     /** @ORM\Column(type="string", length=32) */
     private $name;
 
-
     /** @ORM\Column(type="text", nullable=true) */
     private $notes;
 
     /**
-     * User constructor.
+     * Region constructor.
      *
      * @throws Exception
      */
@@ -37,51 +36,35 @@ class Region
         $this->id = Uuid::uuid4();
     }
 
-    /**
-     * Get the value of id
-     */
+    /** Get the value of id */
     public function getId(): UuidInterface
     {
         return $this->id;
     }
 
-    /**
-     * Get the value of name
-     */
-    public function getName()
+    /** Get the value of name */
+    public function getName(): string
     {
         return $this->name;
     }
 
-    /**
-     * Set the value of name
-     *
-     * @return  self
-     */
-    public function setName($name)
+    /** Set the value of name */
+    public function setName(string $name): self
     {
         $this->name = $name;
-
         return $this;
     }
 
-    /**
-     * Get the value of notes
-     */
-    public function getNotes()
+    /** Get the value of notes */
+    public function getNotes(): string
     {
         return $this->notes;
     }
 
-    /**
-     * Set the value of notes
-     *
-     * @return  self
-     */
-    public function setNotes($notes)
+    /** Set the value of notes */
+    public function setNotes(string $notes): self
     {
         $this->notes = $notes;
-
         return $this;
     }
 }

@@ -91,7 +91,7 @@ class ChapterController extends AbstractController
 
         return new JsonResponse(array_map(function ($c) {
             /** @var Chapter $c */
-            $ret = $this->chapterFormatter->formatFull($c, $this->chapterFormatter::DIRECTOR_BASE_DATA);
+            $ret = $this->chapterFormatter->formatBase($c);
 
             $today = new DateTime();
             $warning = null;

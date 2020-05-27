@@ -6,8 +6,8 @@ use App\Entity\Chapter;
 
 class ChapterFormatter
 {
-    public const DIRECTOR_BASE_DATA = true;
-    public const DIRECTOR_FULL_DATA = false;
+    private const DIRECTOR_BASE_DATA = 1;
+    private const DIRECTOR_FULL_DATA = 0;
 
     /** @var DirectorFormatter */
     protected $directorFormatter;
@@ -24,7 +24,7 @@ class ChapterFormatter
      *
      * @return array
      */
-    private function format(Chapter $chapter): array
+    private function format(Chapter $chapter, $directorDataType): array
     {
         $details = [
             'chapterLaunch'   => [
@@ -37,6 +37,7 @@ class ChapterFormatter
                 'prev'   => $chapter->getPrevLaunchCoregroupDate()->format("Y-m-d")
             ],
             'currentState'    => $chapter->getCurrentState(),
+            'director'        => $directorDataType == self::DIRECTOR_BASE_DATA ? $this->directorFormatter->formatBase($chapter->getDirector()) : $this->directorFormatter->formatFull($chapter->getDirector()),
             'id'              => $chapter->getId(),
             'members'         => $chapter->getMembers(),
             'name'            => $chapter->getName(),
@@ -51,12 +52,18 @@ class ChapterFormatter
      *
      * @return array
      */
-    public function formatFull(Chapter $chapter, $directorBaseData = self::DIRECTOR_BASE_DATA): array
+    public function formatBase(Chapter $chapter): array
     {
-        $details = array_merge($this->format($chapter), [
-            'director' => $directorBaseData ? $this->directorFormatter->formatBase($chapter->getDirector()) : $this->directorFormatter->formatFull($chapter->getDirector())
-        ]);
+        return $this->format($chapter, self::DIRECTOR_BASE_DATA);
+    }
 
-        return $details;
+    /**
+     * @param Chapter $chapter
+     *
+     * @return array
+     */
+    public function formatFull(Chapter $chapter): array
+    {
+        return $this->format($chapter, self::DIRECTOR_FULL_DATA);
     }
 }

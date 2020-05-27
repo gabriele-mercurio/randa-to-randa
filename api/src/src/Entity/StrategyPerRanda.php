@@ -7,7 +7,7 @@ use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
 /**
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="App\Repository\StrategyPerRandaRepository")
  * @ORM\Table(name="strategies_per_randa")
  */
 class StrategyPerRanda
@@ -27,7 +27,7 @@ class StrategyPerRanda
     private $strategy;
 
     /**
-     * User constructor.
+     * StrategyPerRanda constructor.
      *
      * @throws Exception
      */
@@ -43,26 +43,26 @@ class StrategyPerRanda
     }
 
     /** Get the value of randa */
-    public function getRanda()
+    public function getRanda(): Randa
     {
         return $this->randa;
     }
 
     /** Set the value of randa */
-    public function setRanda($randa): self
+    public function setRanda(Randa $randa): self
     {
         $this->randa = $randa;
         return $this;
     }
 
     /** Get the value of strategy */
-    public function getStrategy()
+    public function getStrategy(): Strategy
     {
         return $this->strategy;
     }
 
     /** Set the value of strategy */
-    public function setStrategy($strategy): self
+    public function setStrategy(Strategy $strategy): self
     {
         $this->strategy = $strategy;
         return $this;

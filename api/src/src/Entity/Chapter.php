@@ -25,7 +25,6 @@ class Chapter
     private $name;
 
     /** @ORM\Column(name="current_state", type="string", length=10, options={"default":"PROJECT"}) */
-    // PROJECT | CORE_GROUP | CHAPTER
     private $currentState;
 
     /**
@@ -68,7 +67,7 @@ class Chapter
     private $closureDate;
 
     /**
-     * User constructor.
+     * Chapter constructor.
      *
      * @throws Exception
      */
@@ -84,52 +83,52 @@ class Chapter
     }
 
     /** Get the value of name */
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
     }
 
     /** Set the value of name */
-    public function setName($name): self
+    public function setName(string $name): self
     {
         $this->name = $name;
         return $this;
     }
 
     /** Get the value of currentState */
-    public function getCurrentState()
+    public function getCurrentState(): string
     {
         return $this->currentState;
     }
 
     /** Set the value of currentState */
-    public function setCurrentState($currentState): self
+    public function setCurrentState(string $currentState): self
     {
         $this->currentState = $currentState;
         return $this;
     }
 
     /** Get the value of region */
-    public function getRegion()
+    public function getRegion(): Region
     {
         return $this->region;
     }
 
     /** Set the value of region */
-    public function setRegion($region): self
+    public function setRegion(Region $region): self
     {
         $this->region = $region;
         return $this;
     }
 
     /** Get the value of director */
-    public function getDirector()
+    public function getDirector(): Director
     {
         return $this->director;
     }
 
     /** Set the value of director */
-    public function setDirector($director): self
+    public function setDirector(Director $director): self
     {
         $this->director = $director;
         return $this;

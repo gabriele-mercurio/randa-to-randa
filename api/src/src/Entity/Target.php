@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Ramsey\Uuid\Uuid;
+use Ramsey\Uuid\UuidInterface;
 
 /**
  * @ORM\Entity
@@ -11,17 +13,28 @@ use Doctrine\ORM\Mapping as ORM;
 class Target
 {
     /**
-     * @ORM\Id
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue(strategy="IDENTITY")
+     * @ORM\Id()
+     * @ORM\Column(type="uuid", unique=true)
+     * @ORM\GeneratedValue(strategy="CUSTOM")
+     * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
     private $id;
 
     /** @ORM\Column(type="string") */
     private $name;
 
+    /**
+     * User constructor.
+     *
+     * @throws Exception
+     */
+    public function __construct()
+    {
+        $this->id = Uuid::uuid4();
+    }
+
     /** Get the value of id */
-    public function getId()
+    public function getId(): UuidInterface
     {
         return $this->id;
     }

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controller\Admin;
+namespace App\Controller;
 
 use App\Entity\User;
 use App\Events\UserEvent;
@@ -16,9 +16,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-/**
- * @Route("/admin", name="admin_users_")
- */
 class UserController extends AbstractController
 {
     /** @var UserRepository */
@@ -43,7 +40,7 @@ class UserController extends AbstractController
     /**
      * Get all users
      *
-     * @Route("/users", name="list", methods={"GET"})
+     * @Route("/users", name="users_list", methods={"GET"})
      *
      * @SWG\Response(
      *      response=200,
@@ -72,7 +69,7 @@ class UserController extends AbstractController
     /**
      * Create a user
      *
-     * @Route("/user", name="create", methods={"POST"})
+     * @Route("/user", name="user_create", methods={"POST"})
      *
      * @SWG\Parameter(
      *      name="email",

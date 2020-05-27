@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Chapter;
+use App\Entity\Region;
 use App\Formatter\ChapterFormatter;
 use App\Repository\ChapterRepository;
 use DateTime;
@@ -36,8 +37,14 @@ class ChapterController extends AbstractController
     /**
      * Get chapters
      *
-     * @Route(path="/chapters", methods={"GET"})
+     * @Route(path="/{id}/chapters", name="chapters_list", methods={"GET"})
      *
+     * @SWG\Parameter(
+     *     name="id",
+     *     in="path",
+     *     type="string",
+     *     description="The region"
+     * )
      * @SWG\Response(
      *     response=200,
      *     description="Returns an array of Chapter objects",
@@ -74,11 +81,11 @@ class ChapterController extends AbstractController
      *     )
      * )
      * @SWG\Tag(name="Chapters")
-     * @Security(name="none")
+     * @Security(name="Bearer")
      *
      * @return Response
      */
-    public function getChapters(): Response
+    public function getChapters(Region $region): Response
     {
         $chapters = $this->chapterRepository->findAll();
 

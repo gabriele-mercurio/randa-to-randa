@@ -20,4 +20,5 @@ security:
                     - App\Guard\TokenAuthenticator
             stateless: true
     access_control:
-        - { path: ^/admin/users, roles: ROLE_USER }
+        - { path: ^/(token|api/doc), roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/, roles: ROLE_USER }

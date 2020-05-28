@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Chapter;
+use App\Entity\Region;
 use App\Formatter\ChapterFormatter;
 use App\Repository\ChapterRepository;
 use DateTime;
@@ -36,8 +37,14 @@ class ChapterController extends AbstractController
     /**
      * Get chapters
      *
-     * @Route(path="/chapters", methods={"GET"})
+     * @Route(path="/{id}/chapters", name="chapters_list", methods={"GET"})
      *
+     * @SWG\Parameter(
+     *     name="id",
+     *     in="path",
+     *     type="string",
+     *     description="The region"
+     * )
      * @SWG\Response(
      *     response=200,
      *     description="Returns an array of Chapter objects",
@@ -65,7 +72,7 @@ class ChapterController extends AbstractController
      *                 @SWG\Property(property="id", type="integer"),
      *                 @SWG\Property(property="fullName", type="string")
      *             ),
-     *             @SWG\Property(property="id", type="integer"),
+     *             @SWG\Property(property="id", type="string"),
      *             @SWG\Property(property="members", type="integer"),
      *             @SWG\Property(property="name", type="string"),
      *             @SWG\Property(property="suspDate", type="string", description="Suspension date"),
@@ -74,17 +81,17 @@ class ChapterController extends AbstractController
      *     )
      * )
      * @SWG\Tag(name="Chapters")
-     * @Security(name="none")
+     * @Security(name="Bearer")
      *
      * @return Response
      */
-    public function getChapters(): Response
+    public function getChapters(Region $region): Response
     {
         $chapters = $this->chapterRepository->findAll();
 
         return new JsonResponse(array_map(function ($c) {
             /** @var Chapter $c */
-            $ret = $this->chapterFormatter->formatFull($c, $this->chapterFormatter::DIRECTOR_BASE_DATA);
+            $ret = $this->chapterFormatter->formatBase($c);
 
             $today = new DateTime();
             $warning = null;

@@ -4,6 +4,8 @@ namespace App\Entity;
 
 use DateTime;
 use Doctrine\ORM\Mapping as ORM;
+use Ramsey\Uuid\Uuid;
+use Ramsey\Uuid\UuidInterface;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\ChapterRepository")
@@ -12,9 +14,10 @@ use Doctrine\ORM\Mapping as ORM;
 class Chapter
 {
     /**
-     * @ORM\Id
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue(strategy="IDENTITY")
+     * @ORM\Id()
+     * @ORM\Column(type="uuid", unique=true)
+     * @ORM\GeneratedValue(strategy="CUSTOM")
+     * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
     private $id;
 
@@ -22,7 +25,6 @@ class Chapter
     private $name;
 
     /** @ORM\Column(name="current_state", type="string", length=10, options={"default":"PROJECT"}) */
-    // PROJECT | CORE_GROUP | CHAPTER
     private $currentState;
 
     /**
@@ -64,59 +66,69 @@ class Chapter
     /** @ORM\Column(name="closure_date", type="date") */
     private $closureDate;
 
+    /**
+     * Chapter constructor.
+     *
+     * @throws Exception
+     */
+    public function __construct()
+    {
+        $this->id = Uuid::uuid4();
+    }
+
     /** Get the value of id */
-    public function getId()
+    public function getId(): UuidInterface
     {
         return $this->id;
     }
 
     /** Get the value of name */
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
     }
 
     /** Set the value of name */
-    public function setName($name): self
+    public function setName(string $name): self
     {
         $this->name = $name;
         return $this;
     }
 
     /** Get the value of currentState */
-    public function getCurrentState()
+    public function getCurrentState(): string
     {
         return $this->currentState;
     }
 
     /** Set the value of currentState */
-    public function setCurrentState($currentState): self
+    public function setCurrentState(string $currentState): self
     {
         $this->currentState = $currentState;
         return $this;
     }
 
     /** Get the value of region */
-    public function getRegion()
+    public function getRegion(): Region
     {
         return $this->region;
     }
 
     /** Set the value of region */
-    public function setRegion($region): self
+    public function setRegion(Region $region): self
     {
         $this->region = $region;
         return $this;
     }
 
     /** Get the value of director */
-    public function getDirector()
+    public function getDirector(): Director
     {
         return $this->director;
     }
 
     /** Set the value of director */
-    public function setDirector($director): self
+    public function setDirector(Director $director): self
     {
         $this->director = $director;
         return $this;

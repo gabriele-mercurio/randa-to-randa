@@ -15,6 +15,10 @@ use Doctrine\ORM\EntityManagerInterface;
  */
 class ChapterRepository extends ServiceEntityRepository
 {
+    public const CHAPTER_CURRENT_STATE_CHAPTER = 'CHAPTER';
+    public const CHAPTER_CURRENT_STATE_CORE_GROUP = 'CORE_GROUP';
+    public const CHAPTER_CURRENT_STATE_PROJECT = 'PROJECT';
+
     /** @var EntityManagerInterface */
     protected $entityManager;
 

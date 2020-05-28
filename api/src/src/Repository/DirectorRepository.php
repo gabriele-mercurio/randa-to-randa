@@ -15,6 +15,12 @@ use Doctrine\ORM\EntityManagerInterface;
  */
 class DirectorRepository extends ServiceEntityRepository
 {
+    public const DIRECTOR_PAY_TYPE_ANNUAL = 'ANNUAL';
+    public const DIRECTOR_PAY_TYPE_MONTHLY = 'MONTHLY';
+    public const DIRECTOR_ROLE_AREA = 'AREA';
+    public const DIRECTOR_ROLE_ASSISTANT = 'ASSISTANT';
+    public const DIRECTOR_ROLE_EXECUTIVE = 'EXECUTIVE';
+
     /** @var EntityManagerInterface */
     protected $entityManager;
 

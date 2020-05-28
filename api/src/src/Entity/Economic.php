@@ -3,17 +3,20 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Ramsey\Uuid\Uuid;
+use Ramsey\Uuid\UuidInterface;
 
 /**
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="App\Repository\EconomicRepository")
  * @ORM\Table(name="economics")
  */
-class Economics
+class Economic
 {
     /**
-     * @ORM\Id
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue(strategy="IDENTITY")
+     * @ORM\Id()
+     * @ORM\Column(type="uuid", unique=true)
+     * @ORM\GeneratedValue(strategy="CUSTOM")
+     * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
     private $id;
 
@@ -23,13 +26,10 @@ class Economics
      */
     private $randa;
 
-    /**
-     * @ORM\Column(type="integer")
-     */
+    /** @ORM\Column(type="integer") */
     private $year;
 
     /** @ORM\Column(type="string", length=2) */
-    // T1 | T2 | T3 | T4
     private $timeslot;
 
     /** @ORM\Column(name="extra_incomings", type="integer") */
@@ -47,118 +47,121 @@ class Economics
     /** @ORM\Column(type="integer") */
     private $tax;
 
+    /**
+     * Economic constructor.
+     *
+     * @throws Exception
+     */
+    public function __construct()
+    {
+        $this->id = Uuid::uuid4();
+    }
+
     /** Get the value of id */
-    public function getId()
+    public function getId(): UuidInterface
     {
         return $this->id;
     }
 
-    /** Set the value of id */
-    public function setId($id): self
-    {
-        $this->id = $id;
-        return $this;
-    }
-
     /** Get the value of randa */
-    public function getRanda()
+    public function getRanda(): Randa
     {
         return $this->randa;
     }
 
     /** Set the value of randa */
-    public function setRanda($randa): self
+    public function setRanda(Randa $randa): self
     {
         $this->randa = $randa;
         return $this;
     }
 
     /** Get the value of year */
-    public function getYear()
+    public function getYear(): int
     {
         return $this->year;
     }
 
     /** Set the value of year */
-    public function setYear($year): self
+    public function setYear(int $year): self
     {
         $this->year = $year;
         return $this;
     }
 
     /** Get the value of timeslot */
-    public function getTimeslot()
+    public function getTimeslot(): string
     {
         return $this->timeslot;
     }
 
     /** Set the value of timeslot */
-    public function setTimeslot($timeslot): self
+    public function setTimeslot(string $timeslot): self
     {
         $this->timeslot = $timeslot;
         return $this;
     }
 
     /** Get the value of extraIncomings */
-    public function getExtra_incomings()
+    public function getExtraIncomings(): int
     {
         return $this->extraIncomings;
     }
 
     /** Set the value of extraIncomings */
-    public function setExtra_incomings($extraIncomings): self
+    public function setExtraIncomings(int $extraIncomings): self
     {
         $this->extraIncomings = $extraIncomings;
         return $this;
     }
 
     /** Get the value of deprecations */
-    public function getDeprecations()
+    public function getDeprecations(): int
     {
         return $this->deprecations;
     }
 
     /** Set the value of deprecations */
-    public function setDeprecations($deprecations): self
+    public function setDeprecations(int $deprecations): self
     {
         $this->deprecations = $deprecations;
         return $this;
     }
 
     /** Get the value of provisions */
-    public function getProvisions()
+    public function getProvisions(): int
     {
         return $this->provisions;
     }
 
     /** Set the value of provisions */
-    public function setProvisions($provisions): self
+    public function setProvisions(int $provisions): self
     {
         $this->provisions = $provisions;
         return $this;
     }
 
     /** Get the value of financialCharges */
-    public function getFinancial_charges()
+    public function getFinancialCharges(): int
     {
         return $this->financialCharges;
     }
 
     /** Set the value of financialCharges */
-    public function setFinancial_charges($financialCharges): self
+    public function setFinancialCharges(int $financialCharges): self
     {
         $this->financialCharges = $financialCharges;
         return $this;
     }
 
     /** Get the value of tax */
-    public function getTax()
+    public function getTax(): int
     {
         return $this->tax;
     }
 
     /** Set the value of tax */
-    public function setTax($tax): self
+    public function setTax(int $tax): self
     {
         $this->tax = $tax;
         return $this;

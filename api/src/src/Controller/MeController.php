@@ -15,12 +15,13 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 class MeController extends AbstractController
 {
     /** @var UserFormatter */
-    private $formatter;
+    private $userFormatter;
 
     /** @param UserFormatter $formatter */
-    public function __construct(UserFormatter $formatter)
+    public function __construct(
+        UserFormatter $userFormatter)
     {
-        $this->formatter = $formatter;
+        $this->userFormatter = $userFormatter;
     }
 
     /**
@@ -36,7 +37,7 @@ class MeController extends AbstractController
      *         type="object",
      *         @SWG\Property(property="email", type="string"),
      *         @SWG\Property(property="fullName", type="string"),
-     *         @SWG\Property(property="id", type="integer"),
+     *         @SWG\Property(property="id", type="string"),
      *         @SWG\Property(property="isAdmin", type="boolean")
      *     )
      * )
@@ -50,6 +51,6 @@ class MeController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
 
-        return new JsonResponse($this->formatter->formatFull($user));
+        return new JsonResponse($this->userFormatter->formatFull($user));
     }
 }

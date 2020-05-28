@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <nav v-if="$auth.loggedIn">
+    <nav v-if="$auth.loggedIn && getRegion()">
       <v-navigation-drawer v-model="drawer" absolute temporary right>
         <v-list nav dense>
           <v-list-item-group active-class="secondary--text text--accent-4">

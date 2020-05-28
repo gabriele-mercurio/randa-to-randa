@@ -1,47 +1,71 @@
 <template>
-  <v-container id="login-container" class="primary">
-    <h2 class="white--text text-center py-12">Accedi a Randa to Randa</h2>
-    <v-form @submit.prevent="doLogin()">
-      <v-card class="mx-auto mb-12 elevation-12" max-width="374">
-        <v-card-title class="secondary--text text-center">
-          Login
-        </v-card-title>
-        <v-card-text class="my-4">
-          <!-- <v-text-field
-            label="Username"
-            prepend-icon="mdi-face"
-            color="purple"
-          ></v-text-field> -->
+  <v-container class="primary pa-0 ma-0" id="container">
+      <h2 class="white--text text-center py-12">Accedi a Randa to Randa</h2>
+      <v-form v-if="!$auth.loggedIn" @submit="doLogin($event)">
+        <v-card class="mx-auto mb-12 elevation-12" max-width="374">
+          <v-card-title class="secondary--text text-center">
+            Login
+          </v-card-title>
+          <v-card-text class="my-4">
+            <!-- <v-text-field
+              label="Username"
+              prepend-icon="mdi-face"
+              color="purple"
+            ></v-text-field> -->
 
-          <v-text-field
-            label="Email"
-            prepend-icon="mdi-face"
-            color="secondary"
-            v-model="email"
-          ></v-text-field>
-          <v-text-field
-            label="Password"
-            prepend-icon="mdi-lock-outline"
-            color="secondary"
-            v-model="password"
-            type="password"
-          ></v-text-field>
-        </v-card-text>
-        <v-card-actions>
-          <v-row justify="center">
-            <v-btn type="submit" normal text color="primary"> Accedi </v-btn>
-          </v-row>
-        </v-card-actions>
-      </v-card>
-    </v-form>
+            <v-text-field
+              label="Email"
+              prepend-icon="mdi-face"
+              color="secondary"
+              v-model="email"
+            ></v-text-field>
+            <v-text-field
+              label="Password"
+              prepend-icon="mdi-lock-outline"
+              color="secondary"
+              v-model="password"
+              type="password"
+            ></v-text-field>
+          </v-card-text>
+          <v-card-actions>
+            <v-row justify="center">
+              <v-btn type="submit" normal text color="primary"> Accedi </v-btn>
+            </v-row>
+          </v-card-actions>
+        </v-card>
+      </v-form>
 
-    <v-snackbar v-model="error" timeout=3000 top right>
-      <v-icon color="primary">mdi-alert</v-icon>
-      Username o password errate
-      <v-btn color="white" icon @click="error = false">
-        <v-icon>mdi-close</v-icon>
-      </v-btn>
-    </v-snackbar>
+
+      <v-form v-else @submit="selectRegion($event)">
+        <v-card class="mx-auto mb-12 elevation-12" max-width="374">
+          <v-card-title class="secondary--text text-center">
+            Seleziona region
+          </v-card-title>
+          <v-card-text class="my-4">
+            <v-select
+          :items="regions"
+          label="Seleziona region"
+          v-model="region"
+          @change="selectRegion()"
+          item-text="name"
+        ></v-select>
+          </v-card-text>
+          <v-card-actions>
+            <v-row justify="center">
+              <v-btn type="submit" normal text color="primary"> Accedi </v-btn>
+            </v-row>
+          </v-card-actions>
+        </v-card>
+      </v-form>
+
+
+      <v-snackbar v-model="error" timeout=3000 top right>
+        <v-icon color="primary">mdi-alert</v-icon>
+        Username o password errate
+        <v-btn color="white" icon @click="error = false">
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </v-snackbar>
   </v-container>
 </template>
 
@@ -53,20 +77,22 @@ export default {
     return {
       email: "",
       password: "",
-      error: false
+      error: false,
+      regions: []
     };
   },
   created() {
     if (this.$auth.loggedIn) {
-      if(localStorage.getItem("region")) {
+      if (localStorage.getItem("region")) {
         this.goToHome();
       } else {
-        this.goToRegionSelection();
+        this.fetchRegions();
       }
     }
   },
   methods: {
-    async doLogin() {
+    async doLogin(e) {
+      e.preventDefault();
       try {
         let loginData = {
           email: this.email,
@@ -76,7 +102,7 @@ export default {
           client_secret: process.env.client_secret
         };
         let response = await this.$auth.loginWith("local", { data: loginData });
-        this.goToRegionSelection();
+        this.fetchRegions();
       } catch (e) {
         this.error = true;
       }
@@ -87,16 +113,32 @@ export default {
         path: "/home"
       });
     },
-    goToRegionSelection() {
+
+    async fetchRegions() {
+      this.regions = await Promise.resolve([
+          {
+            name: "Sardegna"
+          },
+          {
+            name: "Abruzzo"
+          }
+        ]);
+    },
+
+    selectRegion(e) {
+      e.preventDefault();
+      localStorage.setItem("region", this.region.name);
       this.$router.push({
-        path: "/region-selection"
+        path: "/home"
       });
     }
   }
 };
 </script>
 <style scoped>
-#login-container {
+#container {
+  width: 100%;
+  max-width: 100%;
   height: 100%;
 }
 </style>

@@ -17,18 +17,12 @@ class ApiServer {
         
         config = {...config, ...ApiServer.commonRequestConfig};
         try {
-            let response = "";
-            
-            if(localStorage.getItem("TEST_MODE")) {
-                let data = ApiServer.getData(endpoint);
-                return Promise.resolve(data);
-            } else {
-                response = await axios.get(ApiServer.base_url + endpoint, config);
-                if(response.status == 200) {
-                    return ApiServer.parseResponse(response);
-                } else if(response.status.toString().startsWith("4")) {
-                    window.location="login";
-                }
+           
+            let response = await axios.get(ApiServer.base_url + endpoint, config);
+            if(response.status == 200) {
+                return ApiServer.parseResponse(response);
+            } else if(response.status.toString().startsWith("4")) {
+                window.location="login";
             }
             
         } catch (e) {
@@ -80,8 +74,7 @@ class ApiServer {
         if(!response.data || response.status !== 200) {
             return null;
         }
-        return;
-        //return response.data.data ?? (response.data.content ?? response.data);
+        return response["data"];
     }
 
 

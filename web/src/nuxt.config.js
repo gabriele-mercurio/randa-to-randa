@@ -88,6 +88,7 @@ export default {
     redirect: {
       home: '/login',
     },
+    rewriteRedirects: false,
     strategies: {
       local: {
         endpoints: {

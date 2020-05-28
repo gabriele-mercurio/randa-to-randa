@@ -37,7 +37,7 @@ class MeController extends AbstractController
      *         type="object",
      *         @SWG\Property(property="email", type="string"),
      *         @SWG\Property(property="fullName", type="string"),
-     *         @SWG\Property(property="id", type="integer"),
+     *         @SWG\Property(property="id", type="string"),
      *         @SWG\Property(property="isAdmin", type="boolean")
      *     )
      * )

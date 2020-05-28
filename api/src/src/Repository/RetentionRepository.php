@@ -15,7 +15,9 @@ use Doctrine\ORM\EntityManagerInterface;
  */
 class RetentionRepository extends ServiceEntityRepository
 {
-    public const RETENTION_VALUE_TYPE = [];
+    public const NEW_MEMBER_VALUE_TYPE_APPROVED = 'APPR';
+    public const NEW_MEMBER_VALUE_TYPE_CONSUMPTIVE = 'CONS';
+    public const NEW_MEMBER_VALUE_TYPE_PROPOSED = 'PROP';
 
     /** @var EntityManagerInterface */
     protected $entityManager;

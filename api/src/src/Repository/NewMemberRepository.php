@@ -20,7 +20,9 @@ class NewMemberRepository extends ServiceEntityRepository
     public const NEW_MEMBER_TIMESLOT_T2 = 'T2';
     public const NEW_MEMBER_TIMESLOT_T3 = 'T3';
     public const NEW_MEMBER_TIMESLOT_T4 = 'T4';
-    public const NEW_MEMBER_VALUE_TYPE = [];
+    public const NEW_MEMBER_VALUE_TYPE_APPROVED = 'APPR';
+    public const NEW_MEMBER_VALUE_TYPE_CONSUMPTIVE = 'CONS';
+    public const NEW_MEMBER_VALUE_TYPE_PROPOSED = 'PROP';
 
     /** @var EntityManagerInterface */
     protected $entityManager;

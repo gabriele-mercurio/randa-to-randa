@@ -72,7 +72,7 @@ class ChapterController extends AbstractController
      *                 @SWG\Property(property="id", type="integer"),
      *                 @SWG\Property(property="fullName", type="string")
      *             ),
-     *             @SWG\Property(property="id", type="integer"),
+     *             @SWG\Property(property="id", type="string"),
      *             @SWG\Property(property="members", type="integer"),
      *             @SWG\Property(property="name", type="string"),
      *             @SWG\Property(property="suspDate", type="string", description="Suspension date"),

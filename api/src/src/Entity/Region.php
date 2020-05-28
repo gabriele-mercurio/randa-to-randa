@@ -56,7 +56,7 @@ class Region
     }
 
     /** Get the value of notes */
-    public function getNotes(): string
+    public function getNotes(): ?string
     {
         return $this->notes;
     }

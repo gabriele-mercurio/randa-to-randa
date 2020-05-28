@@ -59,15 +59,29 @@ class RegionController extends AbstractController
     public function getRegions(): Response
     {
         $user = $this->getUser();
+        $directors = [];
         $regions = [];
 
         foreach ($this->directorRepository->findByUser($user) as $director) {
-            $region = $director->getRegion();
-            if (!array_key_exists($region->getId(), $regions)) {
-                $regions[$region->getId()] = $region;
+            $directorId = $director->getId()->toString();
+            if (!array_Key_exists($directorId, $directors)) {
+                $directors[$directorId] = $director;
+            }
+            foreach ($this->directorRepository->findBySupervisor($director) as $subordinate) {
+                $subordinateId = $subordinate->getId()->toString();
+                if (!array_key_exists($subordinateId, $directors)) {
+                    $directors[$subordinateId] = $subordinate;
+                }
             }
         }
 
+        foreach ($directors as $director) {
+            $region = $director->getRegion();
+            $regionId = $region->getId()->toString();
+            if (!array_key_exists($regionId, $regions)) {
+                $regions[$regionId] = $region;
+            }
+        }
         $regions = array_values($regions);
 
         return new JsonResponse(array_map(function ($region) {

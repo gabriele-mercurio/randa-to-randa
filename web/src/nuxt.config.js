@@ -85,6 +85,9 @@ export default {
     client_secret: "FwPMFRlCa78GPQrO9zRWVRbjPCoPmaBQP254nx3g"
   },
   auth: {
+    redirect: {
+      home: '/login',
+    },
     strategies: {
       local: {
         endpoints: {

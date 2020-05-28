@@ -1,7 +1,7 @@
 <template>
   <v-container class="primary pa-0 ma-0" id="container">
       <h2 class="white--text text-center py-12">Accedi a Randa to Randa</h2>
-      <v-form v-if="!$auth.loggedIn" @submit="doLogin($event)">
+      <v-form v-if="!$auth.loggedIn" @submit.prevent="doLogin()">
         <v-card class="mx-auto mb-12 elevation-12" max-width="374">
           <v-card-title class="secondary--text text-center">
             Login
@@ -34,38 +34,33 @@
           </v-card-actions>
         </v-card>
       </v-form>
-
-
-      <v-form v-else @submit="selectRegion($event)">
+      <v-form v-else @submit.prevent="selectRegion()">
         <v-card class="mx-auto mb-12 elevation-12" max-width="374">
           <v-card-title class="secondary--text text-center">
             Seleziona region
           </v-card-title>
           <v-card-text class="my-4">
             <v-select
-          :items="regions"
-          label="Seleziona region"
-          v-model="region"
-          @change="selectRegion()"
-          item-text="name"
-        ></v-select>
+              :items="regions"
+              label="Seleziona region"
+              v-model="region"
+              @change="selectRegion()"
+              item-text="name"
+              return-object
+            ></v-select>
           </v-card-text>
-          <v-card-actions>
-            <v-row justify="center">
-              <v-btn type="submit" normal text color="primary"> Accedi </v-btn>
-            </v-row>
-          </v-card-actions>
         </v-card>
       </v-form>
 
+      <!-- Username o password errate -->
+        <!-- <v-snackbar v-model="error" timeout=3000 top right>
+          <v-icon color="primary">mdi-alert</v-icon>
+          Username o password errate
+          <v-btn color="white" icon @click="error = false">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </v-snackbar> -->
 
-      <v-snackbar v-model="error" timeout=3000 top right>
-        <v-icon color="primary">mdi-alert</v-icon>
-        Username o password errate
-        <v-btn color="white" icon @click="error = false">
-          <v-icon>mdi-close</v-icon>
-        </v-btn>
-      </v-snackbar>
   </v-container>
 </template>
 
@@ -78,7 +73,8 @@ export default {
       email: "",
       password: "",
       error: false,
-      regions: []
+      regions: [],
+      region: null
     };
   },
   created() {
@@ -91,8 +87,7 @@ export default {
     }
   },
   methods: {
-    async doLogin(e) {
-      e.preventDefault();
+    async doLogin() {
       try {
         let loginData = {
           email: this.email,
@@ -102,6 +97,8 @@ export default {
           client_secret: process.env.client_secret
         };
         let response = await this.$auth.loginWith("local", { data: loginData });
+        let token = localStorage.getItem("auth._token.local");
+        ApiServer.setToken(token);
         this.fetchRegions();
       } catch (e) {
         this.error = true;
@@ -110,23 +107,15 @@ export default {
 
     goToHome() {
       this.$router.push({
-        path: "/home"
+        path: "/chapters"
       });
     },
 
     async fetchRegions() {
-      this.regions = await Promise.resolve([
-          {
-            name: "Sardegna"
-          },
-          {
-            name: "Abruzzo"
-          }
-        ]);
+      this.regions = await ApiServer.get("regions");
     },
 
-    selectRegion(e) {
-      e.preventDefault();
+    selectRegion() {
       localStorage.setItem("region", this.region.name);
       this.$router.push({
         path: "/home"

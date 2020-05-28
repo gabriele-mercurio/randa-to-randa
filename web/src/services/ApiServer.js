@@ -2,10 +2,18 @@ import axios from 'axios'
 
 class ApiServer {
     static commonRequestConfig = {
-        'Content-Type': 'multipart/form-data'
+        'headers': {
+            'Content-Type': 'multipart/form-data'
+        }
     };
+    
     static base_url;
-    static async get(endpoint, body = {}, config) {
+
+    static setToken(token) {
+        ApiServer.commonRequestConfig["headers"]["Authorization"] = token;
+    }
+    
+    static async get(endpoint, config) {
         
         config = {...config, ...ApiServer.commonRequestConfig};
         try {
@@ -15,7 +23,7 @@ class ApiServer {
                 let data = ApiServer.getData(endpoint);
                 return Promise.resolve(data);
             } else {
-                response = await axios.get(ApiServer.base_url + endpoint, body, config);
+                response = await axios.get(ApiServer.base_url + endpoint, config);
                 if(response.status == 200) {
                     return ApiServer.parseResponse(response);
                 } else if(response.status.toString().startsWith("4")) {
@@ -46,7 +54,6 @@ class ApiServer {
         config = {...config, ...ApiServer.commonRequestConfig};
         try {
             let response = await axios.post(ApiServer.base_url + endpoint, body, config );
-            debugger;
             return ApiServer.parseResponse(response);
         } catch (e) {
             return null;

@@ -17,6 +17,14 @@
               </v-list-item-icon>
               <v-list-item-title>Account</v-list-item-title>
             </v-list-item>
+
+            <v-list-item @click="changeRegion()">
+              <v-list-item-icon>
+                <v-icon>mdi-account</v-icon>
+              </v-list-item-icon>
+              <v-list-item-title>Cambia region</v-list-item-title>
+            </v-list-item>
+
           </v-list-item-group>
         </v-list>
       </v-navigation-drawer>
@@ -63,10 +71,19 @@ export default {
   methods: {
     getRegion() {
       return localStorage.getItem("region");
+    },
+    changeRegion() {
+      localStorage.removeItem("region");
+      this.$router.push({
+        path: "/login"
+      });
     }
   },
   created() {
-    localStorage.setItem("TEST_MODE", true);
+    
+    if(this.$auth.loggedIn) {
+      ApiServer.setToken(localStorage.getItem("auth._token.local"))
+    }
     ApiServer.base_url = process.env.base_url + "/";
   }
 };

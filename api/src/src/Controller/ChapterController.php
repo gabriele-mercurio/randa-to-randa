@@ -106,11 +106,6 @@ class ChapterController extends AbstractController
         $user = $this->getUser();
         $role = $request->get("role", null);
         $code = Response::HTTP_OK;
-        // return new JsonResponse([
-        //     'user' => $this->userFormatter->formatFull($user),
-        //     'role' => $role,
-        //     'code' => $code
-        // ]);
 
         if (!is_null($role) && !in_array($role, [
             $this->directorRepository::DIRECTOR_ROLE_AREA,

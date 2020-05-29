@@ -53,9 +53,9 @@ class User implements UserInterface
         $this->id = Uuid::uuid4();
     }
 
-    public function getId(): UuidInterface
+    public function getId(): string
     {
-        return $this->id;
+        return $this->id->toString();
     }
 
     public function getFirstName(): ?string

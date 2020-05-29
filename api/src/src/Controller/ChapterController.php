@@ -2,10 +2,10 @@
 
 namespace App\Controller;
 
-use App\Entity\Chapter;
 use App\Entity\Region;
 use App\Formatter\ChapterFormatter;
-use App\Formatter\UserFormatter;
+use App\Formatter\DirectorFormatter;
+use App\Formatter\RegionFormatter;
 use App\Repository\ChapterRepository;
 use App\Repository\DirectorRepository;
 use App\Util\Util;
@@ -26,22 +26,27 @@ class ChapterController extends AbstractController
     /** @var ChapterRepository */
     private $chapterRepository;
 
+    /** @var DirectorFormatter */
+    private $directorFormatter;
+
     /** @var DirectorRepository */
     private $directorRepository;
 
-    /** @var UserFormatter */
-    private $userFormatter;
+    /** @var RegionFormatter */
+    private $regionFormatter;
 
     public function __construct(
         ChapterFormatter $chapterFormatter,
         ChapterRepository $chapterRepository,
+        DirectorFormatter $directorFormatter,
         DirectorRepository $directorRepository,
-        UserFormatter $userFormatter
+        RegionFormatter $regionFormatter
     ) {
         $this->chapterFormatter = $chapterFormatter;
         $this->chapterRepository = $chapterRepository;
+        $this->directorFormatter = $directorFormatter;
         $this->directorRepository = $directorRepository;
-        $this->userFormatter = $userFormatter;
+        $this->regionFormatter = $regionFormatter;
     }
 
     /**
@@ -71,26 +76,32 @@ class ChapterController extends AbstractController
      *             @SWG\Property(
      *                 property="chapterLaunch",
      *                 type="object",
-     *                 @SWG\Property(property="prev", type="string", description="Expected date"),
-     *                 @SWG\Property(property="actual", type="string", description="Actual date")
+     *                 @SWG\Property(property="actual", type="string", description="Actual date"),
+     *                 @SWG\Property(property="prev", type="string", description="Expected date")
      *             ),
      *             @SWG\Property(property="closureDate", type="string", description="Closure date"),
      *             @SWG\Property(
      *                 property="coreGroupLaunch",
      *                 type="object",
-     *                 @SWG\Property(property="prev", type="string", description="Expected date"),
-     *                 @SWG\Property(property="actual", type="string", description="Actual date")
+     *                 @SWG\Property(property="actual", type="string", description="Actual date"),
+     *                 @SWG\Property(property="prev", type="string", description="Expected date")
      *             ),
      *             @SWG\Property(property="currentState", type="string", description="Available values: PROJECT, CORE_GROUP or CHAPTER"),
      *             @SWG\Property(
      *                 property="director",
      *                 type="object",
-     *                 @SWG\Property(property="id", type="integer"),
-     *                 @SWG\Property(property="fullName", type="string")
+     *                 @SWG\Property(property="fullName", type="string"),
+     *                 @SWG\Property(property="id", type="integer")
      *             ),
      *             @SWG\Property(property="id", type="string"),
      *             @SWG\Property(property="members", type="integer"),
      *             @SWG\Property(property="name", type="string"),
+     *             @SWG\Property(
+     *                 property="resume",
+     *                 type="object",
+     *                 @SWG\Property(property="actual", type="string", description="Actual date"),
+     *                 @SWG\Property(property="prev", type="string", description="Expected date")
+     *             ),
      *             @SWG\Property(property="suspDate", type="string", description="Suspension date"),
      *             @SWG\Property(property="warning", type="string", description="Available values: NULL, 'CORE_GROUP' or 'CHAPTER'")
      *         )
@@ -136,12 +147,12 @@ class ChapterController extends AbstractController
                 break;
                 case $this->directorRepository::DIRECTOR_ROLE_AREA:
                     $directors = [
-                        $director->getId()->toString() => $director
+                        $director->getId() => $director
                     ];
                     foreach ($this->directorRepository->findBy([
                         'supervisor' => $director
                     ]) as $d) {
-                        $id = $d->getId()->toString();
+                        $id = $d->getId();
                         if (!array_key_exists($id, $directors)) {
                             $directors[$id] = $d;
                         }
@@ -154,7 +165,7 @@ class ChapterController extends AbstractController
                             'director' => $d,
                             'region' => $region
                         ]) as $c) {
-                            $id = $c->getId()->toString();
+                            $id = $c->getId();
                             if (!array_key_exists($id, $chapters)) {
                                 $chapters[$id] = $c;
                             }
@@ -193,4 +204,71 @@ class ChapterController extends AbstractController
             return new JsonResponse(null, $code);
         }
     }
+
+    /**
+     * Get chapters
+     *
+     * @Route(path="/{id}/chapter", name="create_chapter", methods={"POST"})
+     *
+     * @SWG\Parameter(
+     *      name="id",
+     *      in="path",
+     *      type="string",
+     *      description="The region"
+     * )
+     * @SWG\Parameter(
+     *      name="role",
+     *      in="query",
+     *      type="string",
+     *      description="Optional parameter to get data relative to the specified given role"
+     * )
+     * @SWG\Parameter(
+     *
+     * )
+     * @SWG\Response(
+     *     response=200,
+     *     description="Returns an array of Chapter objects",
+     *     @SWG\Schema(
+     *         type="array",
+     *         @SWG\Items(
+     *             type="object",
+     *             @SWG\Property(
+     *                 property="chapterLaunch",
+     *                 type="object",
+     *                 @SWG\Property(property="actual", type="string", description="Actual date"),
+     *                 @SWG\Property(property="prev", type="string", description="Expected date")
+     *             ),
+     *             @SWG\Property(property="closureDate", type="string", description="Closure date"),
+     *             @SWG\Property(
+     *                 property="coreGroupLaunch",
+     *                 type="object",
+     *                 @SWG\Property(property="actual", type="string", description="Actual date"),
+     *                 @SWG\Property(property="prev", type="string", description="Expected date")
+     *             ),
+     *             @SWG\Property(property="currentState", type="string", description="Available values: PROJECT, CORE_GROUP or CHAPTER"),
+     *             @SWG\Property(
+     *                 property="director",
+     *                 type="object",
+     *                 @SWG\Property(property="fullName", type="string"),
+     *                 @SWG\Property(property="id", type="integer")
+     *             ),
+     *             @SWG\Property(property="id", type="string"),
+     *             @SWG\Property(property="members", type="integer"),
+     *             @SWG\Property(property="name", type="string"),
+     *             @SWG\Property(
+     *                 property="resume",
+     *                 type="object",
+     *                 @SWG\Property(property="actual", type="string", description="Actual date"),
+     *                 @SWG\Property(property="prev", type="string", description="Expected date")
+     *             )
+     *             @SWG\Property(property="suspDate", type="string", description="Suspension date"),
+     *             @SWG\Property(property="warning", type="string", description="Available values: NULL, 'CORE_GROUP' or 'CHAPTER'")
+     *         )
+     *     )
+     * )
+     * @SWG\Tag(name="Chapters")
+     * @Security(name="Bearer")
+     *
+     * @return Response
+     */
 }

@@ -41,9 +41,9 @@ class Strategy
     }
 
     /** Get the value of id */
-    public function getId(): UuidInterface
+    public function getId(): string
     {
-        return $this->id;
+        return $this->id->toString();
     }
 
     /** Get the value of target */

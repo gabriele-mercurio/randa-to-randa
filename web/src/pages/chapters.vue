@@ -86,7 +86,7 @@
     <v-dialog v-model="showEditChapter" width="500" :scrollable=false>
       <EditChapter
         :show="showEditChapter"
-        :editChapter = "editChapter"
+        :editChapter.sync = "editChapter"
         v-on:close="showEditChapter = false"
       />
     </v-dialog>
@@ -96,7 +96,7 @@
       bottom
       right
       color="primary"
-      @click="showEditChapter = true"
+      @click="newChapter()"
     >
       <v-icon>mdi-plus</v-icon>
     </v-btn>
@@ -137,13 +137,13 @@ export default {
       this.chapters = await Promise.resolve([
         {
           chapterLaunch: {
-            prev: "01/02/2008",
+            prev: "2008-03",
             actual: null
           },
           closureDate: "string",
           coreGroupLaunch: {
-            prev: "09/07/2020",
-            actual: "09/07/2020"
+            prev: "2020-09",
+            actual: "2020-12"
           },
           currentState: "PROJECT",
           director: {
@@ -158,13 +158,13 @@ export default {
         },
         {
           chapterLaunch: {
-            prev: "01/02/2018",
-            actual: "09/07/2020"
+            prev: "2018-04",
+            actual: "2020-05"
           },
           closureDate: null,
           coreGroupLaunch: {
-            prev: "09/07/2020",
-            actual: "09/07/2020"
+            prev: "2020-08",
+            actual: "2020-07"
           },
           currentState: "PROJECT",
           director: {
@@ -195,7 +195,13 @@ export default {
 
     isPrev(item) {
       return item.actual == null;
+    },
+
+    newChapter() {
+      this.editChapter = null;
+      this.showEditChapter = true;
     }
+
   }
 };
 </script>

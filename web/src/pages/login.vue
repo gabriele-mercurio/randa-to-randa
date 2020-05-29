@@ -98,7 +98,6 @@ export default {
         let response = await this.$auth.loginWith("local", { data: loginData });
         let token = localStorage.getItem("auth._token.local");
         ApiServer.setToken(token);
-        debugger;
         this.fetchRegions();
       } catch (e) {
         this.error = true;
@@ -117,7 +116,7 @@ export default {
 
     selectRegion() {
       localStorage.setItem("region", this.region.name);
-      debugger;
+      ;
       this.goToHome();
     }
   }

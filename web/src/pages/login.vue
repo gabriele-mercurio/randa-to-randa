@@ -77,7 +77,7 @@ export default {
   },
   created() {
     if (this.$auth.loggedIn) {
-      if (localStorage.getItem("region")) {
+      if (this.$store.getters["getRegion"]) {
         this.goToHome();
       } else {
         this.fetchRegions();
@@ -115,8 +115,7 @@ export default {
     },
 
     selectRegion() {
-      localStorage.setItem("region", this.region.name);
-      ;
+      this.$store.commit("setRegion", this.region)
       this.goToHome();
     }
   }

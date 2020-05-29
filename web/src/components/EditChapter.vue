@@ -11,13 +11,13 @@
           required
           prepend-icon="mdi-tag"
         ></v-text-field>
-        <v-select
+        <!-- <v-select
           :items="states"
           label="Stato"
           v-model="chapter.currentState"
           required
           prepend-icon="mdi-progress-check"
-        ></v-select>
+        ></v-select> -->
         <MonthPicker
           :defLabel="'Data lancio core group'"
           :defDate.sync="chapter.coreGroupLaunchPrev"
@@ -107,10 +107,10 @@ export default {
   },
   methods: {
     getEditMode() {
-      return this.editMode ? "Modifica" : "Crea";
+      return this.editChapter ? "Modifica" : "Crea";
     },
     fetchUsers() {
-      let region = localStorage.getItem("region");
+      let region = this.$state.getters["getRegion"];
       //todo
       //this.users = ApiServer.get("users?region=" + region);
     },

@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <nav v-if="$auth.loggedIn && getRegion()">
+    <nav v-if="$auth.loggedIn && getRegionName()">
       <v-navigation-drawer v-model="drawer" absolute temporary right>
         <v-list nav dense>
           <v-list-item-group active-class="secondary--text text--accent-4">
@@ -24,7 +24,6 @@
               </v-list-item-icon>
               <v-list-item-title>Cambia region</v-list-item-title>
             </v-list-item>
-
           </v-list-item-group>
         </v-list>
       </v-navigation-drawer>
@@ -48,7 +47,9 @@
         </v-btn>
         <v-spacer></v-spacer>
         <v-toolbar-title class="d-flex flex-row align-center">
-          <div>{{ $auth.user.fullName }} <small>({{getRegion()}})</small></div>
+          <div>
+            {{ $auth.user.fullName }} <small>({{ getRegionName() }})</small>
+          </div>
           <v-btn icon @click="drawer = true" class="white--text">
             <v-icon>mdi-account</v-icon></v-btn
           ></v-toolbar-title
@@ -65,26 +66,35 @@ import ApiServer from "../services/ApiServer";
 export default {
   data() {
     return {
-      drawer: false
+      drawer: false,
+      region: this.$store.getters["getRegion"]
     };
   },
   methods: {
-    getRegion() {
-      return localStorage.getItem("region");
-    },
     changeRegion() {
       localStorage.removeItem("region");
       this.$router.push({
         path: "/login"
       });
+    },
+    getRegionName() {
+      return this.$store.getters["getRegion"] ? this.$store.getters["getRegion"].name : null;
     }
   },
   created() {
-    
-    if(this.$auth.loggedIn) {
-      ApiServer.setToken(localStorage.getItem("auth._token.local"))
+    if (this.$auth.loggedIn) {
+      ApiServer.setToken(localStorage.getItem("auth._token.local"));
     }
     ApiServer.base_url = process.env.base_url + "/";
+
+    this.$store.watch(
+      state => {
+        return this.$store.state.region; // could also put a Getter here
+      },
+      (newValue, oldValue) => {
+        this.region = newValue;
+      }
+    );
   }
 };
 </script>

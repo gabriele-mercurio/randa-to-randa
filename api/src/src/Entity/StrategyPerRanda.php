@@ -20,7 +20,7 @@ class StrategyPerRanda
      */
     private $id;
 
-    /** @ORM\ManyToOne(targetEntity="Target", cascade={"all"}, fetch="LAZY") */
+    /** @ORM\ManyToOne(targetEntity="Randa", cascade={"all"}, fetch="LAZY") */
     private $randa;
 
     /** @ORM\ManyToOne(targetEntity="Strategy", cascade={"all"}, fetch="LAZY") */
@@ -37,9 +37,9 @@ class StrategyPerRanda
     }
 
     /** Get the value of id */
-    public function getId(): UuidInterface
+    public function getId(): string
     {
-        return $this->id;
+        return $this->id->toString();
     }
 
     /** Get the value of randa */

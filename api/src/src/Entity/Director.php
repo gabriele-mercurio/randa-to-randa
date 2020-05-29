@@ -67,9 +67,9 @@ class Director
     }
 
     /** Get the value of id */
-    public function getId(): UuidInterface
+    public function getId(): string
     {
-        return $this->id;
+        return $this->id->toString();
     }
 
     /** Get the value of user */
@@ -99,13 +99,13 @@ class Director
     }
 
     /** Get the value of supervisor */
-    public function getSupervisor(): Director
+    public function getSupervisor(): ?Director
     {
         return $this->supervisor;
     }
 
     /** Set the value of supervisor */
-    public function setSupervisor(Director $supervisor): self
+    public function setSupervisor(?Director $supervisor): self
     {
         $this->supervisor = $supervisor;
         return $this;

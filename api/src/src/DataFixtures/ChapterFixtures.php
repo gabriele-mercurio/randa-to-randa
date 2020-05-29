@@ -4,6 +4,8 @@ namespace App\DataFixtures;
 
 use App\Entity\Chapter;
 use App\Repository\ChapterRepository;
+use App\Repository\DirectorRepository;
+use App\Util\Util;
 use DateTime;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
@@ -16,10 +18,15 @@ class ChapterFixtures extends Fixture implements DependentFixtureInterface
     /** @var ChapterRepository */
     private $chapterRepository;
 
+    /** @var DirectorRepository */
+    private $directorRepository;
+
     public function __construct(
-        ChapterRepository $chapterRepository
+        ChapterRepository $chapterRepository,
+        DirectorRepository $directorRepository
     ) {
         $this->chapterRepository = $chapterRepository;
+        $this->directorRepository = $directorRepository;
     }
 
     public function getDependencies()
@@ -70,8 +77,14 @@ class ChapterFixtures extends Fixture implements DependentFixtureInterface
                 $closureDate = mt_rand(1, 5) == 1 ? array_shift($dates) : null;
             }
 
-            $director = $this->getReference("Director_" . mt_rand(1, DirectorFixtures::CREATED_QUANTITY));
-            $region = $this->getReference("Region_" . mt_rand(1, RegionFixtures::CREATED_QUANTITY));
+            do {
+                $region = $this->getReference("Region_" . mt_rand(1, RegionFixtures::CREATED_QUANTITY));
+                $directors = $this->directorRepository->findBy([
+                    'region' => $region,
+                    'role'   => $this->directorRepository::DIRECTOR_ROLE_ASSISTANT
+                ]);
+            } while (empty($directors));
+            $director = Util::arrayGetValue($directors, mt_rand(1, count($directors)) -1);
 
             $chapter = new Chapter();
             $chapter->setActualLaunchChatperDate($actualLaunchChatperDate);

@@ -28,12 +28,12 @@ class ChapterFormatter
     {
         $details = [
             'chapterLaunch'   => [
-                'actual' => $chapter->getActualLaunchChatperDate()->format("Y-m-d"),
+                'actual' => $chapter->getActualLaunchChatperDate() ? $chapter->getActualLaunchChatperDate()->format("Y-m-d") : null,
                 'prev'   => $chapter->getPrevLaunchChatperDate()->format("Y-m-d")
             ],
-            'closureDate'     => $chapter->getClosureDate()->format("Y-m-d"),
+            'closureDate'     => $chapter->getClosureDate() ? $chapter->getClosureDate()->format("Y-m-d") : null,
             'coreGroupLaunch' => [
-                'actual' => $chapter->getActualLaunchCoregroupDate()->format("Y-m-d"),
+                'actual' => $chapter->getActualLaunchCoregroupDate() ? $chapter->getActualLaunchCoregroupDate()->format("Y-m-d") : null,
                 'prev'   => $chapter->getPrevLaunchCoregroupDate()->format("Y-m-d")
             ],
             'currentState'    => $chapter->getCurrentState(),
@@ -41,7 +41,11 @@ class ChapterFormatter
             'id'              => $chapter->getId(),
             'members'         => $chapter->getMembers(),
             'name'            => $chapter->getName(),
-            'suspDate'        => $chapter->getSuspDate()->format("Y-m-d")
+            'resume'          => [
+                'actual' => $chapter->getActualResumeDate() ? $chapter->getActualResumeDate()->format("Y-m-d") : null,
+                'prev'   => $chapter->getPrevResumeDate() ? $chapter->getPrevResumeDate()->format("Y-m-d") : null
+            ],
+            'suspDate'        => $chapter->getSuspDate() ? $chapter->getSuspDate()->format("Y-m-d") : null
         ];
 
         return $details;

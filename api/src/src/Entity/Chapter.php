@@ -45,25 +45,25 @@ class Chapter
     /** @ORM\Column(name="prev_launch_coregroup_date", type="date") */
     private $prevLaunchCoregroupDate;
 
-    /** @ORM\Column(name="actual_launch_coregroup_date", type="date") */
+    /** @ORM\Column(name="actual_launch_coregroup_date", type="date", nullable=true) */
     private $actualLaunchCoregroupDate;
 
     /** @ORM\Column(name="prev_launch_chatper_date", type="date") */
     private $prevLaunchChatperDate;
 
-    /** @ORM\Column(name="actual_launch_chatper_date", type="date") */
+    /** @ORM\Column(name="actual_launch_chatper_date", type="date", nullable=true) */
     private $actualLaunchChatperDate;
 
-    /** @ORM\Column(name="susp_date", type="date") */
+    /** @ORM\Column(name="susp_date", type="date", nullable=true) */
     private $suspDate;
 
-    /** @ORM\Column(name="prev_resume_date", type="date") */
+    /** @ORM\Column(name="prev_resume_date", type="date", nullable=true) */
     private $prevResumeDate;
 
-    /** @ORM\Column(name="actual_resume_date", type="date") */
+    /** @ORM\Column(name="actual_resume_date", type="date", nullable=true) */
     private $actualResumeDate;
 
-    /** @ORM\Column(name="closure_date", type="date") */
+    /** @ORM\Column(name="closure_date", type="date", nullable=true) */
     private $closureDate;
 
     /**
@@ -135,117 +135,117 @@ class Chapter
     }
 
     /** Get the value of members */
-    public function getMembers(): int
+    public function getMembers(): ?int
     {
         return (int) $this->members;
     }
 
     /** Set the value of members */
-    public function setMembers(int $members): self
+    public function setMembers(?int $members): self
     {
         $this->members = $members;
         return $this;
     }
 
     /** Get the value of prevLaunchCoregroupDate */
-    public function getPrevLaunchCoregroupDate(): DateTime
+    public function getPrevLaunchCoregroupDate(): ?DateTime
     {
         return $this->prevLaunchCoregroupDate;
     }
 
     /** Set the value of prevLaunchCoregroupDate */
-    public function setPrevLaunchCoregroupDate(DateTime $prevLaunchCoregroupDate): self
+    public function setPrevLaunchCoregroupDate(?DateTime $prevLaunchCoregroupDate): self
     {
         $this->prevLaunchCoregroupDate = $prevLaunchCoregroupDate;
         return $this;
     }
 
     /** Get the value of actualLaunchCoregroupDate */
-    public function getActualLaunchCoregroupDate(): DateTime
+    public function getActualLaunchCoregroupDate(): ?DateTime
     {
         return $this->actualLaunchCoregroupDate;
     }
 
     /** Set the value of actualLaunchCoregroupDate */
-    public function setActualLaunchCoregroupDate(DateTime $actualLaunchCoregroupDate): self
+    public function setActualLaunchCoregroupDate(?DateTime $actualLaunchCoregroupDate): self
     {
         $this->actualLaunchCoregroupDate = $actualLaunchCoregroupDate;
         return $this;
     }
 
     /** Get the value of prevLaunchChatperDate */
-    public function getPrevLaunchChatperDate(): DateTime
+    public function getPrevLaunchChatperDate(): ?DateTime
     {
         return $this->prevLaunchChatperDate;
     }
 
     /** Set the value of prevLaunchChatperDate */
-    public function setPrevLaunchChatperDate(DateTime $prevLaunchChatperDate): self
+    public function setPrevLaunchChatperDate(?DateTime $prevLaunchChatperDate): self
     {
         $this->prevLaunchChatperDate = $prevLaunchChatperDate;
         return $this;
     }
 
     /** Get the value of actualLaunchChatperDate */
-    public function getActualLaunchChatperDate(): DateTime
+    public function getActualLaunchChatperDate(): ?DateTime
     {
         return $this->actualLaunchChatperDate;
     }
 
     /** Set the value of actualLaunchChatperDate */
-    public function setActualLaunchChatperDate(DateTime $actualLaunchChatperDate): self
+    public function setActualLaunchChatperDate(?DateTime $actualLaunchChatperDate): self
     {
         $this->actualLaunchChatperDate = $actualLaunchChatperDate;
         return $this;
     }
 
     /** Get the value of suspDate */
-    public function getSuspDate(): DateTime
+    public function getSuspDate(): ?DateTime
     {
         return $this->suspDate;
     }
 
     /** Set the value of suspDate */
-    public function setSuspDate(DateTime $suspDate): self
+    public function setSuspDate(?DateTime $suspDate): self
     {
         $this->suspDate = $suspDate;
         return $this;
     }
 
     /** Get the value of prevResumeDate */
-    public function getPrevResumeDate(): DateTime
+    public function getPrevResumeDate(): ?DateTime
     {
         return $this->prevResumeDate;
     }
 
     /** Set the value of prevResumeDate */
-    public function setPrevResumeDate(DateTime $prevResumeDate): self
+    public function setPrevResumeDate(?DateTime $prevResumeDate): self
     {
         $this->prevResumeDate = $prevResumeDate;
         return $this;
     }
 
     /** Get the value of actualResumeDate */
-    public function getActualResumeDate(): DateTime
+    public function getActualResumeDate(): ?DateTime
     {
         return $this->actualResumeDate;
     }
 
     /** Set the value of actualResumeDate */
-    public function setActualResumeDate(DateTime $actualResumeDate): self
+    public function setActualResumeDate(?DateTime $actualResumeDate): self
     {
         $this->actualResumeDate = $actualResumeDate;
         return $this;
     }
 
     /** Get the value of closureDate */
-    public function getClosureDate(): DateTime
+    public function getClosureDate(): ?DateTime
     {
         return $this->closureDate;
     }
 
     /** Set the value of closureDate */
-    public function setClosureDate(DateTime $closureDate): self
+    public function setClosureDate(?DateTime $closureDate): self
     {
         $this->closureDate = $closureDate;
         return $this;

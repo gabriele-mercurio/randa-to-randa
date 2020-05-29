@@ -3,31 +3,96 @@
 namespace App\DataFixtures;
 
 use App\Entity\Director;
+use App\Repository\DirectorRepository;
 use Doctrine\Bundle\FixturesBundle\Fixture;
+use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
 
-class DirectorFixtures extends Fixture
+class DirectorFixtures extends Fixture implements DependentFixtureInterface
 {
-    const CREATED_QUANTITY = 50;
+    const CREATED_QUANTITY = 60;
+
+    /** @var DirectorRepository */
+    private $directorRepository;
+
+    public function __construct(
+        DirectorRepository $directorRepository
+    ) {
+        $this->directorRepository = $directorRepository;
+    }
+
+    public function getDependencies()
+    {
+        return [
+            UserFixtures::class,
+            RegionFixtures::class
+        ];
+    }
 
     public function load(ObjectManager $manager)
     {
+        $areaDirectors = $assistantDirectors = [];
+
         // Create some directors
-        // for ($i = 1; $i <= static::CREATED_QUANTITY; $i++) {
-        //     $director = new Director();
-        //     $director->setName("Chapter $i");
-        //     $director->setCurrentState("PROJECT");
+        for ($i = 1; $i <= static::CREATED_QUANTITY; $i++) {
+            $region = $this->getReference("Region_" . mt_rand(1, RegionFixtures::CREATED_QUANTITY));
+            $user = $this->getReference("User_" . mt_rand(1, UserFixtures::CREATED_QUANTITY));
 
-        //     $region = $this->getReference("Region_" . mt_rand(1, RegionFixtures::CREATED_QUANTITY));
-        //     $director = $this->getReference("Director_" . mt_rand(1, DirectorFixtures::CREATED_QUANTITY));
+            $rand = mt_rand(1, 6);
+            switch (true) {
+                case $rand == 1:
+                    $role = $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE;
+                break;
+                case $rand > 1 && $rand < 4:
+                    $role = $this->directorRepository::DIRECTOR_ROLE_AREA;
+                break;
+                case $rand >= 4:
+                    $role = $this->directorRepository::DIRECTOR_ROLE_ASSISTANT;
+                break;
+            }
 
-        //     $chapter->setDirector($director);
-        //     $chapter->setRegion($region);
+            $director = new Director();
+            $director->setFixedPercentage(0);
+            $director->setGreenLightPercentage(25);
+            $director->setGreyLightPercentage(10);
+            $director->setLaunchPercentage(25);
+            $director->setPayType(mt_rand(1, 2) == 1 ? $this->directorRepository::DIRECTOR_PAY_TYPE_ANNUAL : $this->directorRepository::DIRECTOR_PAY_TYPE_MONTHLY);
+            $director->setRedLightPercentage(15);
+            $director->setRegion($region);
+            $director->setRole($role);
+            $director->setUser($user);
+            $director->setYellowLightPercentage(20);
 
-        //     $manager->persist($chapter);
-        //     $this->addReference("Chapter_$i", $chapter);
-        // }
+            $manager->persist($director);
+            $this->addReference("Director_$i", $director);
 
-        // $manager->flush();
+            if ($role == $this->directorRepository::DIRECTOR_ROLE_AREA) {
+                $areaDirectors[] = $director;
+            } elseif ($role == $this->directorRepository::DIRECTOR_ROLE_ASSISTANT) {
+                $assistantDirectors[] = $director;
+            }
+        }
+
+        static::assignAreaDirectors($areaDirectors, $assistantDirectors);
+
+        $manager->flush();
+    }
+
+    private static function assignAreaDirectors(&$areaDirectors, &$assistantDirectors) {
+        shuffle($areaDirectors);
+        shuffle($assistantDirectors);
+        $canContinue = true;
+        foreach ($areaDirectors as $supervisor) {
+            if (!!count($assistantDirectors)) {
+                $director = array_shift($assistantDirectors);
+                $director->setSupervisor($supervisor);
+            } else {
+                $canContinue = false;
+                break;
+            }
+        }
+        if ($canContinue) {
+            static::assignAreaDirectors($areaDirectors, $assistantDirectors);
+        }
     }
 }

@@ -6,6 +6,7 @@ use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * @method User|null find($id, $lockMode = null, $lockVersion = null)
@@ -22,6 +23,40 @@ class UserRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, User::class);
         $this->entityManager = $entityManager;
+    }
+
+    /**
+     * If is null $actAs, returns $user as user and response 200 OK as code otherwise if $user
+     * is admin and $actAs is a valid user id, returns $actAs as user and response 200 OK as code.
+     * If $user is not admin or $actAs is not a valid user, returns $user as user and respectively
+     * response 403 FORBIDDEN or 404 NOT FOUND as code.
+     *
+     * @param User $user
+     * @param string|null $actAs
+     *
+     * @return array
+     */
+    public function checkUser(User $user, ?string $actAs): array
+    {
+        $response = [
+            'code' => Response::HTTP_OK,
+            'user' => $user
+        ];
+
+        if (!is_null($actAs)) {
+            if (!$user->isAdmin()) {
+                $response['code'] = Response::HTTP_FORBIDDEN;
+            } else {
+                $actAs = $this->find($actAs);
+                if (is_null($actAs)) {
+                    $response['code'] = Response::HTTP_NOT_FOUND;
+                } else {
+                    $response['user'] = $actAs;
+                }
+            }
+        }
+
+        return $response;
     }
 
     /**

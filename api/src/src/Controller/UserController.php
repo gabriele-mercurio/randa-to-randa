@@ -55,7 +55,7 @@ class UserController extends AbstractController
      *          )
      *      )
      * )
-     * @SWG\Tag(name="Admin\Users")
+     * @SWG\Tag(name="Users")
      * @Security(name="Bearer")
      */
     public function listUsers()
@@ -109,7 +109,7 @@ class UserController extends AbstractController
      *          @SWG\Property(property="id", type="string")
      *      )
      * )
-     * @SWG\Tag(name="Admin\Users")
+     * @SWG\Tag(name="Users")
      * @Security(name="Bearer")
      */
     public function createUser(Request $request)

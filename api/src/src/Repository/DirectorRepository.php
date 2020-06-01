@@ -24,6 +24,7 @@ class DirectorRepository extends ServiceEntityRepository
     public const DIRECTOR_ROLE_AREA = 'AREA';
     public const DIRECTOR_ROLE_ASSISTANT = 'ASSISTANT';
     public const DIRECTOR_ROLE_EXECUTIVE = 'EXECUTIVE';
+    public const DIRECTOR_ROLE_NATIONAL = 'NATIONAL';
 
     /** @var EntityManagerInterface */
     protected $entityManager;
@@ -47,7 +48,7 @@ class DirectorRepository extends ServiceEntityRepository
     public function checkDirectorRole(User $user, Region $region, ?string $role = null): array
     {
         $response = [
-            'errorCode' => Response::HTTP_OK,
+            'code' => Response::HTTP_OK,
             'director' => null
         ];
 
@@ -63,27 +64,25 @@ class DirectorRepository extends ServiceEntityRepository
         $directors = $this->findBy($params);
 
         if (empty($directors)) {
-            $response['errorCode'] = Response::HTTP_FORBIDDEN;
+            $response['code'] = Response::HTTP_FORBIDDEN;
         } else {
             if (count($directors) > 1) {
-                if (!is_null($role)) {
-                    $directors = array_filter($directors, function($d) use($role) {
-                        return $d->getRole() == $role;
-                    });
-                } else {
-                    $maxFoundedRole = $this->directorRepository::DIRECTOR_ROLE_ASSISTANT;
-                    foreach ($directors as $director) {
-                        if ($director->getRole() == $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE) {
-                            $maxFoundedRole = $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE;
-                        } elseif ($director->getRole() == $this->directorRepository::DIRECTOR_ROLE_AREA && $maxFoundedRole == $this->directorRepository::DIRECTOR_ROLE_ASSISTANT) {
-                            $maxFoundedRole = $this->directorRepository::DIRECTOR_ROLE_AREA;
-                        }
+                $maxFoundedRole = $this->directorRepository::DIRECTOR_ROLE_ASSISTANT;
+                foreach ($directors as $director) {
+                    $role = $director->getRole();
+                    if ($role == $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE) {
+                        $maxFoundedRole = $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE;
+                        break;
                     }
-                    $directors = array_filter($directors, function ($d) use($maxFoundedRole) {
-                        return $d->getRole() == $maxFoundedRole;
-                    });
+                    if ($role == $this->directorRepository::DIRECTOR_ROLE_AREA) {
+                        $maxFoundedRole = $this->directorRepository::DIRECTOR_ROLE_AREA;
+                    }
                 }
+                $directors = array_filter($directors, function ($d) use($maxFoundedRole) {
+                    return $d->getRole() == $maxFoundedRole;
+                });
             }
+
             $response['director'] = Util::arrayGetValue($directors, 0, null);
         }
 

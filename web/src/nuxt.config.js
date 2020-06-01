@@ -31,6 +31,7 @@ export default {
   ** Plugins to load before mounting the App
   */
   plugins: [
+    { src: '~/plugins/vuex-persist', ssr: false }
   ],
   /*
   ** Nuxt.js dev-modules
@@ -87,12 +88,14 @@ export default {
   auth: {
     redirect: {
       home: '/login',
+      logout: '/login'
     },
     rewriteRedirects: false,
     strategies: {
       local: {
         endpoints: {
           login: { url: 'http://api.randa2randa.test/token', method: 'post', propertyName: 'access_token' },
+          logout: { url: 'http://api.randa2randa.test/revoke', method: 'post'},
           user: { url: 'http://api.randa2randa.test/me', method: 'get', propertyName: false}
           //todo logout
         }

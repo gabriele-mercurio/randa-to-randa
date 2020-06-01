@@ -52,7 +52,7 @@
       </v-card>
     </v-form>
 
-    <v-snackbar v-model="error" timeout="3000" top right>
+    <v-snackbar v-model="error" :timeout="timeout" top right>
       <v-icon color="primary">mdi-alert</v-icon>
       Username o password errate
       <v-btn color="white" icon @click="error = false">
@@ -72,7 +72,8 @@ export default {
       password: "",
       error: false,
       regions: [],
-      region: null
+      region: null,
+      timeout: 3000
     };
   },
   created() {

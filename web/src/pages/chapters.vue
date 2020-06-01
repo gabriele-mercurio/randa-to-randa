@@ -1,10 +1,9 @@
 <template>
   <div class="ma-4 fill-height">
     <v-data-table
-    
       :headers="headers"
       :items="chapters"
-      :items-per-page="15"
+      disable-pagination
       class="elevation-3"
     >
       <template v-slot:item.currentState="{ item }">
@@ -24,80 +23,66 @@
           </v-list>
         </v-menu>
       </template>
-      <template
-        v-slot:item.coreGroupLaunch="{ item }"
-        
-      >
-      <div class="d-flex flex-column justicy-center">
-        <small
-          class="font-italic font-weight-light"
-          v-if="isPrev(item.coreGroupLaunch)"
-          >Previsional >
+      <template v-slot:item.coreGroupLaunch="{ item }">
+        <div class="d-flex flex-column justicy-center">
+          <small
+            class="font-italic font-weight-light"
+            v-if="isPrev(item.coreGroupLaunch)"
+            >Previsional >
 
-          <v-tooltip right v-if="item.warning == 'COREGROUP'">
-            <template v-slot:activator="{ on }">
-              <v-icon v-on="on" small class="primary--text">mdi-alert</v-icon>
-            </template>
-            <span
-              >La data prevista per il lancio del core group è stata
-              superata!</span
-            >
-          </v-tooltip>
-        </small>
-        <span
-          :class="{
-            'font-italic font-weight-light': isPrev(item.coreGroupLaunch)
-          }"
-          >{{ getPrevOrActualDate(item.coreGroupLaunch) }}</span
-        >
-      </div>
+            <v-tooltip right v-if="item.warning == 'COREGROUP'">
+              <template v-slot:activator="{ on }">
+                <v-icon v-on="on" small class="primary--text">mdi-alert</v-icon>
+              </template>
+              <span
+                >La data prevista per il lancio del core group è stata
+                superata!</span
+              >
+            </v-tooltip>
+          </small>
+          <span
+            :class="{
+              'font-italic font-weight-light': isPrev(item.coreGroupLaunch)
+            }"
+            >{{ getPrevOrActualDate(item.coreGroupLaunch) }}</span
+          >
+        </div>
       </template>
 
-      <template
-        v-slot:item.chapterLaunch="{ item }"
-        
-      >
-      <div class="d-flex flex-column justicy-center">
-        <small
-          class="font-italic font-weight-light"
-          v-if="isPrev(item.chapterLaunch)"
-          >Previsional
-          <v-tooltip right v-if="item.warning == 'CHAPTER'">
-            <template v-slot:activator="{ on }">
-              <v-icon v-on="on" small class="primary--text">mdi-alert</v-icon>
-            </template>
-            <span
-              >La data prevista per il lancio del capitolo è stata
-              superata!</span
-            >
-          </v-tooltip>
-        </small>
-        <span
-          :class="{
-            'font-italic font-weight-light': isPrev(item.chapterLaunch)
-          }"
-          >{{ getPrevOrActualDate(item.chapterLaunch) }}</span
-        >
-      </div>
+      <template v-slot:item.chapterLaunch="{ item }">
+        <div class="d-flex flex-column justicy-center">
+          <small
+            class="font-italic font-weight-light"
+            v-if="isPrev(item.chapterLaunch)"
+            >Previsional
+            <v-tooltip right v-if="item.warning == 'CHAPTER'">
+              <template v-slot:activator="{ on }">
+                <v-icon v-on="on" small class="primary--text">mdi-alert</v-icon>
+              </template>
+              <span
+                >La data prevista per il lancio del capitolo è stata
+                superata!</span
+              >
+            </v-tooltip>
+          </small>
+          <span
+            :class="{
+              'font-italic font-weight-light': isPrev(item.chapterLaunch)
+            }"
+            >{{ getPrevOrActualDate(item.chapterLaunch) }}</span
+          >
+        </div>
       </template>
     </v-data-table>
-   
 
-    <v-dialog v-model="showEditChapter" width="500" :scrollable=false>
+    <v-dialog v-model="showEditChapter" width="500" :scrollable="false">
       <EditChapter
         :show="showEditChapter"
-        :editChapter.sync = "editChapter"
+        :editChapter.sync="editChapter"
         v-on:close="showEditChapter = false"
       />
     </v-dialog>
-     <v-btn
-      fixed
-      fab
-      bottom
-      right
-      color="primary"
-      @click="newChapter()"
-    >
+    <v-btn fixed fab bottom right color="primary" @click="newChapter()">
       <v-icon>mdi-plus</v-icon>
     </v-btn>
   </div>
@@ -123,8 +108,7 @@ export default {
       editChapter: null
     };
   },
-  props: {
-  },
+  props: {},
   middleware: "auth",
   created() {
     this.fetchChapters();
@@ -134,8 +118,15 @@ export default {
   },
   methods: {
     async fetchChapters() {
-      let role = this.$store.getters["getRole"] ? "?role=" + this.$store.getters["getRole"] : "";
-      this.chapters = await ApiServer.get(this.$store.getters["getRegion"].id + "/chapters" + role);
+      if (this.$store.getters["getRegion"]) {
+        let role = this.$store.getters["getRole"]
+          ? "?role=" + this.$store.getters["getRole"]
+          : "";
+        this.chapters = await ApiServer.get(
+          this.$store.getters["getRegion"].id + "/chapters" + role
+        );
+      }
+
       // console.log(this.chapters);
       // this.chapters = await Promise.resolve([
       //   {
@@ -204,7 +195,6 @@ export default {
       this.editChapter = null;
       this.showEditChapter = true;
     }
-
   }
 };
 </script>

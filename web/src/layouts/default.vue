@@ -13,9 +13,16 @@
 
             <v-list-item to="/login">
               <v-list-item-icon>
-                <v-icon>mdi-account</v-icon>
+                <v-icon>mdi-user-arrow-right-outline</v-icon>
               </v-list-item-icon>
               <v-list-item-title>Account</v-list-item-title>
+            </v-list-item>
+
+            <v-list-item @click="doLogout()">
+              <v-list-item-icon>
+                <v-icon>mdi-exit</v-icon>
+              </v-list-item-icon>
+              <v-list-item-title>Logout</v-list-item-title>
             </v-list-item>
 
             <v-list-item @click="changeRegion()">
@@ -72,24 +79,35 @@ export default {
   },
   methods: {
     changeRegion() {
-      localStorage.removeItem("region");
+      this.$store.commit("setRegion", null);
       this.$router.push({
         path: "/login"
       });
     },
     getRegionName() {
-      return this.$store.getters["getRegion"] ? this.$store.getters["getRegion"].name : null;
+      return this.$store.getters["getRegion"]
+        ? this.$store.getters["getRegion"].name
+        : null;
+    },
+    doLogout() {
+      this.$auth.logout({
+        oauth_access_token: localStorage.getItem("auth._token.local"),
+        oauth_client_id: process.env.client_id
+      });
     }
   },
   created() {
     if (this.$auth.loggedIn) {
       ApiServer.setToken(localStorage.getItem("auth._token.local"));
     }
+    if (!this.$store.getters["getRegion"]) {
+      this.$router.push("login");
+    }
     ApiServer.base_url = process.env.base_url + "/";
 
     this.$store.watch(
       state => {
-        return this.$store.state.region; // could also put a Getter here
+        return this.$store.state.region;
       },
       (newValue, oldValue) => {
         this.region = newValue;

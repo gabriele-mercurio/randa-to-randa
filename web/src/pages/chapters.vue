@@ -9,6 +9,9 @@
       <template v-slot:item.currentState="{ item }">
         <span :class="item.currentState">{{ item.currentState }}</span>
       </template>
+       <template v-slot:item.currentState="{ item }">
+        <span :class="item.currentState">{{ item.currentState }}</span>
+      </template>
       <template v-slot:item.actions="{ item }">
         <v-menu bottom left>
           <template v-slot:activator="{ on }">
@@ -90,6 +93,7 @@
 
 <script>
 import ApiServer from "../services/ApiServer";
+import Utils from "../services/Utils";
 import EditChapter from "../components/EditChapter";
 export default {
   data() {
@@ -181,9 +185,9 @@ export default {
 
     getPrevOrActualDate(item) {
       if (item.actual != null) {
-        return item.actual;
+        return Utils.getMonthYear(item.actual);
       } else {
-        return item.prev;
+        return Utils.getMonthYear(item.prev);
       }
     },
 
@@ -192,6 +196,7 @@ export default {
     },
 
     newChapter() {
+      debugger;
       this.editChapter = null;
       this.showEditChapter = true;
     }

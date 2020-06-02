@@ -32,7 +32,7 @@ class RanaLifecycle
 
 
     /** @ORM\Column(name="current_status", type="string", length=8, options={"default"="TODO"}) */
-    private $currentStatus;
+    private $currentState;
 
     /**
      * RanaLifecycle constructor.
@@ -76,16 +76,16 @@ class RanaLifecycle
         return $this;
     }
 
-    /** Get the value of currentStatus */
-    public function getCurrentStatus(): string
+    /** Get the value of currentState */
+    public function getcurrentState(): string
     {
-        return $this->currentStatus;
+        return $this->currentState;
     }
 
-    /** Set the value of currentStatus */
-    public function setCurrentStatus(string $currentStatus): self
+    /** Set the value of currentState */
+    public function setcurrentState(string $currentState): self
     {
-        $this->currentStatus = $currentStatus;
+        $this->currentState = $currentState;
         return $this;
     }
 }

@@ -19,17 +19,25 @@
           prepend-icon="mdi-progress-check"
         ></v-select> -->
         <MonthPicker
-          :defLabel="'Data lancio core group'"
-          :defDate.sync="chapter.coreGroupLaunchPrev"
+          :defLabel="getCoreGroupLabel(chapter)"
+          :defDate.sync="chapter.coreGroupLaunch"
           v-on:setdate="setCoreGroupLaunch"
           :disabled="isCoreGroupOrChapter(chapter)"
         />
+        <span v-if="chapter.coreGroupLaunchWarning"
+          >Attenzione, si sta inserendo una data di lancio passata; il capitolo
+          verrà creato in stato core group.</span
+        >
         <MonthPicker
-          :defLabel="'Data lancio capitolo'"
-          :defDate.sync="chapter.chapterLaunchPrev"
+          :defLabel="getChapterLabel(chapter)"
+          :defDate.sync="chapter.chapterLaunch"
           v-on:setdate="setChapterLaunch"
           :disabled="isChapter(chapter)"
         />
+        <span v-if="chapter.chapterLaunchWarning"
+          >Attenzione, si sta inserendo una data di lancio passata; il capitolo
+          verrà creato in stato capitolo.</span
+        >
         <v-select
           :items="users"
           label="Seleziona assistant"
@@ -75,15 +83,9 @@ const mandatoryFields = [
 
 const chapterSkeleton = {
   name: "",
-  currentStatus: "PROJECT",
-  chapterLaunch: {
-    prev: null,
-    actual: null
-  },
-  coreGroupLaunch: {
-    prev: null,
-    actual: null
-  },
+  currentState: "PROJECT",
+  chapterLaunch: null,
+  coreGroupLaunch: null,
   director: null
 };
 
@@ -94,9 +96,9 @@ export default {
   data() {
     return {
       editMode: false,
-      chapter: {...chapterSkeleton},
+      chapter: { ...chapterSkeleton },
       users: [],
-      states: ["PROJECT", "CORE GROUP", "CHAPTER"]
+      states: ["PROJECT", "CORE_GROUP", "CHAPTER"]
     };
   },
   props: {
@@ -105,9 +107,32 @@ export default {
       default: null
     }
   },
+  computed: {
+    isEditing() {
+      return this.editMode;
+    },
+    isCreating() {
+      return !this.editMode;
+    }
+  },
   methods: {
     getEditMode() {
       return this.editChapter ? "Modifica" : "Crea";
+    },
+    getCoreGroupLabel(chapter) {
+      let label = "Data lancio core group";
+      if(!chapter.coreGroupLaunch.actual) {
+        label += " (previsional)";
+      }
+      return label;
+    },
+    getChapterLabel(chapter) {
+      debugger;
+      let label = "Data lancio capitolo";
+      if(!chapter.chapterLaunch.actual) {
+        label += " (previsional)";
+      }
+      return label;
     },
     fetchUsers() {
       let region = this.$state.getters["getRegion"];
@@ -115,13 +140,30 @@ export default {
       //this.users = ApiServer.get("users?region=" + region);
     },
     setChapterLaunch(value) {
-      this.chapter.chapterLaunch.prev = value;
+      let d = new Date(value);
+      let today = new Date();
+      //se sono in fase di creazione del capitolo e la data previsionale è minore della data attuale, quella data diventa automaticamente la data di lancio effettiva
+      if (this.isCreating && d < today) {
+        this.chapter.chapterLaunch.actual = value;
+        this.chapter.chapterLaunchWarning = true;
+      } else {
+        this.chapter.chapterLaunch.prev = value;
+      }
     },
     setCoreGroupLaunch(value) {
-      this.chapter.coreGroupLaunch.prev = value;
+      let d = new Date(value);
+      let today = new Date();
+
+      //se sono in fase di creazione del capitolo e la data previsionale è minore della data attuale, quella data diventa automaticamente la data di lancio effettiva
+      if (this.isCreating && d < today) {
+        this.chapter.coreGroupLaunch.actual = value;
+        this.chapter.coreGroupLaunchWarning = true;
+      } else {
+        this.chapter.coreGroupLaunch.prev = value;
+      }
     },
     emitClose() {
-      this.chapter = {...chapterSkeleton};
+      this.chapter = { ...chapterSkeleton };
       this.$emit("close");
     },
     saveChapter() {
@@ -130,11 +172,11 @@ export default {
     },
     isCoreGroupOrChapter(item) {
       return (
-        item.currentStatus === "CORE GROUP" || item.currentStatus === "CHAPTER"
+        item.currentState === "CORE_GROUP" || item.currentState === "CHAPTER"
       );
     },
     isChapter(item) {
-      return item.currentStatus === "CHAPTER";
+      return item.currentState === "CHAPTER";
     },
     saveChapter() {
       console.log(this.chapter);
@@ -153,13 +195,38 @@ export default {
     editChapter: {
       handler: function(newVal, oldVal) {
         if (this.editChapter) {
+          this.editMode = true;
           this.chapter = { ...this.editChapter };
-          this.chapter["coreGroupLaunchPrev"] = Utils.getMonthYear(
-            this.chapter["coreGroupLaunch"]["prev"]
-          );
-          this.chapter["chapterLaunchPrev"] = Utils.getMonthYear(
-            this.chapter["chapterLaunch"]["prev"]
-          );
+
+        debugger;
+          switch (this.chapter.currentState) {
+            case "PROJECT":
+              this.chapter["coreGroupLaunch"] = Utils.getMonthYear(
+                this.chapter["coreGroupLaunch"]["prev"]
+              );
+              this.chapter["chapterLaunch"] = Utils.getMonthYear(
+                this.chapter["chapterLaunch"]["prev"]
+              );
+              break;
+            case "CORE_GROUP":
+              this.chapter["coreGroupLaunch"] = Utils.getMonthYear(
+                this.chapter["coreGroupLaunch"]["actual"]
+              );
+              this.chapter["chapterLaunch"] = Utils.getMonthYear(
+                this.chapter["chapterLaunch"]["prev"]
+              );
+              break;
+            case "CHAPTER":
+              this.chapter["coreGroupLaunch"] = Utils.getMonthYear(
+                this.chapter["coreGroupLaunch"]["actual"]
+              );
+              this.chapter["chapterLaunch"] = Utils.getMonthYear(
+                this.chapter["chapterLaunch"]["actual"]
+              );
+              break;
+          }
+        } else {
+          this.editMode = false;
         }
       },
       deep: true,

@@ -23,21 +23,18 @@
           :defDate.sync="chapter.coreGroupLaunch"
           v-on:setdate="setCoreGroupLaunch"
           :disabled="isCoreGroupOrChapter(chapter)"
+          :invalidInterval="invalidInterval()"
+          launchType="CORE GROUP"
         />
-        <span v-if="chapter.coreGroupLaunchWarning"
-          >Attenzione, si sta inserendo una data di lancio passata; il capitolo
-          verrà creato in stato core group.</span
-        >
         <MonthPicker
           :defLabel="getChapterLabel(chapter)"
           :defDate.sync="chapter.chapterLaunch"
           v-on:setdate="setChapterLaunch"
           :disabled="isChapter(chapter)"
+          :invalidInterval="invalidInterval()"
+          launchType="CHAPTER"
         />
-        <span v-if="chapter.chapterLaunchWarning"
-          >Attenzione, si sta inserendo una data di lancio passata; il capitolo
-          verrà creato in stato capitolo.</span
-        >
+
         <v-select
           :items="users"
           label="Seleziona assistant"
@@ -73,19 +70,15 @@ import Utils from "../services/Utils";
 import ApiServer from "../services/ApiServer";
 import MonthPicker from "../components/MonthPicker";
 
-const mandatoryFields = [
-  "name",
-  "currentState",
-  "chapterLaunchPrev",
-  "coreGroupLaunchPrev",
-  "director"
-];
+const mandatoryFields = ["name", "chapterLaunch", "coreGroupLaunch"];
 
 const chapterSkeleton = {
   name: "",
   currentState: "PROJECT",
   chapterLaunch: null,
   coreGroupLaunch: null,
+  coreGroupLaunchType: null,
+  chapterLaunchType: null,
   director: null
 };
 
@@ -98,7 +91,9 @@ export default {
       editMode: false,
       chapter: { ...chapterSkeleton },
       users: [],
-      states: ["PROJECT", "CORE_GROUP", "CHAPTER"]
+      states: ["PROJECT", "CORE_GROUP", "CHAPTER"],
+      coreGroupMessage: "",
+      chapterMessage: ""
     };
   },
   props: {
@@ -121,17 +116,10 @@ export default {
     },
     getCoreGroupLabel(chapter) {
       let label = "Data lancio core group";
-      if(!chapter.coreGroupLaunch.actual) {
-        label += " (previsional)";
-      }
       return label;
     },
     getChapterLabel(chapter) {
-      debugger;
       let label = "Data lancio capitolo";
-      if(!chapter.chapterLaunch.actual) {
-        label += " (previsional)";
-      }
       return label;
     },
     fetchUsers() {
@@ -142,24 +130,28 @@ export default {
     setChapterLaunch(value) {
       let d = new Date(value);
       let today = new Date();
+
+      if (!this.chapter.chapterLaunch) this.chapter.chapterLaunch = {};
+
       //se sono in fase di creazione del capitolo e la data previsionale è minore della data attuale, quella data diventa automaticamente la data di lancio effettiva
+      this.chapter.chapterLaunch = value;
       if (this.isCreating && d < today) {
-        this.chapter.chapterLaunch.actual = value;
-        this.chapter.chapterLaunchWarning = true;
+        this.chapter.chapterLaunchType = "actual";
       } else {
-        this.chapter.chapterLaunch.prev = value;
+        this.chapter.chapterLaunchType = "prev";
       }
     },
     setCoreGroupLaunch(value) {
       let d = new Date(value);
       let today = new Date();
+      if (!this.chapter.coreGroupLaunch) this.chapter.coreGroupLaunch = {};
 
+      this.chapter.coreGroupLaunch = value;
       //se sono in fase di creazione del capitolo e la data previsionale è minore della data attuale, quella data diventa automaticamente la data di lancio effettiva
       if (this.isCreating && d < today) {
-        this.chapter.coreGroupLaunch.actual = value;
-        this.chapter.coreGroupLaunchWarning = true;
+        this.chapter.coreGroupLaunchType = "actual";
       } else {
-        this.chapter.coreGroupLaunch.prev = value;
+        this.chapter.coreGroupLaunchType = "prev";
       }
     },
     emitClose() {
@@ -168,7 +160,18 @@ export default {
     },
     saveChapter() {
       //todo
-      ApiServer.post("chapter");
+      this.chapter.director = "1425d188-e39f-4c4c-810e-d16c9d73e1f7";
+      if (this.chapter.coreGroupLaunchType === "actual") {
+        this.chapter.launchCoregroupDate = this.chapter.coreGroupLaunch.actual;
+      } else {
+        this.chapter.launchCoregroupDate = this.chapter.coreGroupLaunch.prev;
+      }
+      if (this.chapter.chapterLaunchType === "actual") {
+        this.chapter.launchChapterDate = this.chapter.chapterLaunch.actual;
+      } else {
+        this.chapter.launchChapterDate = this.chapter.chapterLaunch.prev;
+      }
+      ApiServer.post(this.$store.getters["getRegion"].id + "/chapter", this.chapter);
     },
     isCoreGroupOrChapter(item) {
       return (
@@ -178,17 +181,23 @@ export default {
     isChapter(item) {
       return item.currentState === "CHAPTER";
     },
-    saveChapter() {
-      console.log(this.chapter);
-    },
     isFormValid() {
-      Object.keys(this.chapter).forEach(k => {
-        console.log(this.chapter[k]);
-        if (mandatoryFields.indexOf(k) && !this.chapter[k]) {
+      for (let k of Object.keys(this.chapter)) {
+        if (mandatoryFields.includes(k) && !this.chapter[k]) {
           return false;
         }
-      });
+      }
+      if (this.invalidInterval()) return false;
       return true;
+    },
+    invalidInterval() {
+      if (this.chapter.coreGroupLaunch && this.chapter.chapterLaunch) {
+        let cg_date = new Date(this.chapter.coreGroupLaunch);
+        let c_date = new Date(this.chapter.chapterLaunch);
+        if (cg_date <= c_date) return "";
+        return "Attenzione, la data di lancio capitolo deve essere superiore a quella del lancio core group.";
+      }
+      return "";
     }
   },
   watch: {
@@ -198,7 +207,6 @@ export default {
           this.editMode = true;
           this.chapter = { ...this.editChapter };
 
-        debugger;
           switch (this.chapter.currentState) {
             case "PROJECT":
               this.chapter["coreGroupLaunch"] = Utils.getMonthYear(

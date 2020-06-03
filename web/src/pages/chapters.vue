@@ -196,7 +196,6 @@ export default {
     },
 
     newChapter() {
-      debugger;
       this.editChapter = null;
       this.showEditChapter = true;
     }

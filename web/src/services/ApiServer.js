@@ -33,11 +33,7 @@ class ApiServer {
     static async post (endpoint, body, config) {
         config = {...config, ...ApiServer.commonRequestConfig};
         try {
-            let response = await axios.post(ApiServer.base_url + endpoint, body, {
-                headers: {
-                    'Constent-Type': 'multipart/form-data'
-                }
-            } );
+            let response = await axios.post(ApiServer.base_url + endpoint, body, config );
             return ApiServer.parseResponse(response);
         } catch (e) {
             return null;

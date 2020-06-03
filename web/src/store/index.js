@@ -1,7 +1,8 @@
 //store/index.js
 export const state = () => ({
   region: null,
-  role: null
+  role: null,
+  chapters: []
 });
 
 export const mutations = {
@@ -10,6 +11,9 @@ export const mutations = {
   },
   setRole(state, role) {
     state.role = role;
+  },
+  setChapters(state, chapters) {
+    state.chapters = chapters;
   }
 };
 
@@ -19,5 +23,8 @@ export const getters = {
   },
   getRole(state) {
     return state.role;
+  },
+  getChapters(state) {
+    return state.chapters;
   }
 };

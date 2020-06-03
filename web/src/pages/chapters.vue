@@ -1,6 +1,6 @@
 <template>
   <div class="ma-4 fill-height">
-    <ChaptersList v-on:edit="edit(item)" />
+    <ChaptersList :classSpec="'elevation-3'" v-on:edit="edit(item)" />
 
     <v-dialog
       :persistent="false"
@@ -33,7 +33,6 @@ export default {
     };
   },
   props: {},
-  middleware: "auth",
   components: {
     EditChapter,
     ChaptersList
@@ -55,8 +54,11 @@ export default {
 .PROJECT {
   background-color: lighten(red, 40);
 }
-
 .CORE_GROUP {
   background-color: lighten(orange, 40);
+}
+
+.CHAPTER {
+  background-color: rgb(223, 255, 223);
 }
 </style>

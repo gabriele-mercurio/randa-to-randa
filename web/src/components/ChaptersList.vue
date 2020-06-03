@@ -2,16 +2,13 @@
   <v-data-table
     :headers="headers"
     :items="chapters"
-    disable-pagination
-    class="elevation-3"
+      hide-default-footer
+    :class="classSpec"
   >
     <template v-slot:item.currentState="{ item }">
       <span :class="item.currentState">{{ item.currentState }}</span>
     </template>
-    <template v-slot:item.currentState="{ item }">
-      <span :class="item.currentState">{{ item.currentState }}</span>
-    </template>
-    <template v-slot:item.actions="{ item }">
+    <template v-slot:item.actions="{ item }" v-if="!short">
       <v-menu bottom left>
         <template v-slot:activator="{ on }">
           <v-btn dark icon v-on="on">
@@ -25,7 +22,7 @@
         </v-list>
       </v-menu>
     </template>
-    <template v-slot:item.coreGroupLaunch="{ item }">
+    <template v-slot:item.coreGroupLaunch="{ item }" v-if="!short">
       <div class="d-flex flex-column justicy-center">
         <small
           class="font-italic font-weight-light"
@@ -51,7 +48,7 @@
       </div>
     </template>
 
-    <template v-slot:item.chapterLaunch="{ item }">
+    <template v-slot:item.chapterLaunch="{ item }" v-if="!short">
       <div class="d-flex flex-column justicy-center">
         <small
           class="font-italic font-weight-light"
@@ -78,12 +75,10 @@
   </v-data-table>
 </template>
 <script>
-
 import ApiServer from "../services/ApiServer";
 import Utils from "../services/Utils";
 export default {
-  components:{
-  },
+  components: {},
   data() {
     return {
       headers: [
@@ -95,8 +90,24 @@ export default {
         { text: "Capitolo", value: "chapterLaunch" },
         { value: "actions" }
       ],
+      shortFields: [
+        "name",
+        "director.fullName",
+        "members",
+        "currentState"
+      ],
       chapters: []
     };
+  },
+  props: {
+    classSpec: {
+      type: String,
+      default: ""
+    },
+    short: {
+      type: Boolean,
+      default: false
+    }
   },
   methods: {
     edit() {
@@ -110,6 +121,7 @@ export default {
         this.chapters = await ApiServer.get(
           this.$store.getters["getRegion"].id + "/chapters" + role
         );
+        this.$store.commit("setChapters", this.chapters);
       }
 
       // console.log(this.chapters);
@@ -172,6 +184,16 @@ export default {
   },
   created() {
     this.fetchChapters();
+    if(this.short) {
+      this.headers = this.headers.filter(h => {
+        return this.shortFields.includes(h.value);
+      });
+    }
   }
 };
 </script>
+<style>
+.hidden {
+  display: none;
+}
+</style>

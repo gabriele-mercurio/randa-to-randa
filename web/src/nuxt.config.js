@@ -88,7 +88,7 @@ export default {
   auth: {
     redirect: {
       logout: '/login',
-      login: '/home'
+      login: '/chapters',
     },
     rewriteRedirects: false,
     strategies: {

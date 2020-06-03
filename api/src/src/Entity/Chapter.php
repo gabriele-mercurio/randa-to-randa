@@ -39,22 +39,22 @@ class Chapter
      */
     private $director;
 
-    /** @ORM\Column(type="integer") */
+    /** @ORM\Column(type="integer", nullable=true, options={"default":0}) */
     private $members;
 
-    /** @ORM\Column(name="prev_launch_coregroup_date", type="date") */
+    /** @ORM\Column(name="prev_launch_coregroup_date", type="date", nullable=true) */
     private $prevLaunchCoregroupDate;
 
     /** @ORM\Column(name="actual_launch_coregroup_date", type="date", nullable=true) */
     private $actualLaunchCoregroupDate;
 
-    /** @ORM\Column(name="prev_launch_chatper_date", type="date") */
+    /** @ORM\Column(name="prev_launch_chatper_date", type="date", nullable=true) */
     private $prevLaunchChatperDate;
 
     /** @ORM\Column(name="actual_launch_chatper_date", type="date", nullable=true) */
     private $actualLaunchChatperDate;
 
-    /** @ORM\Column(name="susp_date", type="date", nullable=true) */
+    /** @ORM\Column(name="susp_date", type="date", nullable=true, nullable=true) */
     private $suspDate;
 
     /** @ORM\Column(name="prev_resume_date", type="date", nullable=true) */

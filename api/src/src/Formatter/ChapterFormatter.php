@@ -29,12 +29,12 @@ class ChapterFormatter
         $details = [
             'chapterLaunch'   => [
                 'actual' => $chapter->getActualLaunchChatperDate() ? $chapter->getActualLaunchChatperDate()->format("Y-m-d") : null,
-                'prev'   => $chapter->getPrevLaunchChatperDate()->format("Y-m-d")
+                'prev'   => $chapter->getPrevLaunchChatperDate() ? $chapter->getPrevLaunchChatperDate()->format("Y-m-d") : null
             ],
             'closureDate'     => $chapter->getClosureDate() ? $chapter->getClosureDate()->format("Y-m-d") : null,
             'coreGroupLaunch' => [
                 'actual' => $chapter->getActualLaunchCoregroupDate() ? $chapter->getActualLaunchCoregroupDate()->format("Y-m-d") : null,
-                'prev'   => $chapter->getPrevLaunchCoregroupDate()->format("Y-m-d")
+                'prev'   => $chapter->getPrevLaunchCoregroupDate() ? $chapter->getPrevLaunchCoregroupDate()->format("Y-m-d") : null
             ],
             'currentState'    => $chapter->getCurrentState(),
             'director'        => $directorDataType == self::DIRECTOR_BASE_DATA ? $this->directorFormatter->formatBase($chapter->getDirector()) : $this->directorFormatter->formatFull($chapter->getDirector()),

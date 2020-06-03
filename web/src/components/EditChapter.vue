@@ -79,6 +79,10 @@ const chapterSkeleton = {
   coreGroupLaunch: null,
   coreGroupLaunchType: null,
   chapterLaunchType: null,
+  actualLaunchChapterDate: null,
+  prevLaunchChapterDate: null,
+  actualLaunchCoregroupDate: null,
+  prevLaunchCoregroupDate: null,
   director: null
 };
 
@@ -111,6 +115,9 @@ export default {
     }
   },
   methods: {
+    addDay(date) {
+      return date + "-01";
+    },
     getEditMode() {
       return this.editChapter ? "Modifica" : "Crea";
     },
@@ -160,18 +167,20 @@ export default {
     },
     saveChapter() {
       //todo
-      this.chapter.director = "1425d188-e39f-4c4c-810e-d16c9d73e1f7";
+      let data = {};
+      data["director"] = "1425d188-e39f-4c4c-810e-d16c9d73e1f7";
+      data["name"] = this.chapter["name"];
       if (this.chapter.coreGroupLaunchType === "actual") {
-        this.chapter.launchCoregroupDate = this.chapter.coreGroupLaunch.actual;
+        data["actualLaunchCoregroupDate"] = this.addDay(this.chapter.coreGroupLaunch);
       } else {
-        this.chapter.launchCoregroupDate = this.chapter.coreGroupLaunch.prev;
+        data["prevLaunchCoregroupDate"] =  this.addDay(this.chapter.coreGroupLaunch);
       }
-      if (this.chapter.chapterLaunchType === "actual") {
-        this.chapter.launchChapterDate = this.chapter.chapterLaunch.actual;
+      if (this.chapter["chapterLaunchType"] === "actual") {
+        data["actualLaunchChapterDate"] =  this.addDay(this.chapter.chapterLaunch);
       } else {
-        this.chapter.launchChapterDate = this.chapter.chapterLaunch.prev;
+        data["prevLaunchChapterDate"] = this.addDay(this.chapter.chapterLaunch);
       }
-      ApiServer.post(this.$store.getters["getRegion"].id + "/chapter", this.chapter);
+      ApiServer.post(this.$store.getters["getRegion"].id + "/chapter", data);
     },
     isCoreGroupOrChapter(item) {
       return (

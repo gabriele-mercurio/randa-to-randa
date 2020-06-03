@@ -2,25 +2,27 @@ import axios from 'axios'
 
 class ApiServer {
     static commonRequestConfig = {
-        'Content-Type': 'multipart/form-data'
+        'headers': {
+            'Content-Type': 'multipart/form-data'
+        }
     };
+    
     static base_url;
-    static async get(endpoint, body = {}, config) {
+
+    static setToken(token) {
+        ApiServer.commonRequestConfig["headers"]["Authorization"] = token;
+    }
+    
+    static async get(endpoint, config) {
         
         config = {...config, ...ApiServer.commonRequestConfig};
         try {
-            let response = "";
-            
-            if(localStorage.getItem("TEST_MODE")) {
-                let data = ApiServer.getData(endpoint);
-                return Promise.resolve(data);
-            } else {
-                response = await axios.get(ApiServer.base_url + endpoint, body, config);
-                if(response.status == 200) {
-                    return ApiServer.parseResponse(response);
-                } else if(response.status.toString().startsWith("4")) {
-                    window.location="login";
-                }
+           
+            let response = await axios.get(ApiServer.base_url + endpoint, config);
+            if(response.status == 200) {
+                return ApiServer.parseResponse(response);
+            } else if(response.status.toString().startsWith("4")) {
+                window.location="login";
             }
             
         } catch (e) {
@@ -31,11 +33,7 @@ class ApiServer {
     static async post (endpoint, body, config) {
         config = {...config, ...ApiServer.commonRequestConfig};
         try {
-            let response = await axios.post(ApiServer.base_url + endpoint, body, {
-                headers: {
-                    'Constent-Type': 'multipart/form-data'
-                }
-            } );
+            let response = await axios.post(ApiServer.base_url + endpoint, body, config );
             return ApiServer.parseResponse(response);
         } catch (e) {
             return null;
@@ -46,7 +44,6 @@ class ApiServer {
         config = {...config, ...ApiServer.commonRequestConfig};
         try {
             let response = await axios.post(ApiServer.base_url + endpoint, body, config );
-            debugger;
             return ApiServer.parseResponse(response);
         } catch (e) {
             return null;
@@ -73,8 +70,7 @@ class ApiServer {
         if(!response.data || response.status !== 200) {
             return null;
         }
-        return;
-        //return response.data.data ?? (response.data.content ?? response.data);
+        return response["data"];
     }
 
 

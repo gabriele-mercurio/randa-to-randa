@@ -27,7 +27,7 @@ class RanaLifecycleFormatter
     private function format(RanaLifecycle $ranaLifecycle, $ranaDataType): array
     {
         $details = [
-            'currentStatus'   => $ranaLifecycle->getCurrentStatus(),
+            'currentState'   => $ranaLifecycle->getcurrentState(),
             'currentTimeslot' => $ranaLifecycle->getCurrentTimeslot(),
             'id'              => $ranaLifecycle->getId(),
             'rana'            => $ranaDataType == self::RANA_BASE_DATA ? $this->ranaFormatter->formatBase($ranaLifecycle->getRana()) : $this->ranaFormatter->formatFull($ranaLifecycle->getRana())

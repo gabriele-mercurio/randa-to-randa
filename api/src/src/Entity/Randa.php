@@ -32,6 +32,27 @@ class Randa
     private $currentTimeslot;
 
     /**
+     * @var Collection|Economic[]
+     *
+     * @ORM\OneToMany(targetEntity="Economic", mappedBy="randa")
+     */
+    private $economics;
+
+    /**
+     * @var Collection|Rana[]
+     *
+     * @ORM\OneToMany(targetEntity="Rana", mappedBy="randa")
+     */
+    private $ranas;
+
+    /**
+     * @var Collection|StrategyPerRanda[]
+     *
+     * @ORM\OneToMany(targetEntity="StrategyPerRanda", mappedBy="randa")
+     */
+    private $strategiesPerRanda;
+
+    /**
      * Randa constructor.
      *
      * @throws Exception
@@ -84,5 +105,29 @@ class Randa
     {
         $this->currentTimeslot = $currentTimeslot;
         return $this;
+    }
+
+    /**
+     * @return Collection|Economic[]
+     */
+    public function getEconomics()
+    {
+        return $this->economics;
+    }
+
+    /**
+     * @return Collection|Rana[]
+     */
+    public function getRanas()
+    {
+        return $this->ranas;
+    }
+
+    /**
+     * @return Collection|StrategyPerRanda[]
+     */
+    public function getStrategiesPerRanda()
+    {
+        return $this->strategiesPerRanda;
     }
 }

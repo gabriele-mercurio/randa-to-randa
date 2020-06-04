@@ -23,6 +23,13 @@ class Target
     private $name;
 
     /**
+     * @var Collection|Strategy[]
+     *
+     * @ORM\OneToMany(targetEntity="Strategy", mappedBy="target")
+     */
+    private $strategies;
+
+    /**
      * Target constructor.
      *
      * @throws Exception
@@ -49,5 +56,13 @@ class Target
     {
         $this->name = $name;
         return $this;
+    }
+
+    /**
+     * @return Collection|Strategy[]
+     */
+    public function getStrategies()
+    {
+        return $this->strategies;
     }
 }

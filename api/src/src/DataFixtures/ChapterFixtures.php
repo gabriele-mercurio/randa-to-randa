@@ -54,7 +54,7 @@ class ChapterFixtures extends Fixture implements DependentFixtureInterface
             sort($dates);
 
             $currentState = $this->chapterRepository::CHAPTER_CURRENT_STATE_PROJECT;
-            $actualLaunchChatperDate = $actualLaunchCoregroupDate = $actualResumeDate = $closureDate = $prevResumeDate = $suspDate = null;
+            $actualLaunchChapterDate = $actualLaunchCoregroupDate = $actualResumeDate = $closureDate = $prevResumeDate = $suspDate = null;
             $prevLaunchCoregroupDate = array_shift($dates);
             if ($prevLaunchCoregroupDate < $today && $dates[0] < $today) {
                 $actualLaunchCoregroupDate = array_shift($dates);
@@ -63,7 +63,7 @@ class ChapterFixtures extends Fixture implements DependentFixtureInterface
 
             $prevLaunchChapterDate = array_shift($dates);
             if ($prevLaunchChapterDate < $today && $dates[0] < $today) {
-                $actualLaunchChatperDate = array_shift($dates);
+                $actualLaunchChapterDate = array_shift($dates);
                 $currentState = $currentState == $this->chapterRepository::CHAPTER_CURRENT_STATE_PROJECT ? $currentState : (mt_rand(1, 4) == 1 ? $currentState : $this->chapterRepository::CHAPTER_CURRENT_STATE_CHAPTER);
             }
 
@@ -87,7 +87,7 @@ class ChapterFixtures extends Fixture implements DependentFixtureInterface
             $director = Util::arrayGetValue($directors, mt_rand(1, count($directors)) -1);
 
             $chapter = new Chapter();
-            $chapter->setActualLaunchChatperDate($actualLaunchChatperDate);
+            $chapter->setActualLaunchChapterDate($actualLaunchChapterDate);
             $chapter->setActualLaunchCoregroupDate($actualLaunchCoregroupDate);
             $chapter->setActualResumeDate($actualResumeDate);
             $chapter->setClosureDate($closureDate);
@@ -95,7 +95,7 @@ class ChapterFixtures extends Fixture implements DependentFixtureInterface
             $chapter->setDirector($director);
             $chapter->setMembers(mt_rand(100, 300));
             $chapter->setName("Chapter $i");
-            $chapter->setPrevLaunchChatperDate($prevLaunchChapterDate);
+            $chapter->setPrevLaunchChapterDate($prevLaunchChapterDate);
             $chapter->setPrevLaunchCoregroupDate($prevLaunchCoregroupDate);
             $chapter->setPrevResumeDate($prevResumeDate);
             $chapter->setRegion($region);

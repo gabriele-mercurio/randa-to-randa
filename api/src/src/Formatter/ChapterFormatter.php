@@ -28,8 +28,8 @@ class ChapterFormatter
     {
         $details = [
             'chapterLaunch'   => [
-                'actual' => $chapter->getActualLaunchChatperDate() ? $chapter->getActualLaunchChatperDate()->format("Y-m-d") : null,
-                'prev'   => $chapter->getPrevLaunchChatperDate() ? $chapter->getPrevLaunchChatperDate()->format("Y-m-d") : null
+                'actual' => $chapter->getActualLaunchChapterDate() ? $chapter->getActualLaunchChapterDate()->format("Y-m-d") : null,
+                'prev'   => $chapter->getPrevLaunchChapterDate() ? $chapter->getPrevLaunchChapterDate()->format("Y-m-d") : null
             ],
             'closureDate'     => $chapter->getClosureDate() ? $chapter->getClosureDate()->format("Y-m-d") : null,
             'coreGroupLaunch' => [

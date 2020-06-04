@@ -6,13 +6,12 @@ use App\Entity\Chapter;
 use App\Entity\Director;
 use App\Entity\Region;
 use App\Formatter\ChapterFormatter;
-use App\Formatter\DirectorFormatter;
-use App\Formatter\RegionFormatter;
 use App\Repository\ChapterRepository;
 use App\Repository\DirectorRepository;
 use App\Repository\UserRepository;
 use App\Util\Util;
 use DateTime;
+use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Nelmio\ApiDocBundle\Annotation\Security;
 use Swagger\Annotations as SWG;
@@ -30,14 +29,11 @@ class ChapterController extends AbstractController
     /** @var ChapterRepository */
     private $chapterRepository;
 
-    /** @var DirectorFormatter */
-    private $directorFormatter;
-
     /** @var DirectorRepository */
     private $directorRepository;
 
-    /** @var RegionFormatter */
-    private $regionFormatter;
+    /** @var EntityManagerInterface */
+    private $entityManager;
 
     /** @var UserRepository */
     private $userRepository;
@@ -45,16 +41,14 @@ class ChapterController extends AbstractController
     public function __construct(
         ChapterFormatter $chapterFormatter,
         ChapterRepository $chapterRepository,
-        DirectorFormatter $directorFormatter,
         DirectorRepository $directorRepository,
-        RegionFormatter $regionFormatter,
+        EntityManagerInterface $entityManager,
         UserRepository $userRepository
     ) {
         $this->chapterFormatter = $chapterFormatter;
         $this->chapterRepository = $chapterRepository;
-        $this->directorFormatter = $directorFormatter;
         $this->directorRepository = $directorRepository;
-        $this->regionFormatter = $regionFormatter;
+        $this->entityManager = $entityManager;
         $this->userRepository = $userRepository;
     }
 
@@ -341,12 +335,12 @@ class ChapterController extends AbstractController
             }
 
             $chapter = new Chapter();
-            $chapter->setActualLaunchChatperDate($actualLaunchChapterDate);
+            $chapter->setActualLaunchChapterDate($actualLaunchChapterDate);
             $chapter->setActualLaunchCoregroupDate($actualLaunchCoregroupDate);
             $chapter->setCurrentState($state);
             $chapter->setDirector($d);
             $chapter->setName($name);
-            $chapter->setPrevLaunchChatperDate($prevLaunchChapterDate);
+            $chapter->setPrevLaunchChapterDate($prevLaunchChapterDate);
             $chapter->setPrevLaunchCoregroupDate($prevLaunchCoregroupDate);
             $chapter->setRegion($region);
             $this->chapterRepository->save($chapter);
@@ -421,28 +415,10 @@ class ChapterController extends AbstractController
      *      description="Optional actual chapter launch date. If this date is given prevLaunchChapterDate is not given."
      * )
      * @SWG\Parameter(
-     *      name="suspDate",
-     *      in="formData",
-     *      type="string",
-     *      description="Optional chapter suspention date."
-     * )
-     * @SWG\Parameter(
      *      name="prevResumeDate",
      *      in="formData",
      *      type="string",
      *      description="Optional previsioning chapter resume date."
-     * )
-     * @SWG\Parameter(
-     *      name="actualResumeChapterDate",
-     *      in="formData",
-     *      type="string",
-     *      description="Optional actual chapter resume date. If this date is given prevResumeChapterDate is not given."
-     * )
-     * @SWG\Parameter(
-     *      name="closureDate",
-     *      in="formData",
-     *      type="string",
-     *      description="Optional chapter closure date."
      * )
      * @SWG\Response(
      *      response=200,
@@ -520,7 +496,7 @@ class ChapterController extends AbstractController
 
         $actAs = $request->get("actAs");
         $code = Response::HTTP_OK;
-        $fields = [];
+        $errorFields = $fields = [];
         $user = $this->getUser();
 
         $checkUser = $this->userRepository->checkUser($user, $actAs);
@@ -551,12 +527,8 @@ class ChapterController extends AbstractController
             $actualLaunchCoregroupDate = $request->get("actualLaunchCoregroupDate");
             $prevLaunchChapterDate = $request->get("prevLaunchChapterDate");
             $actualLaunchChapterDate = $request->get("actualLaunchChapterDate");
-            $suspDate = $request->get("suspDate");
             $prevResumeDate = $request->get("prevResumeDate");
-            $actualResumeDate = $request->get("actualResumeDate");
-            $closureDate = $request->get("closureDate");
 
-            $errorFields = $fields = [];
             $today = Util::UTCDateTime();
 
             // Check Name
@@ -594,153 +566,210 @@ class ChapterController extends AbstractController
                 }
             }
 
-            // Check Coregroup dates
-            if ($chapter->getCurrentState() == $this->chapterRepository::CHAPTER_CURRENT_STATE_PROJECT) {
-                if (!empty($prevLaunchCoregroupDate)) {
-                    $prevLaunchCoregroupDate = trim($prevLaunchCoregroupDate);
+            // Check Coregroup and Chapter dates
+            switch ($chapter->getCurrentState()) {
+                case $this->chapterRepository::CHAPTER_CURRENT_STATE_PROJECT:
                     if (!empty($prevLaunchCoregroupDate)) {
+                        $prevLaunchCoregroupDate = trim($prevLaunchCoregroupDate);
+                        if (!empty($prevLaunchCoregroupDate)) {
+                            try {
+                                $prevLaunchCoregroupDate = Util::UTCDateTime($prevLaunchCoregroupDate);
+                            } catch (Exception $ex) {
+                                $errorFields['prevLaunchCoregroupDate'] = "invalid";
+                            }
+
+                            if (!array_key_exists('prevLaunchCoregroupDate', $errorFields)) {
+                                if ($prevLaunchCoregroupDate < $today) {
+                                    $errorFields['prevLaunchCoregroupDate'] = "invalid";
+                                } else {
+                                    $fields['prevLaunchCoregroupDate'] = $prevLaunchCoregroupDate;
+                                }
+                            }
+                        }
+                    }
+
+                    if (!empty($actualLaunchCoregroupDate)) {
+                        $errorFields['actualLaunchCoregroupDate'] = "conflict";
+                    }
+
+                    if (!empty($prevLaunchChapterDate)) {
+                        $prevLaunchChapterDate = trim($prevLaunchChapterDate);
+                        if (!empty($prevLaunchChapterDate)) {
+                            try {
+                                $prevLaunchChapterDate = Util::UTCDateTime($prevLaunchChapterDate);
+                            } catch (Exception $ex) {
+                                $errorFields['prevLaunchChapterDate'] = "invalid";
+                            }
+
+                            if (!array_key_exists('prevLaunchChapterDate', $errorFields)) {
+                                if ($prevLaunchChapterDate <= $prevLaunchCoregroupDate) {
+                                    $errorFields['prevLaunchChapterDate'] = "invalid";
+                                } else {
+                                    $fields['prevLaunchChapterDate'] = $prevLaunchChapterDate;
+                                }
+                            }
+                        }
+                    }
+
+                    if (!empty($actualLaunchChapterDate)) {
+                        $errorFields['actualLaunchChapterDate'] = "conflict";
+                    }
+                break;
+                case $this->chapterRepository::CHAPTER_CURRENT_STATE_CORE_GROUP:
+                    if (!empty($prevLaunchCoregroupDate)) {
+                        $errorFields['prevLaunchCoregroupDate'] = "conflict";
+                    }
+
+                    if (!empty($actualLaunchCoregroupDate)) {
+                        $errorFields['actualLaunchCoregroupDate'] = "conflict";
+                    }
+
+                    if (!empty($prevLaunchChapterDate)) {
+                        $prevLaunchChapterDate = trim($prevLaunchChapterDate);
+                        if (!empty($prevLaunchChapterDate)) {
+                            try {
+                                $actualLaunchChapterDate = Util::UTCDateTime($actualLaunchChapterDate);
+                            } catch (Exception $ex) {
+                                $errorFields['prevLaunchChapterDate'] = "invalid";
+                            }
+
+                            if (!array_key_exists('prevLaunchChapterDate', $errorFields)) {
+                                if ($prevLaunchChapterDate <= $today) {
+                                    $errorFields['prevLaunchChapterDate'] = "invalid";
+                                } else {
+                                    $fields['prevLaunchChapterDate'] = $prevLaunchChapterDate;
+                                }
+                            }
+                        }
+                    }
+
+                    if (!empty($actualLaunchChapterDate)) {
+                        $errorFields['actualLaunchChapterDate'] = "conflict";
+                    }
+                break;
+                default:
+                    if (!empty($prevLaunchCoregroupDate)) {
+                        $errorFields['prevLaunchCoregroupDate'] = "conflict";
+                    }
+
+                    if (!empty($actualLaunchCoregroupDate)) {
+                        $errorFields['actualLaunchCoregroupDate'] = "conflict";
+                    }
+
+                    if (!empty($prevLaunchChapterDate)) {
+                        $errorFields['prevLaunchChapterDate'] = "conflict";
+                    }
+
+                    if (!empty($actualLaunchChapterDate)) {
+                        $errorFields['actualLaunchChapterDate'] = "conflict";
+                    }
+                break;
+            }
+
+            // Check Resume date
+            if (!empty($prevResumeDate)) {
+                $prevResumeDate = trim($prevResumeDate);
+                if (!empty($prevResumeDate)) {
+                    if ($chapter->getCurrentState() != $this->chapterRepository::CHAPTER_CURRENT_STATE_SUSPENDED) {
+                        $errorFields['prevResumeDate'] = "conflict";
+                    } else {
                         try {
-                            $prevLaunchCoregroupDate = Util::UTCDateTime($prevLaunchCoregroupDate);
+                            $prevResumeDate = Util::UTCDateTime($prevResumeDate);
                         } catch (Exception $ex) {
-                            $errorFields['prevLaunchCoregroupDate'] = "invalid";
+                            $errorFields['prevResumeDate'] = "invalid";
                         }
 
-                        if (!array_key_exists('prevLaunchCoregroupDate', $errorFields)) {
-                            if ($prevLaunchCoregroupDate <= $today) {
-                                $errorFields['prevLaunchCoregroupDate'] = "invalid";
+                        if (!array_key_exists('prevResumeDate', $errorFields)) {
+                            if ($prevResumeDate < $today) {
+                                $errorFields['prevResumeDate'] = "conflict";
                             } else {
-                                $fields['prevLaunchCoregroupDate'] = $prevLaunchCoregroupDate;
+                                $fields['prevResumeDate'] = $prevResumeDate;
                             }
                         }
                     }
                 }
-
-                if (!empty($actualLaunchCoregroupDate)) {
-                    $errorFields['actualLaunchCoregroupDate'] = "conflict";
-                }
-
-                if (!empty($prevLaunchChapterDate)) {
-                    $prevLaunchChapterDate = trim($prevLaunchChapterDate);
-                    if (!empty($prevLaunchChapterDate)) {
-                        try {
-                            $prevLaunchChapterDate = Util::UTCDateTime($prevLaunchChapterDate);
-                        } catch (Exception $ex) {
-                            $errorFields['prevLaunchChapterDate'] = "invalid";
-                        }
-                    }
-                }
-
-                if (!empty($actualLaunchChapterDate)) {
-                    $errorFields['actualLaunchChapterDate'] = "conflict";
-                }
             }
 
-            if ($chapter->getCurrentState() == $this->chapterRepository::CHAPTER_CURRENT_STATE_CORE_GROUP) {
-                try {
-                    if (!is_null($actualLaunchCoregroupDate)) {
-                        $actualLaunchCoregroupDate = Util::UTCDateTime($actualLaunchCoregroupDate);
-                    }
-                } catch (Exception $ex) {
-                    $fields['launchCoregroupDate'] = "invalid";
+            if (!empty($errorFields)) {
+                if (in_array("conflict", $errorFields)) {
+                    $code = Response::HTTP_CONFLICT;
+                } else {
+                    $code = Response::HTTP_BAD_REQUEST;
                 }
-            }
-
-            if (!is_null($prevLaunchCoregroupDate) && !is_null($actualLaunchCoregroupDate)) {
-                $fields['launchCoregroupDate'] = "invalid";
-            } else {
-                if (!is_null($prevLaunchCoregroupDate) && $prevLaunchCoregroupDate < $today) {
-                    $actualLaunchCoregroupDate = is_null($actualLaunchCoregroupDate) ? $prevLaunchCoregroupDate : $actualLaunchCoregroupDate;
-                    $prevLaunchCoregroupDate = null;
-                    $state = $this->chapterRepository::CHAPTER_CURRENT_STATE_CORE_GROUP;
-                }
-
-                if (!is_null($actualLaunchCoregroupDate) && $actualLaunchCoregroupDate >= $today) {
-                    $prevLaunchCoregroupDate = $actualLaunchCoregroupDate;
-                    $actualLaunchCoregroupDate = null;
-                    $state = $this->chapterRepository::CHAPTER_CURRENT_STATE_PROJECT;
-                }
-            }
-
-            // Chapter dates
-            try {
-                if (!is_null($prevLaunchChapterDate)) {
-                    $prevLaunchChapterDate = Util::UTCDateTime($prevLaunchChapterDate);
-                }
-                if (!is_null($actualLaunchChapterDate)) {
-                    $actualLaunchChapterDate = Util::UTCDateTime($actualLaunchChapterDate);
-                }
-            } catch (Exception $ex) {
-                $code = Response::HTTP_BAD_REQUEST;
-                $fields['launchChapterDate'] = "invalid";
-            }
-
-            if (!is_null($prevLaunchChapterDate) && !is_null($actualLaunchChapterDate)) {
-                $fields['launchChapterDate'] = "invalid";
-            } else {
-                if (!is_null($prevLaunchChapterDate) && $prevLaunchChapterDate < $today) {
-                    $actualLaunchChapterDate = is_null($actualLaunchChapterDate) ? $prevLaunchChapterDate : $actualLaunchChapterDate;
-                    $prevLaunchChapterDate = null;
-                    $previuosState = $state;
-                    $state = $this->chapterRepository::CHAPTER_CURRENT_STATE_CHAPTER;
-                }
-
-                if (!is_null($actualLaunchChapterDate) && $actualLaunchChapterDate >= $today) {
-                    $prevLaunchChapterDate = $actualLaunchChapterDate;
-                    $actualLaunchChapterDate = null;
-                    $state = is_null($previuosState) ? $state : $previuosState;
-                }
-            }
-
-            // Date constraints
-            $coregroupDate = $prevLaunchCoregroupDate ? $prevLaunchCoregroupDate : $actualLaunchCoregroupDate;
-            $chapterDate = $prevLaunchChapterDate ? $prevLaunchChapterDate : $actualLaunchChapterDate;
-            if (!is_null($coregroupDate) && !is_null($chapterDate) && $chapterDate < $coregroupDate) {
-                $fields['launchChapterDate'] = "invalid";
-                $fields['launchCoregroupDate'] = "invalid";
-            }
-
-            if (in_array($state, [
-                $this->chapterRepository::CHAPTER_CURRENT_STATE_PROJECT,
-                $this->chapterRepository::CHAPTER_CURRENT_STATE_CORE_GROUP
-            ]) && is_null($prevLaunchChapterDate)) {
-                $fields['launchChapterDate'] = "empty";
-            }
-
-            if (!empty($fields)) {
-                $code = Response::HTTP_BAD_REQUEST;
             }
         }
 
         if ($code == Response::HTTP_OK) {
-            $d = $this->directorRepository->findOneBy([
-                'user' => $chapterDirector,
-                'region' => $region,
-                'role' => $this->directorRepository::DIRECTOR_ROLE_ASSISTANT
-            ]);
+            // Check allowed actions for user role
+            if (in_array($role, [
+                $this->directorRepository::DIRECTOR_ROLE_AREA,
+                $this->directorRepository::DIRECTOR_ROLE_ASSISTANT
+            ])) {
+                $changingFields = array_keys($fields);
+                $allowedFields = [
+                    'members',
+                    'prevLaunchCoregroupDate',
+                    'prevLaunchChapterDate',
+                    'prevResumeDate'
+                ];
+                if (count(array_diff($changingFields, $allowedFields))) {
+                    $code = Response::HTTP_FORBIDDEN;
+                }
+            } elseif ($role != $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE) {
+                $code = Response::HTTP_FORBIDDEN;
+            }
+        }
 
-            if (is_null($d)) {
-                $d = new Director();
-                $d->setRegion($region);
-                $d->setRole($this->directorRepository::DIRECTOR_ROLE_ASSISTANT);
-                $d->setUser($chapterDirector);
-                $this->directorRepository->save($d);
+        if ($code == Response::HTTP_OK) {
+            if (array_key_exists('name', $fields)) {
+                $chapter->setName(Util::arrayGetValue('name', $fields));
             }
 
-            $chapter = new Chapter();
-            $chapter->setActualLaunchChatperDate($actualLaunchChapterDate);
-            $chapter->setActualLaunchCoregroupDate($actualLaunchCoregroupDate);
-            $chapter->setCurrentState($state);
-            $chapter->setDirector($d);
-            $chapter->setName($name);
-            $chapter->setPrevLaunchChatperDate($prevLaunchChapterDate);
-            $chapter->setPrevLaunchCoregroupDate($prevLaunchCoregroupDate);
-            $chapter->setRegion($region);
-            $this->chapterRepository->save($chapter);
+            if (array_key_exists('director', $fields)) {
+                $chapterDirector = Util::arrayGetValue('director', $fields);
+                $d = $this->directorRepository->findOneBy([
+                    'user' => $chapterDirector,
+                    'region' => $region,
+                    'role' => $this->directorRepository::DIRECTOR_ROLE_ASSISTANT
+                ]);
+
+                if (is_null($d)) {
+                    $d = new Director();
+                    $d->setRegion($region);
+                    $d->setRole($this->directorRepository::DIRECTOR_ROLE_ASSISTANT);
+                    $d->setUser($chapterDirector);
+                    $this->directorRepository->save($d);
+                }
+
+                $chapter->setDirector($d);
+            }
+
+            if (array_key_exists('members', $fields)) {
+                $chapter->setMembers(Util::arrayGetValue('members', $fields));
+            }
+
+            if (array_key_exists('prevLaunchCoregroupDate', $fields)) {
+                $chapter->setPrevLaunchCoregroupDate(Util::arrayGetValue('prevLaunchCoregroupDate', $fields));
+            }
+
+            if (array_key_exists('actualLaunchCoregroupDate', $fields)) {
+                $chapter->setActualLaunchCoregroupDate(Util::arrayGetValue('actualLaunchCoregroupDate', $fields));
+            }
+
+            if (array_key_exists('prevLaunchChapterDate', $fields)) {
+                $chapter->setPrevLaunchChapterDate(Util::arrayGetValue('prevLaunchChapterDate', $fields));
+            }
+
+            if (array_key_exists('actualLaunchChapterDate', $fields)) {
+                $chapter->setActualLaunchChapterDate(Util::arrayGetValue('actualLaunchChapterDate', $fields));
+            }
+
+            $this->entityManager->flush();
 
             return new JsonResponse($this->chapterFormatter->formatFull($chapter), Response::HTTP_CREATED);
         } else {
-            $fields = $code == Response::HTTP_BAD_REQUEST ? $fields : null;
-            return new JsonResponse($fields, $code);
+            $errorFields = empty($errorFields) ? null : $errorFields;
+            return new JsonResponse($errorFields, $code);
         }
     }
 
@@ -907,7 +936,7 @@ class ChapterController extends AbstractController
 
                 if (is_null($c->getActualLaunchCoregroupDate()) && $c->getPrevLaunchCoregroupDate() <= $today) {
                     $warning = "CORE_GROUP";
-                } elseif (is_null($c->getActualLaunchChatperDate()) && $c->getPrevLaunchChatperDate() <= $today) {
+                } elseif (is_null($c->getActualLaunchChapterDate()) && $c->getPrevLaunchChapterDate() <= $today) {
                     $warning = "CHAPTER";
                 }
 

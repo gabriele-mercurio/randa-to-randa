@@ -4,6 +4,8 @@ namespace App\Util;
 
 use DateTime;
 use DateTimeZone;
+use Symfony\Component\HttpFoundation\ParameterBag;
+use Symfony\Component\HttpFoundation\Request;
 use Webmozart\PathUtil\Path;
 
 class Util
@@ -179,6 +181,43 @@ class Util
         $url = Path::join($host, static::getUploadedRelativeURLDirectory($subfolder));
 
         return (substr($protocol, 0, 5) == "HTTPS" ? "https" : "http") . "://" . $url;
+    }
+
+    public static function normalizeRequest(Request $request): Request
+    {
+        $content = str_replace(["\n", "\t"], "", $request->getContent());
+
+        if (!empty($content) && empty($request->request->all())) {
+            $allowedContentTypes = [
+                'application/json',
+                'application/x-json',
+                'multipart/form-data'
+            ];
+            $allowedRequestMethods = [
+                'POST',
+                'PUT',
+                'DELETE',
+                'PATCH'
+            ];
+            $contentType = $request->headers->get('CONTENT_TYPE');
+            $requestMethod = strtoupper($request->server->get('REQUEST_METHOD', 'GET'));
+
+            if (in_array($contentType, $allowedContentTypes) && in_array($requestMethod, $allowedRequestMethods)) {
+                $newRequest = json_decode($content, true);
+                if (!is_null($newRequest) && is_array($newRequest)) {
+                    $query = $request->query->all();
+                    $newRequest = array_merge($request->request->all(), $newRequest);
+                    $attributes = $request->attributes->all();
+                    $cookies = $request->cookies->all();
+                    $files = $request->files;
+                    $server = $request->server->all();
+                    $request = new Request($query, $newRequest, $attributes, $cookies, [], $server, $content);
+                    $request->files = $files;
+                }
+            }
+        }
+
+        return $request;
     }
 
     public static function translateRecaptchaErrors(array $errors): string

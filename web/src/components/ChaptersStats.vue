@@ -1,15 +1,23 @@
 <template>
-    
+     <line-chart
+      :chartdata="chapters" />
 </template>
 
 <script>
+import LineChart from './DonutChart.vue'
+
 export default {
 
-    props: {
-        chapters: {
-            type: Array,
-            default: null
+    data() {
+        return {
+            headers: {
+
+            },
+            chapters: {}
         }
+    },
+    components: {
+        LineChart
     },
     whatch: {
         chapters: {
@@ -20,6 +28,13 @@ export default {
         }
     },
     created() {
+        this.chapters = {
+            project: 34,
+            core_group: 13,
+            chapter: 90,
+            closed:0,
+            suspended: 5
+        }
     }
 }
 </script>

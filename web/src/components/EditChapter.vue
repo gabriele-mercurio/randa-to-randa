@@ -168,7 +168,7 @@ export default {
     saveChapter() {
       //todo
       let data = {};
-      data["director"] = "1425d188-e39f-4c4c-810e-d16c9d73e1f7";
+      data["director"] = "6bc0688b-63a0-41e4-960c-b37b3e9c31ec";
       data["name"] = this.chapter["name"];
       if (this.chapter.coreGroupLaunchType === "actual") {
         data["actualLaunchCoregroupDate"] = this.addDay(this.chapter.coreGroupLaunch);

@@ -39,6 +39,27 @@ class ChapterRepository extends ServiceEntityRepository
 
     /**
      * @param Chapter $chapter
+     * @param array $params
+     */
+    public function existsOtherWithSameFields(Chapter $chapter, array $params): bool
+    {
+        $qb = $this->createQueryBuilder('c');
+        $qb->where('c.id != :cid')
+           ->setParameter('cid', $chapter->getId());
+
+        foreach ($params as $field => $value) {
+            $qb->andWhere("c.$field = :c$field")
+               ->setParameter("c$field", $value);
+        }
+
+        $res = $qb->getQuery()
+                  ->getResult();
+
+        return !empty($res);
+    }
+
+    /**
+     * @param Chapter $chapter
      */
     public function save(Chapter $chapter): void
     {

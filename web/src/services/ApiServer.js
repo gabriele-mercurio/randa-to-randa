@@ -3,7 +3,7 @@ import axios from 'axios'
 class ApiServer {
     static commonRequestConfig = {
         'headers': {
-            'Content-Type': 'multipart/form-data'
+            'Content-Type': 'application/json'
         }
     };
     

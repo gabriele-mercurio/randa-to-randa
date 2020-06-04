@@ -30,6 +30,13 @@ class Strategy
     private $timestamp;
 
     /**
+     * @var Collection|StrategyPerRanda[]
+     *
+     * @ORM\OneToMany(targetEntity="StrategyPerRanda", mappedBy="startegy")
+     */
+    private $strategiesPerRanda;
+
+    /**
      * Strategy constructor.
      *
      * @throws Exception
@@ -82,5 +89,13 @@ class Strategy
     {
         $this->timestamp = $timestamp;
         return $this;
+    }
+
+    /**
+     * @return Collection|StrategyPerRanda[]
+     */
+    public function getStrategiesPerRanda()
+    {
+        return $this->strategiesPerRanda;
     }
 }

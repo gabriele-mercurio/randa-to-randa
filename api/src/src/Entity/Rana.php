@@ -32,6 +32,41 @@ class Rana
     private $randa;
 
     /**
+     * @var Collection|NewMember[]
+     *
+     * @ORM\OneToMany(targetEntity="NewMember", mappedBy="rana")
+     */
+    private $newMembers;
+
+    /**
+     * @var Collection|RanaLifecycle[]
+     *
+     * @ORM\OneToMany(targetEntity="RanaLifecycle", mappedBy="rana")
+     */
+    private $ranaLifecycles;
+
+    /**
+     * @var Collection|RenewedMember[]
+     *
+     * @ORM\OneToMany(targetEntity="RenewedMember", mappedBy="rana")
+     */
+    private $renewedMembers;
+
+    /**
+     * @var Collection|Retention[]
+     *
+     * @ORM\OneToMany(targetEntity="Retention", mappedBy="rana")
+     */
+    private $retentions;
+
+    /**
+     * @var Collection|TrafficLight[]
+     *
+     * @ORM\OneToMany(targetEntity="TrafficLight", mappedBy="rana")
+     */
+    private $trafficLights;
+
+    /**
      * Rana constructor.
      *
      * @throws Exception
@@ -71,5 +106,45 @@ class Rana
     {
         $this->randa = $randa;
         return $this;
+    }
+
+    /**
+     * @return Collection|NewMember[]
+     */
+    public function getNewMembers()
+    {
+        return $this->newMembers;
+    }
+
+    /**
+     * @return Collection|RanaLifecycle[]
+     */
+    public function getRanaLifecycles()
+    {
+        return $this->ranaLifecycles;
+    }
+
+    /**
+     * @return Collection|RenewedMember[]
+     */
+    public function getRenewedMembers()
+    {
+        return $this->renewedMembers;
+    }
+
+    /**
+     * @return Collection|Retention[]
+     */
+    public function getRetentions()
+    {
+        return $this->retentions;
+    }
+
+    /**
+     * @return Collection|TrafficLight[]
+     */
+    public function getTrafficLights()
+    {
+        return $this->trafficLights;
     }
 }

@@ -22,9 +22,9 @@ class UserFormatter
     private function format(User $user): array
     {
         $userDetails = [
-            'id'       => $user->getId(),
             'email'    => $user->getEmail(),
-            'fullName' => $user->getFullName()
+            'fullName' => $user->getFullName(),
+            'id'       => $user->getId()
         ];
 
         return $userDetails;

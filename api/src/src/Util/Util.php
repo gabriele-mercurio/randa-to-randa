@@ -190,8 +190,7 @@ class Util
         if (!empty($content) && empty($request->request->all())) {
             $allowedContentTypes = [
                 'application/json',
-                'application/x-json',
-                'multipart/form-data'
+                'application/x-json'
             ];
             $allowedRequestMethods = [
                 'POST',

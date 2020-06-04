@@ -249,16 +249,24 @@ class ChapterController extends AbstractController
             if (!is_null($prevLaunchCoregroupDate) && !is_null($actualLaunchCoregroupDate)) {
                 $fields['launchCoregroupDate'] = "invalid";
             } else {
-                if (!is_null($prevLaunchCoregroupDate) && $prevLaunchCoregroupDate < $today) {
-                    $actualLaunchCoregroupDate = is_null($actualLaunchCoregroupDate) ? $prevLaunchCoregroupDate : $actualLaunchCoregroupDate;
-                    $prevLaunchCoregroupDate = null;
-                    $state = $this->chapterRepository::CHAPTER_CURRENT_STATE_CORE_GROUP;
+                if (!is_null($prevLaunchCoregroupDate)) {
+                    if ($prevLaunchCoregroupDate < $today) {
+                        $actualLaunchCoregroupDate = $prevLaunchCoregroupDate;
+                        $prevLaunchCoregroupDate = null;
+                        $state = $this->chapterRepository::CHAPTER_CURRENT_STATE_CORE_GROUP;
+                    } else {
+                        $state = $this->chapterRepository::CHAPTER_CURRENT_STATE_PROJECT;
+                    }
                 }
 
-                if (!is_null($actualLaunchCoregroupDate) && $actualLaunchCoregroupDate >= $today) {
-                    $prevLaunchCoregroupDate = $actualLaunchCoregroupDate;
-                    $actualLaunchCoregroupDate = null;
-                    $state = $this->chapterRepository::CHAPTER_CURRENT_STATE_PROJECT;
+                if (!is_null($actualLaunchCoregroupDate)) {
+                    if ($actualLaunchCoregroupDate >= $today) {
+                        $prevLaunchCoregroupDate = $actualLaunchCoregroupDate;
+                        $actualLaunchCoregroupDate = null;
+                        $state = $this->chapterRepository::CHAPTER_CURRENT_STATE_PROJECT;
+                    } else {
+                        $state = $this->chapterRepository::CHAPTER_CURRENT_STATE_CORE_GROUP;
+                    }
                 }
             }
 
@@ -271,24 +279,29 @@ class ChapterController extends AbstractController
                     $actualLaunchChapterDate = Util::UTCDateTime($actualLaunchChapterDate);
                 }
             } catch (Exception $ex) {
-                $code = Response::HTTP_BAD_REQUEST;
                 $fields['launchChapterDate'] = "invalid";
             }
 
             if (!is_null($prevLaunchChapterDate) && !is_null($actualLaunchChapterDate)) {
                 $fields['launchChapterDate'] = "invalid";
             } else {
-                if (!is_null($prevLaunchChapterDate) && $prevLaunchChapterDate < $today) {
-                    $actualLaunchChapterDate = is_null($actualLaunchChapterDate) ? $prevLaunchChapterDate : $actualLaunchChapterDate;
-                    $prevLaunchChapterDate = null;
-                    $previuosState = $state;
-                    $state = $this->chapterRepository::CHAPTER_CURRENT_STATE_CHAPTER;
+                if (!is_null($prevLaunchChapterDate)) {
+                    if ($prevLaunchChapterDate < $today) {
+                        $actualLaunchChapterDate = $prevLaunchChapterDate;
+                        $prevLaunchChapterDate = null;
+                        $previuosState = $state;
+                        $state = $this->chapterRepository::CHAPTER_CURRENT_STATE_CHAPTER;
+                    }
                 }
 
-                if (!is_null($actualLaunchChapterDate) && $actualLaunchChapterDate >= $today) {
-                    $prevLaunchChapterDate = $actualLaunchChapterDate;
-                    $actualLaunchChapterDate = null;
-                    $state = is_null($previuosState) ? $state : $previuosState;
+                if (!is_null($actualLaunchChapterDate)){
+                    if ($actualLaunchChapterDate >= $today) {
+                        $prevLaunchChapterDate = $actualLaunchChapterDate;
+                        $actualLaunchChapterDate = null;
+                        $state = is_null($previuosState) ? $state : $previuosState;
+                    } else {
+                        $state = $this->chapterRepository::CHAPTER_CURRENT_STATE_CHAPTER;
+                    }
                 }
             }
 
@@ -492,6 +505,10 @@ class ChapterController extends AbstractController
      *      response=404,
      *      description="Returned if actAs is given but is not a valid user id."
      * )
+     * @SWG\Response(
+     *      response=409,
+     *      description="Returned when are given dates that change the chapter status. Use dedicated APIs instead."
+     * )
      * @SWG\Tag(name="Chapters")
      * @Security(name="Bearer")
      *
@@ -499,6 +516,8 @@ class ChapterController extends AbstractController
      */
     public function editChapter(Chapter $chapter, Request $request): Response
     {
+        $request = Util::normalizeRequest($request);
+
         $actAs = $request->get("actAs");
         $code = Response::HTTP_OK;
         $fields = [];
@@ -594,6 +613,23 @@ class ChapterController extends AbstractController
                             }
                         }
                     }
+                }
+
+                if (!empty($actualLaunchCoregroupDate)) {
+                    $errorFields['actualLaunchCoregroupDate'] = "conflict";
+                }
+
+                if (!empty($prevLaunchChapterDate)) {
+                    $prevLaunchChapterDate = trim($prevLaunchChapterDate);
+                    if (!empty($prevLaunchChapterDate)) {
+                        try {
+                            $prevLaunchChapterDate
+                        }
+                    }
+                }
+
+                if (!empty($actualLaunchChapterDate)) {
+                    $errorFields['actualLaunchChapterDate'] = "conflict";
                 }
             }
 

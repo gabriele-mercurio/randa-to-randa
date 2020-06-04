@@ -45,6 +45,19 @@ class UserFormatter
      *
      * @return array
      */
+    public function formatForSelectFields(User $user): array
+    {
+        $ret = $this->format($user);
+        unset($ret['email']);
+
+        return $ret;
+    }
+
+    /**
+     * @param User $user
+     *
+     * @return array
+     */
     public function formatFull(User $user): array
     {
         $userDetails = array_merge($this->format($user), [

@@ -3,9 +3,9 @@
 namespace App\Entity;
 
 use App\Util\Util;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Ramsey\Uuid\Uuid;
-use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
@@ -42,6 +42,13 @@ class User implements UserInterface
 
     /** @ORM\Column(name="is_admin", type="boolean", options={"default":false}) */
     private $isAdmin;
+
+    /**
+     * @var Collection|Director[]
+     *
+     * @ORM\OneToMany(targetEntity="Director", mappedBy="user")
+     */
+    private $directors;
 
     /**
      * User constructor.
@@ -138,6 +145,15 @@ class User implements UserInterface
         return $this;
     }
 
+    /**
+     * @return Collection|Director[]
+     */
+    public function getDirectors()
+    {
+        return $this->directors;
+    }
+
+    // Custom methods
     public function getFullName(): string
     {
         return trim($this->firstName . " " . $this->lastName);

@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\Region;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -60,19 +61,36 @@ class UserRepository extends ServiceEntityRepository
     }
 
     /**
+     * @param string $email
+     *
+     * @return User
+     */
+    public function getUserByEmail(string $email): User
+    {
+        return $this->findOneBy([
+            "email" => $email
+        ]);
+    }
+
+    /**
      * @return User[]
      */
-    public function getUsers() {
+    public function getUsers(): array
+    {
         return $this->findAll();
     }
 
     /**
-     * @return User
+     * @return User[]
      */
-    public function getUserByEmail($email) {
-        return $this->findOneBy([
-            "email" => $email
-        ]);
+    public function getUsersPerRegion(Region $region): array
+    {
+        $qb = $this->createQueryBuilder('u');
+        return $qb->join('u.directors', 'd')
+                  ->where('d.region = :dregion_id')
+                  ->setParameter('dregion_id', $region->getId())
+                  ->getQuery()
+                  ->getResult();
     }
 
     /**

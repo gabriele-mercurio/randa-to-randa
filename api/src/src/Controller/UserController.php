@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Region;
 use App\Entity\User;
 use App\Events\UserEvent;
 use App\Formatter\UserFormatter;
@@ -35,35 +36,6 @@ class UserController extends AbstractController
         $this->userRepository = $userRepository;
         $this->userFormatter = $userFormatter;
         $this->eventDispatcher = $eventDispatcher;
-    }
-
-    /**
-     * Get all users
-     *
-     * @Route("/users", name="users_list", methods={"GET"})
-     *
-     * @SWG\Response(
-     *      response=200,
-     *      description="Returns all users",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(
-     *              type="object",
-     *              @SWG\Property(property="email", type="string"),
-     *              @SWG\Property(property="fullName", type="string"),
-     *              @SWG\Property(property="id", type="string")
-     *          )
-     *      )
-     * )
-     * @SWG\Tag(name="Users")
-     * @Security(name="Bearer")
-     */
-    public function listUsers()
-    {
-        $users = $this->userRepository->getUsers();
-        return new JsonResponse(array_map(function ($u) {
-            return $this->userFormatter->formatBasic($u);
-        }, $users));
     }
 
     /**
@@ -112,7 +84,7 @@ class UserController extends AbstractController
      * @SWG\Tag(name="Users")
      * @Security(name="Bearer")
      */
-    public function createUser(Request $request)
+    public function createUser(Request $request): Response
     {
         $email = trim($request->request->get("email"));
         $firstName = trim($request->request->get("firstName"));
@@ -148,5 +120,69 @@ class UserController extends AbstractController
                 "errors" => $errors
             ], Response::HTTP_BAD_REQUEST);
         }
+    }
+
+    /**
+     * Get all users
+     *
+     * @Route("/users", name="users_list", methods={"GET"})
+     *
+     * @SWG\Response(
+     *      response=200,
+     *      description="Returns all users",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(
+     *              type="object",
+     *              @SWG\Property(property="email", type="string"),
+     *              @SWG\Property(property="fullName", type="string"),
+     *              @SWG\Property(property="id", type="string")
+     *          )
+     *      )
+     * )
+     * @SWG\Tag(name="Users")
+     * @Security(name="Bearer")
+     */
+    public function listUsers(): Response
+    {
+        $users = $this->userRepository->getUsers();
+        return new JsonResponse(array_map(function ($u) {
+            return $this->userFormatter->formatBasic($u);
+        }, $users));
+    }
+
+    /**
+     * Get all users for a specific region
+     *
+     * @Route("{id}/users", name="users_list_per_region", methods={"GET"})
+     *
+     * @SWG\Response(
+     *      response=200,
+     *      description="Returns all users for the specified region",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(
+     *              type="object",
+     *              @SWG\Property(property="fullName", type="string"),
+     *              @SWG\Property(property="id", type="string")
+     *          )
+     *      )
+     * )
+     * @SWG\Tag(name="Users")
+     * @Security(name="Bearer")
+     */
+    public function listUsersPerRegion(Region $region): Response
+    {
+        $users = $this->userRepository->getUsersPerRegion($region);
+        usort($users, function ($u1, $u2) {
+            $fullName1 = $u1->getFullName();
+            $fullName2 = $u2->getFullName();
+
+            return $fullName1 < $fullName2 ? -1 : ($fullName1 > $fullName2 ? 1 : 0);
+        });
+
+        return new JsonResponse(array_map(function ($user) {
+            return $this->userFormatter->formatForSelectFields($user);
+        }, $users));
     }
 }

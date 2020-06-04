@@ -623,7 +623,9 @@ class ChapterController extends AbstractController
                     $prevLaunchChapterDate = trim($prevLaunchChapterDate);
                     if (!empty($prevLaunchChapterDate)) {
                         try {
-                            $prevLaunchChapterDate
+                            $prevLaunchChapterDate = Util::UTCDateTime($prevLaunchChapterDate);
+                        } catch (Exception $ex) {
+                            $errorFields['prevLaunchChapterDate'] = "invalid";
                         }
                     }
                 }

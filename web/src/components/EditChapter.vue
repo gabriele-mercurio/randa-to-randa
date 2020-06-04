@@ -165,10 +165,10 @@ export default {
       this.chapter = { ...chapterSkeleton };
       this.$emit("close");
     },
-    saveChapter() {
-      //todo
+    async saveChapter() {
       let data = {};
-      data["director"] = "6bc0688b-63a0-41e4-960c-b37b3e9c31ec";
+      //todo
+      data["director"] = "a5c2047d-089b-436c-bd6e-45285e03052e";
       data["name"] = this.chapter["name"];
       if (this.chapter.coreGroupLaunchType === "actual") {
         data["actualLaunchCoregroupDate"] = this.addDay(this.chapter.coreGroupLaunch);
@@ -180,7 +180,12 @@ export default {
       } else {
         data["prevLaunchChapterDate"] = this.addDay(this.chapter.chapterLaunch);
       }
-      ApiServer.post(this.$store.getters["getRegion"].id + "/chapter", data);
+      try {
+        let result = await ApiServer.post(this.$store.getters["getRegion"].id + "/chapter", data);
+        this.$emit("saveChapter", result);
+      } catch (e) {
+
+      }
     },
     isCoreGroupOrChapter(item) {
       return (

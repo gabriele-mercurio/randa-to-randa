@@ -1,6 +1,6 @@
 <template>
   <div class="ma-4 fill-height">
-    <ChaptersList :classSpec="'elevation-3'" v-on:edit="edit(item)" />
+    <ChaptersList :chapters.sync="chapters" :classSpec="'elevation-3'" v-on:edit="edit(item)" />
 
     <v-dialog
       :persistent="false"
@@ -12,6 +12,7 @@
         :show="showEditChapter"
         :editChapter.sync="editChapter"
         v-on:close="showEditChapter = false"
+        v-on:saveChapter="updateChapters()"
       />
     </v-dialog>
     <v-btn fixed fab bottom right color="primary" @click="newChapter()">
@@ -29,7 +30,8 @@ export default {
   data() {
     return {
       showEditChapter: false,
-      editChapter: null
+      editChapter: null,
+      chapters: []
     };
   },
   props: {},
@@ -43,22 +45,75 @@ export default {
       this.showEditChapter = true;
     },
 
+    updateChapters(chapter) {
+      this.showEditChapter = false;
+      this.chapters.push(chapter);
+    },
+
     newChapter() {
       this.editChapter = null;
       this.showEditChapter = true;
-    }
+    },
+
+     async fetchChapters() {
+      if (this.$store.getters["getRegion"]) {
+        let role = this.$store.getters["getRole"]
+          ? "?role=" + this.$store.getters["getRole"]
+          : "";
+        this.chapters = await ApiServer.get(
+          this.$store.getters["getRegion"].id + "/chapters" + role
+        );
+      }
+
+      // console.log(this.chapters);
+      // this.chapters = await Promise.resolve([
+      //   {
+      //     chapterLaunch: {
+      //       prev: "2008-03",
+      //       actual: null
+      //     },
+      //     closureDate: "string",
+      //     coreGroupLaunch: {
+      //       prev: "2020-09",
+      //       actual: "2020-12"
+      //     },
+      //     currentState: "PROJECT",
+      //     director: {
+      //       id: 0,
+      //       fullName: "Luigi luigetti"
+      //     },
+      //     id: 0,
+      //     members: 10,
+      //     name: "Abn",
+      //     suspDate: null,
+      //     warning: "CHAPTER"
+      //   },
+      //   {
+      //     chapterLaunch: {
+      //       prev: "2018-04",
+      //       actual: "2020-05"
+      //     },
+      //     closureDate: null,
+      //     coreGroupLaunch: {
+      //       prev: "2020-08",
+      //       actual: "2020-07"
+      //     },
+      //     currentState: "PROJECT",
+      //     director: {
+      //       id: 0,
+      //       fullName: "Luigi poi"
+      //     },
+      //     id: 1,
+      //     members: 100,
+      //     name: "Saracap",
+      //     suspDate: null,
+      //     warning: null
+      //   }
+      // ]);
+    },
+  },
+  created() {
+    this.fetchChapters();
   }
 };
 </script>
-<style lang="scss">
-.PROJECT {
-  background-color: lighten(red, 40);
-}
-.CORE_GROUP {
-  background-color: lighten(orange, 40);
-}
-
-.CHAPTER {
-  background-color: rgb(223, 255, 223);
-}
-</style>

@@ -1,7 +1,7 @@
 <template>
   <v-container class="primary pa-0 ma-0" id="container">
     <h2 class="white--text text-center py-12">Accedi a Randa to Randa</h2>
-    <v-form v-if="!$auth.loggedIn" @submit.prevent="doLogin()">
+    <v-form v-if="!getToken()" @submit.prevent="doLogin()">
       <v-card class="mx-auto mb-12 elevation-12" max-width="374">
         <v-card-title class="secondary--text text-center">
           Login
@@ -52,7 +52,7 @@
       </v-card>
     </v-form>
 
-    <v-snackbar v-model="error" :timeout=timeout top right>
+    <v-snackbar v-model="error" :timeout="timeout" top right>
       <v-icon color="primary">mdi-alert</v-icon>
       Username o password errate
       <v-btn color="white" icon @click="error = false">
@@ -77,7 +77,8 @@ export default {
     };
   },
   created() {
-    if (this.$auth.loggedIn) {
+    if (this.getToken()) {
+      debugger;
       if (this.$store.getters["getRegion"]) {
         this.goToHome();
       } else {
@@ -87,22 +88,20 @@ export default {
   },
   methods: {
     async doLogin() {
-    localStorage.removeItem("region");
-      try {
-        let loginData = {
-          email: this.email,
-          password: this.password,
-          grant_type: "password",
-          client_id: process.env.client_id,
-          client_secret: process.env.client_secret
-        };
-        let response = await this.$auth.loginWith("local", { data: loginData });
-        let token = localStorage.getItem("auth._token.local");
-        ApiServer.setToken(token);
+      localStorage.removeItem("region");
+      let response = await ApiServer.login(this.email, this.password);
+      if (response["token"] && response["user"]) {
+        this.$store.commit("setToken", response["token"]);
+        this.$store.commit("setUser", response["user"]);
+        let d = this.$store.getters["getToken"];
         this.fetchRegions();
-      } catch (e) {
+      } else {
         this.error = true;
       }
+    },
+
+    getToken() {
+      return this.$store.getters["getToken"];
     },
 
     goToHome() {
@@ -116,7 +115,7 @@ export default {
     },
 
     selectRegion() {
-      this.$store.commit("setRegion", this.region)
+      this.$store.commit("setRegion", this.region);
       this.goToHome();
     }
   }

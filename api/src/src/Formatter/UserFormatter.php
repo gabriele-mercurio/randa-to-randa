@@ -22,9 +22,9 @@ class UserFormatter
     private function format(User $user): array
     {
         $userDetails = [
-            'id'       => $user->getId(),
             'email'    => $user->getEmail(),
-            'fullName' => $user->getFullName()
+            'fullName' => $user->getFullName(),
+            'id'       => $user->getId()
         ];
 
         return $userDetails;
@@ -38,6 +38,19 @@ class UserFormatter
     public function formatBasic(User $user): array
     {
         return $this->format($user);
+    }
+
+    /**
+     * @param User $user
+     *
+     * @return array
+     */
+    public function formatForSelectFields(User $user): array
+    {
+        $ret = $this->format($user);
+        unset($ret['email']);
+
+        return $ret;
     }
 
     /**

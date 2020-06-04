@@ -3,7 +3,7 @@
 </template><script>
 export default {
     created() {
-        this.$router.push("home");
+        //this.$router.push("home");
     }
 }
 </script>

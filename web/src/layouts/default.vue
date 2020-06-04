@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <nav v-if="$auth.loggedIn && getRegionName()">
+    <nav v-if="getToken() && getRegionName()">
       <v-navigation-drawer v-model="drawer" absolute temporary right>
         <v-list nav dense>
           <v-list-item-group active-class="secondary--text text--accent-4">
@@ -55,7 +55,7 @@
         <v-spacer></v-spacer>
         <v-toolbar-title class="d-flex flex-row align-center">
           <div>
-            {{ $auth.user.fullName }} <small>({{ getRegionName() }})</small>
+            {{ getUser() }} <small>({{ getRegionName() }})</small>
           </div>
           <v-btn icon @click="drawer = true" class="white--text">
             <v-icon>mdi-account</v-icon></v-btn
@@ -78,6 +78,9 @@ export default {
     };
   },
   methods: {
+    getUser() {
+      return this.$store.getters["getUser"].fullName;
+    },
     changeRegion() {
       this.$store.commit("setRegion", null);
       this.$router.push({
@@ -89,30 +92,46 @@ export default {
         ? this.$store.getters["getRegion"].name
         : null;
     },
-    doLogout() {
-      this.$auth.logout({
-        oauth_access_token: localStorage.getItem("auth._token.local"),
-        oauth_client_id: process.env.client_id
-      });
+    getToken() {
+      return this.$store.getters["getToken"];
+    },
+    async doLogout() {
+      try {
+        await ApiServer.logout();
+        this.$store.commit("setToken", null);
+        this.$store.commit("setRegion", null);
+        this.$router.push("/login");
+      } catch (e) {
+
+      }
     }
   },
-  created() {
-    if (this.$auth.loggedIn) {
-      ApiServer.setToken(localStorage.getItem("auth._token.local"));
-    }
-    if (!this.$store.getters["getRegion"]) {
-      this.$router.push("login");
-    }
-    ApiServer.base_url = process.env.base_url + "/";
 
-    this.$store.watch(
-      state => {
-        return this.$store.state.region;
-      },
-      (newValue, oldValue) => {
-        this.region = newValue;
+  mounted() {
+    window.onNuxtReady(() => {
+      let token = this.getToken();
+      if (token) {
+        ApiServer.setToken(token);
+        debugger;
+        if (!this.$store.getters["getRegion"]) {
+          this.$router.push("login");
+        }
+        ApiServer.base_url = process.env.base_url + "/";
+
+        this.$store.watch(
+          state => {
+            return this.$store.state.region;
+          },
+          (newValue, oldValue) => {
+            this.region = newValue;
+          }
+        );
+      } else {
+        this.$router.push({
+          path: "/login"
+        });
       }
-    );
+    });
   }
 };
 </script>

@@ -5,6 +5,7 @@
       hide-default-footer
     :class="classSpec"
   >
+
     <template v-slot:item.currentState="{ item }">
       <span :class="item.currentState">{{ item.currentState }}</span>
     </template>
@@ -71,7 +72,7 @@
           >{{ getPrevOrActualDate(item.chapterLaunch) }}</span
         >
       </div>
-    </template>
+    </template> 
   </v-data-table>
 </template>
 <script>
@@ -95,8 +96,7 @@ export default {
         "director.fullName",
         "members",
         "currentState"
-      ],
-      chapters: []
+      ]
     };
   },
   props: {
@@ -107,69 +107,17 @@ export default {
     short: {
       type: Boolean,
       default: false
+    },
+    chapters: {
+      type: Array,
+      default: null
     }
   },
   methods: {
     edit() {
       this.$emit("edit", item);
     },
-    async fetchChapters() {
-      if (this.$store.getters["getRegion"]) {
-        let role = this.$store.getters["getRole"]
-          ? "?role=" + this.$store.getters["getRole"]
-          : "";
-        this.chapters = await ApiServer.get(
-          this.$store.getters["getRegion"].id + "/chapters" + role
-        );
-        this.$store.commit("setChapters", this.chapters);
-      }
-
-      // console.log(this.chapters);
-      // this.chapters = await Promise.resolve([
-      //   {
-      //     chapterLaunch: {
-      //       prev: "2008-03",
-      //       actual: null
-      //     },
-      //     closureDate: "string",
-      //     coreGroupLaunch: {
-      //       prev: "2020-09",
-      //       actual: "2020-12"
-      //     },
-      //     currentState: "PROJECT",
-      //     director: {
-      //       id: 0,
-      //       fullName: "Luigi luigetti"
-      //     },
-      //     id: 0,
-      //     members: 10,
-      //     name: "Abn",
-      //     suspDate: null,
-      //     warning: "CHAPTER"
-      //   },
-      //   {
-      //     chapterLaunch: {
-      //       prev: "2018-04",
-      //       actual: "2020-05"
-      //     },
-      //     closureDate: null,
-      //     coreGroupLaunch: {
-      //       prev: "2020-08",
-      //       actual: "2020-07"
-      //     },
-      //     currentState: "PROJECT",
-      //     director: {
-      //       id: 0,
-      //       fullName: "Luigi poi"
-      //     },
-      //     id: 1,
-      //     members: 100,
-      //     name: "Saracap",
-      //     suspDate: null,
-      //     warning: null
-      //   }
-      // ]);
-    },
+   
     getPrevOrActualDate(item) {
       if (item.actual != null) {
         return Utils.getMonthYear(item.actual);
@@ -183,14 +131,21 @@ export default {
     }
   },
   created() {
-    this.fetchChapters();
     if(this.short) {
       this.headers = this.headers.filter(h => {
         return this.shortFields.includes(h.value);
       });
     }
+  },
+
+  watch: {
+    chapters: {
+      "handler": function(old, n) {
+        debugger;
+      }
+    }
   }
-};
+ }
 </script>
 <style>
 .hidden {

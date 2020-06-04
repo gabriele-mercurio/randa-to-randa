@@ -5,7 +5,6 @@ namespace App\Entity;
 use DateTime;
 use Doctrine\ORM\Mapping as ORM;
 use Ramsey\Uuid\Uuid;
-use Ramsey\Uuid\UuidInterface;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\ChapterRepository")
@@ -48,11 +47,11 @@ class Chapter
     /** @ORM\Column(name="actual_launch_coregroup_date", type="date", nullable=true) */
     private $actualLaunchCoregroupDate;
 
-    /** @ORM\Column(name="prev_launch_chatper_date", type="date", nullable=true) */
-    private $prevLaunchChatperDate;
+    /** @ORM\Column(name="prev_launch_chapter_date", type="date", nullable=true) */
+    private $prevLaunchChapterDate;
 
-    /** @ORM\Column(name="actual_launch_chatper_date", type="date", nullable=true) */
-    private $actualLaunchChatperDate;
+    /** @ORM\Column(name="actual_launch_chapter_date", type="date", nullable=true) */
+    private $actualLaunchChapterDate;
 
     /** @ORM\Column(name="susp_date", type="date", nullable=true, nullable=true) */
     private $suspDate;
@@ -173,29 +172,29 @@ class Chapter
         return $this;
     }
 
-    /** Get the value of prevLaunchChatperDate */
-    public function getPrevLaunchChatperDate(): ?DateTime
+    /** Get the value of prevLaunchChapterDate */
+    public function getPrevLaunchChapterDate(): ?DateTime
     {
-        return $this->prevLaunchChatperDate;
+        return $this->prevLaunchChapterDate;
     }
 
-    /** Set the value of prevLaunchChatperDate */
-    public function setPrevLaunchChatperDate(?DateTime $prevLaunchChatperDate): self
+    /** Set the value of prevLaunchChapterDate */
+    public function setPrevLaunchChapterDate(?DateTime $prevLaunchChapterDate): self
     {
-        $this->prevLaunchChatperDate = $prevLaunchChatperDate;
+        $this->prevLaunchChapterDate = $prevLaunchChapterDate;
         return $this;
     }
 
-    /** Get the value of actualLaunchChatperDate */
-    public function getActualLaunchChatperDate(): ?DateTime
+    /** Get the value of actualLaunchChapterDate */
+    public function getActualLaunchChapterDate(): ?DateTime
     {
-        return $this->actualLaunchChatperDate;
+        return $this->actualLaunchChapterDate;
     }
 
-    /** Set the value of actualLaunchChatperDate */
-    public function setActualLaunchChatperDate(?DateTime $actualLaunchChatperDate): self
+    /** Set the value of actualLaunchChapterDate */
+    public function setActualLaunchChapterDate(?DateTime $actualLaunchChapterDate): self
     {
-        $this->actualLaunchChatperDate = $actualLaunchChatperDate;
+        $this->actualLaunchChapterDate = $actualLaunchChapterDate;
         return $this;
     }
 

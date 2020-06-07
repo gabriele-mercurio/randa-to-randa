@@ -22,7 +22,6 @@ export default {
     whatch: {
         chapters: {
             "handler": function(oldVal, newVal) {
-                debugger;
             },
             immediate: true
         }

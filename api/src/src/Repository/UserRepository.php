@@ -87,8 +87,8 @@ class UserRepository extends ServiceEntityRepository
     {
         $qb = $this->createQueryBuilder('u');
         return $qb->join('u.directors', 'd')
-                  ->where('d.region = :dregion_id')
-                  ->setParameter('dregion_id', $region->getId())
+                  ->where('d.region = :dregionId')
+                  ->setParameter('dregionId', $region->getId())
                   ->getQuery()
                   ->getResult();
     }

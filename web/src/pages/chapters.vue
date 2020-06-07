@@ -1,6 +1,10 @@
 <template>
   <div class="ma-4 fill-height">
-    <ChaptersList :chapters.sync="chapters" :classSpec="'elevation-3'" v-on:edit="edit(item)" />
+    <ChaptersList
+      :chapters.sync="chapters"
+      :classSpec="'elevation-3'"
+      v-on:edit="openEditModal"
+    />
 
     <v-dialog
       :persistent="false"
@@ -11,8 +15,9 @@
       <EditChapter
         :show="showEditChapter"
         :editChapter.sync="editChapter"
+        :users="users"
         v-on:close="showEditChapter = false"
-        v-on:saveChapter="updateChapters()"
+        v-on:saveChapter="updateChapters"
       />
     </v-dialog>
     <v-btn fixed fab bottom right color="primary" @click="newChapter()">
@@ -31,8 +36,10 @@ export default {
     return {
       showEditChapter: false,
       editChapter: null,
-      chapters: []
-    };
+      chapters: [],
+      users: [],
+      regionId: null
+    }
   },
   props: {},
   components: {
@@ -40,7 +47,8 @@ export default {
     ChaptersList
   },
   methods: {
-    edit(chapter) {
+    openEditModal(chapter) {
+      debugger;
       this.editChapter = chapter;
       this.showEditChapter = true;
     },
@@ -48,6 +56,9 @@ export default {
     updateChapters(chapter) {
       this.showEditChapter = false;
       this.chapters.push(chapter);
+      console.log(this.chapters[this.chapters.length - 2].chapterLaunch);
+      console.log(this.chapters[this.chapters.length - 1].chapterLaunch);
+      debugger;
     },
 
     newChapter() {
@@ -55,65 +66,18 @@ export default {
       this.showEditChapter = true;
     },
 
-     async fetchChapters() {
-      if (this.$store.getters["getRegion"]) {
-        let role = this.$store.getters["getRole"]
-          ? "?role=" + this.$store.getters["getRole"]
-          : "";
-        this.chapters = await ApiServer.get(
-          this.$store.getters["getRegion"].id + "/chapters" + role
-        );
-      }
-
-      // console.log(this.chapters);
-      // this.chapters = await Promise.resolve([
-      //   {
-      //     chapterLaunch: {
-      //       prev: "2008-03",
-      //       actual: null
-      //     },
-      //     closureDate: "string",
-      //     coreGroupLaunch: {
-      //       prev: "2020-09",
-      //       actual: "2020-12"
-      //     },
-      //     currentState: "PROJECT",
-      //     director: {
-      //       id: 0,
-      //       fullName: "Luigi luigetti"
-      //     },
-      //     id: 0,
-      //     members: 10,
-      //     name: "Abn",
-      //     suspDate: null,
-      //     warning: "CHAPTER"
-      //   },
-      //   {
-      //     chapterLaunch: {
-      //       prev: "2018-04",
-      //       actual: "2020-05"
-      //     },
-      //     closureDate: null,
-      //     coreGroupLaunch: {
-      //       prev: "2020-08",
-      //       actual: "2020-07"
-      //     },
-      //     currentState: "PROJECT",
-      //     director: {
-      //       id: 0,
-      //       fullName: "Luigi poi"
-      //     },
-      //     id: 1,
-      //     members: 100,
-      //     name: "Saracap",
-      //     suspDate: null,
-      //     warning: null
-      //   }
-      // ]);
+    async fetchUsersPerRegion() {
+      this.users = await ApiServer.get(this.regionId + "/users");
     },
+
+    async fetchChapters() {
+        this.chapters = await ApiServer.get(this.regionId + "/chapters");
+    }
   },
   created() {
-    this.fetchChapters();
+      this.regionId = Utils.getFromStorage("region").id;
+      this.fetchChapters();
+      this.fetchUsersPerRegion();
   }
 };
 </script>

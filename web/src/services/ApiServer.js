@@ -1,4 +1,5 @@
 import axios from "axios";
+import Utils from "./Utils";
 
 class ApiServer {
   static commonRequestConfig = {
@@ -23,7 +24,7 @@ class ApiServer {
       return {
         token: data.data.access_token,
         user: me
-      }
+      };
     } catch (e) {
       return false;
     }
@@ -37,14 +38,15 @@ class ApiServer {
       return {
         token: data.data.access_token,
         user: me
-      }
+      };
     } catch (e) {
       return false;
     }
   }
 
   static setToken(token) {
-    ApiServer.commonRequestConfig["headers"]["Authorization"] = "Bearer " + token;
+    ApiServer.commonRequestConfig["headers"]["Authorization"] =
+      "Bearer " + token;
   }
 
   static revokeToken() {
@@ -54,13 +56,13 @@ class ApiServer {
   static async get(endpoint, config) {
     config = { ...config, ...ApiServer.commonRequestConfig };
     try {
-      let response = await axios.get(process.env.base_url + "/" + endpoint, config);
-      if (response.status == 200) {
-        return ApiServer.parseResponse(response);
-      } else if (response.status.toString().startsWith("4")) {
-        window.location = "login";
-      }
+      let response = await axios.get(
+        process.env.base_url + "/" + endpoint,
+        config
+      );
+      return ApiServer.parseResponse(response);
     } catch (e) {
+      ApiServer.parseError(e);
       return null;
     }
   }
@@ -78,8 +80,6 @@ class ApiServer {
       return null;
     }
   }
-
-
 
   static async put(endpoint, body, config) {
     config = { ...config, ...ApiServer.commonRequestConfig };
@@ -106,6 +106,19 @@ class ApiServer {
       return null;
     }
     return response["data"];
+  }
+
+  static parseError(error) {
+    switch (error.response.status) {
+      case 401:
+        Utils.removeFromStorage("token");
+        Utils.removeFromStorage("region");
+        window.location = "login";
+        break;
+      default:
+        //window.location = "login";
+        break;
+    }
   }
 
   static getData(endpoint) {

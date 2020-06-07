@@ -341,12 +341,12 @@ class ChapterController extends AbstractController
             }
 
             $chapter = new Chapter();
-            $chapter->setActualLaunchChatperDate($actualLaunchChapterDate);
+            $chapter->setActualLaunchChapterDate($actualLaunchChapterDate);
             $chapter->setActualLaunchCoregroupDate($actualLaunchCoregroupDate);
             $chapter->setCurrentState($state);
             $chapter->setDirector($d);
             $chapter->setName($name);
-            $chapter->setPrevLaunchChatperDate($prevLaunchChapterDate);
+            $chapter->setPrevLaunchChapterDate($prevLaunchChapterDate);
             $chapter->setPrevLaunchCoregroupDate($prevLaunchCoregroupDate);
             $chapter->setRegion($region);
             $this->chapterRepository->save($chapter);
@@ -727,12 +727,12 @@ class ChapterController extends AbstractController
             }
 
             $chapter = new Chapter();
-            $chapter->setActualLaunchChatperDate($actualLaunchChapterDate);
+            $chapter->setActualLaunchChapterDate($actualLaunchChapterDate);
             $chapter->setActualLaunchCoregroupDate($actualLaunchCoregroupDate);
             $chapter->setCurrentState($state);
             $chapter->setDirector($d);
             $chapter->setName($name);
-            $chapter->setPrevLaunchChatperDate($prevLaunchChapterDate);
+            $chapter->setPrevLaunchChapterDate($prevLaunchChapterDate);
             $chapter->setPrevLaunchCoregroupDate($prevLaunchCoregroupDate);
             $chapter->setRegion($region);
             $this->chapterRepository->save($chapter);
@@ -907,7 +907,7 @@ class ChapterController extends AbstractController
 
                 if (is_null($c->getActualLaunchCoregroupDate()) && $c->getPrevLaunchCoregroupDate() <= $today) {
                     $warning = "CORE_GROUP";
-                } elseif (is_null($c->getActualLaunchChatperDate()) && $c->getPrevLaunchChatperDate() <= $today) {
+                } elseif (is_null($c->getActualLaunchChapterDate()) && $c->getPrevLaunchChapterDate() <= $today) {
                     $warning = "CHAPTER";
                 }
 

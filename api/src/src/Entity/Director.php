@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Ramsey\Uuid\Uuid;
 
@@ -54,6 +55,20 @@ class Director
 
     /** @ORM\Column(name="fixed_percentage", type="float", options={"default":0}) */
     private $fixedPercentage;
+
+    /**
+     * @var Collection|Chapter[]
+     *
+     * @ORM\OneToMany(targetEntity="Chapter", mappedBy="director")
+     */
+    private $chapters;
+
+    /**
+     * @var Collection|Director[]
+     *
+     * @ORM\OneToMany(targetEntity="Director", mappedBy="supervisor")
+     */
+    private $subordinates;
 
     /**
      * Director constructor.
@@ -212,5 +227,21 @@ class Director
     {
         $this->region = $region;
         return $this;
+    }
+
+    /**
+     * @return Collection|Chapter[]
+     */
+    public function getChapters()
+    {
+        return $this->chapters;
+    }
+
+    /**
+     * @return Collection|Director[]
+     */
+    public function getSubordinates()
+    {
+        return $this->subordinates;
     }
 }

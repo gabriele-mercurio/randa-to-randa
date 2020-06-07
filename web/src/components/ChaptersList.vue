@@ -2,10 +2,10 @@
   <v-data-table
     :headers="headers"
     :items="chapters"
-      hide-default-footer
+    disable-pagination
+    hide-default-footer
     :class="classSpec"
   >
-
     <template v-slot:item.currentState="{ item }">
       <span :class="item.currentState">{{ item.currentState }}</span>
     </template>
@@ -20,6 +20,18 @@
           <v-list-item @click="edit(item)">
             <v-list-item-title>Modifica capitolo</v-list-item-title>
           </v-list-item>
+          <v-list-item @click="launch(item)" class="{'disabled': item.currentState === 'SUSPENDED' || item.currentState === 'CLOSED'}">
+            <v-list-item-title>Lancia {{getStateToLaunch()}} </v-list-item-title>
+          </v-list-item>
+          <v-list-item @click="suspend(item)">
+            <v-list-item-title>Sospendi capitolo</v-list-item-title>
+          </v-list-item>
+          <v-list-item @click="resume(item)" class="{'disabled': item.currentStatus !== 'SUSPENDED'}">
+            <v-list-item-title>Riprendi capitolo</v-list-item-title>
+          </v-list-item>
+          <v-list-item @click="stimateResume(item)" class="{'disabled': item.currentStatus !== 'SUSPENDED'}">
+            <v-list-item-title>Stima ripresa capitolo</v-list-item-title>
+          </v-list-item>
         </v-list>
       </v-menu>
     </template>
@@ -28,7 +40,7 @@
         <small
           class="font-italic font-weight-light"
           v-if="isPrev(item.coreGroupLaunch)"
-          >Previsional >
+          >Previsional
 
           <v-tooltip right v-if="item.warning == 'COREGROUP'">
             <template v-slot:activator="{ on }">
@@ -72,7 +84,7 @@
           >{{ getPrevOrActualDate(item.chapterLaunch) }}</span
         >
       </div>
-    </template> 
+    </template>
   </v-data-table>
 </template>
 <script>
@@ -91,12 +103,7 @@ export default {
         { text: "Capitolo", value: "chapterLaunch" },
         { value: "actions" }
       ],
-      shortFields: [
-        "name",
-        "director.fullName",
-        "members",
-        "currentState"
-      ]
+      shortFields: ["name", "director.fullName", "members", "currentState"]
     };
   },
   props: {
@@ -114,24 +121,35 @@ export default {
     }
   },
   methods: {
-    edit() {
+    edit(item) {
+      debugger;
       this.$emit("edit", item);
     },
-   
+
     getPrevOrActualDate(item) {
       if (item.actual != null) {
         return Utils.getMonthYear(item.actual);
-      } else {
+      } else if (item.prev) {
         return Utils.getMonthYear(item.prev);
+      } else {
+        return "";
       }
     },
 
     isPrev(item) {
-      return item.actual == null;
+      return item.prev && !item.actual;
+    },
+
+    getStateToLaunch(item) {
+      if(item.currentState === "PROJECT") {
+        return "core group";
+      } else if(item.currentState === "CORE_GROUP") {
+        return "capitolo";
+      }
     }
   },
   created() {
-    if(this.short) {
+    if (this.short) {
       this.headers = this.headers.filter(h => {
         return this.shortFields.includes(h.value);
       });
@@ -140,12 +158,10 @@ export default {
 
   watch: {
     chapters: {
-      "handler": function(old, n) {
-        debugger;
-      }
+      handler: function(old, n) {}
     }
   }
- }
+};
 </script>
 <style>
 .hidden {

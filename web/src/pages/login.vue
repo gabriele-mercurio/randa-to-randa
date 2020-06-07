@@ -64,6 +64,7 @@
 
 <script>
 import ApiServer from "../services/ApiServer";
+import Utils from "../services/Utils";
 
 export default {
   data() {
@@ -72,14 +73,15 @@ export default {
       password: "",
       error: false,
       regions: [],
-      region: null,
-      timeout: 3000
+      regionId: null,
+      timeout: 3000,
+      region: null
     };
   },
   created() {
     if (this.getToken()) {
-      debugger;
-      if (this.$store.getters["getRegion"]) {
+      this.region = Utils.getFromStorage("region");
+      if(this.region) {
         this.goToHome();
       } else {
         this.fetchRegions();
@@ -88,12 +90,12 @@ export default {
   },
   methods: {
     async doLogin() {
-      localStorage.removeItem("region");
+      debugger;
+      Utils.removeFromStorage("region");
       let response = await ApiServer.login(this.email, this.password);
       if (response["token"] && response["user"]) {
-        this.$store.commit("setToken", response["token"]);
         this.$store.commit("setUser", response["user"]);
-        let d = this.$store.getters["getToken"];
+        Utils.saveToStorage("token", response["token"]);
         this.fetchRegions();
       } else {
         this.error = true;
@@ -101,7 +103,9 @@ export default {
     },
 
     getToken() {
-      return this.$store.getters["getToken"];
+      console.log(Utils.getFromStorage("token"));
+      debugger;
+        return Utils.getFromStorage("token");
     },
 
     goToHome() {
@@ -115,7 +119,7 @@ export default {
     },
 
     selectRegion() {
-      this.$store.commit("setRegion", this.region);
+      Utils.saveToStorage("region", this.region);
       this.goToHome();
     }
   }

@@ -69,69 +69,54 @@
 
 <script>
 import ApiServer from "../services/ApiServer";
+import Utils from "../services/Utils";
 
 export default {
   data() {
     return {
       drawer: false,
-      region: this.$store.getters["getRegion"]
+      region: Utils.getFromStorage("region")
     };
   },
   methods: {
     getUser() {
-      return this.$store.getters["getUser"].fullName;
+      return this.$store.getters["getUser"] ? this.$store.getters["getUser"].fullName : "";
     },
     changeRegion() {
-      this.$store.commit("setRegion", null);
+      Utils.removeFromStorage("region");
       this.$router.push({
         path: "/login"
       });
     },
     getRegionName() {
-      return this.$store.getters["getRegion"]
-        ? this.$store.getters["getRegion"].name
-        : null;
+      let region = Utils.getFromStorage("region");
+      return region ? region.name : null;
     },
     getToken() {
-      return this.$store.getters["getToken"];
+      return Utils.getFromStorage("token");
     },
     async doLogout() {
       try {
         await ApiServer.logout();
-        this.$store.commit("setToken", null);
-        this.$store.commit("setRegion", null);
+        Utils.removeFromStorage("token");
+        Utils.removeFromStorage("region");
         this.$router.push("/login");
-      } catch (e) {
-
-      }
+      } catch (e) {}
     }
   },
 
-  mounted() {
-    window.onNuxtReady(() => {
-      let token = this.getToken();
-      if (token) {
-        ApiServer.setToken(token);
-        debugger;
-        if (!this.$store.getters["getRegion"]) {
-          this.$router.push("login");
-        }
-        ApiServer.base_url = process.env.base_url + "/";
-
-        this.$store.watch(
-          state => {
-            return this.$store.state.region;
-          },
-          (newValue, oldValue) => {
-            this.region = newValue;
-          }
-        );
-      } else {
-        this.$router.push({
-          path: "/login"
-        });
+  created() {
+    let token = Utils.getFromStorage("token");
+    if (token) {
+      ApiServer.setToken(token);
+      if (!Utils.getFromStorage("region")) {
+        this.$router.push("login");
       }
-    });
+    } else {
+      this.$router.push({
+        path: "/login"
+      });
+    }
   }
 };
 </script>

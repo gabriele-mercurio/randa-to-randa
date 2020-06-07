@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Ramsey\Uuid\Uuid;
 
@@ -24,6 +25,27 @@ class Region
 
     /** @ORM\Column(type="text", nullable=true) */
     private $notes;
+
+    /**
+     * @var Collection|Chapter[]
+     *
+     * @ORM\OneToMany(targetEntity="Chapter", mappedBy="region")
+     */
+    private $chapters;
+
+    /**
+     * @var Collection|Director[]
+     *
+     * @ORM\OneToMany(targetEntity="Director", mappedBy="region")
+     */
+    private $directors;
+
+    /**
+     * @var Collection|Randa[]
+     *
+     * @ORM\OneToMany(targetEntity="Randa", mappedBy="region")
+     */
+    private $randas;
 
     /**
      * Region constructor.
@@ -65,5 +87,29 @@ class Region
     {
         $this->notes = $notes;
         return $this;
+    }
+
+    /**
+     * @return Collection|Chapter[]
+     */
+    public function getChapters()
+    {
+        return $this->chapters;
+    }
+
+    /**
+     * @return Collection|Director[]
+     */
+    public function getDirectors()
+    {
+        return $this->directors;
+    }
+
+    /**
+     * @return Collection|Randa[]
+     */
+    public function getRandas()
+    {
+        return $this->randas;
     }
 }

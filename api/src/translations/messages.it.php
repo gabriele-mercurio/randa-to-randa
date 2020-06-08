@@ -1,6 +1,6 @@
 <?php
 
-[
+return [
     'directors' => [
         'AREA' => "Area Director",
         'ASSISTANT' => "Assistant Director",

@@ -12,7 +12,9 @@
   },
   "dependencies": {
     "@nuxtjs/auth": "^4.9.1",
+    "chart.js": "^2.9.3",
     "nuxt": "^2.0.0",
+    "vue-chartjs": "^3.5.0",
     "vuex-persist": "^2.2.0"
   },
   "devDependencies": {

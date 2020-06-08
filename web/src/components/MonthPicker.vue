@@ -49,7 +49,6 @@ export default {
       type: String
     },
     defDate: {
-      type: String,
       default: null
     },
     disabled: false,

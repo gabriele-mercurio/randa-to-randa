@@ -31,7 +31,7 @@ export default {
   ** Plugins to load before mounting the App
   */
   plugins: [
-    { src: '~/plugins/vuex-persist', ssr: false }
+    { src: '~/plugins/vuex-persist', ssr: false, mode: "client" }
   ],
   /*
   ** Nuxt.js dev-modules
@@ -88,7 +88,7 @@ export default {
   auth: {
     redirect: {
       logout: '/login',
-      login: '/home'
+      login: '/pippo/login',
     },
     rewriteRedirects: false,
     strategies: {

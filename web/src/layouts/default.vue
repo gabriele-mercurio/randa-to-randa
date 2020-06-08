@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <nav v-if="$auth.loggedIn && getRegionName()">
+    <nav v-if="getToken() && getRegionName()">
       <v-navigation-drawer v-model="drawer" absolute temporary right>
         <v-list nav dense>
           <v-list-item-group active-class="secondary--text text--accent-4">
@@ -55,7 +55,7 @@
         <v-spacer></v-spacer>
         <v-toolbar-title class="d-flex flex-row align-center">
           <div>
-            {{ $auth.user.fullName }} <small>({{ getRegionName() }})</small>
+            {{ getUser() }} <small>({{ getRegionName() }})</small>
           </div>
           <v-btn icon @click="drawer = true" class="white--text">
             <v-icon>mdi-account</v-icon></v-btn
@@ -69,50 +69,56 @@
 
 <script>
 import ApiServer from "../services/ApiServer";
+import Utils from "../services/Utils";
 
 export default {
   data() {
     return {
       drawer: false,
-      region: this.$store.getters["getRegion"]
+      region: Utils.getFromStorage("region")
     };
   },
   methods: {
+    getUser() {
+      return this.$store.getters["getUser"] ? this.$store.getters["getUser"].fullName : "";
+    },
     changeRegion() {
-      this.$store.commit("setRegion", null);
+      Utils.removeFromStorage("region");
       this.$router.push({
         path: "/login"
       });
     },
     getRegionName() {
-      return this.$store.getters["getRegion"]
-        ? this.$store.getters["getRegion"].name
-        : null;
+      let region = Utils.getFromStorage("region");
+      return region ? region.name : null;
     },
-    doLogout() {
-      this.$auth.logout({
-        oauth_access_token: localStorage.getItem("auth._token.local"),
-        oauth_client_id: process.env.client_id
-      });
+    getToken() {
+      let token = Utils.getFromStorage("token");
+      debugger;
+      return token;
+    },
+    async doLogout() {
+      try {
+        await ApiServer.logout();
+        Utils.removeFromStorage("token");
+        Utils.removeFromStorage("region");
+        this.$router.push("/login");
+      } catch (e) {}
     }
   },
-  created() {
-    if (this.$auth.loggedIn) {
-      ApiServer.setToken(localStorage.getItem("auth._token.local"));
-    }
-    if (!this.$store.getters["getRegion"]) {
-      this.$router.push("login");
-    }
-    ApiServer.base_url = process.env.base_url + "/";
 
-    this.$store.watch(
-      state => {
-        return this.$store.state.region;
-      },
-      (newValue, oldValue) => {
-        this.region = newValue;
+  created() {
+    let token = Utils.getFromStorage("token");
+    if (token) {
+      ApiServer.setToken(token);
+      if (!Utils.getFromStorage("region")) {
+        this.$router.push("login");
       }
-    );
+    } else {
+      this.$router.push({
+        path: "/login"
+      });
+    }
   }
 };
 </script>

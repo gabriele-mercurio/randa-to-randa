@@ -63,7 +63,20 @@
         </v-btn>
       </div>
     </v-card-actions>
+
+
+  <v-snackbar v-model="error" :timeout="timeout" top right>
+      <v-icon color="primary">mdi-alert</v-icon>
+      Errore nel salvataggio del capitolo
+      <v-btn color="white" icon @click="error = false">
+        <v-icon>mdi-close</v-icon>
+      </v-btn>
+    </v-snackbar>
+    
+
+
   </v-card>
+
 </template>
 <script>
 import Utils from "../services/Utils";
@@ -83,7 +96,8 @@ const chapterSkeleton = {
   prevLaunchChapterDate: null,
   actualLaunchCoregroupDate: null,
   prevLaunchCoregroupDate: null,
-  director: null
+  director: null,
+  members: 0
 };
 
 export default {
@@ -94,15 +108,20 @@ export default {
     return {
       editMode: false,
       chapter: { ...chapterSkeleton },
-      users: [],
       states: ["PROJECT", "CORE_GROUP", "CHAPTER"],
       coreGroupMessage: "",
-      chapterMessage: ""
+      chapterMessage: "",
+      error: false,
+      timeout: 3000
     };
   },
   props: {
     editChapter: {
       type: Object,
+      default: null
+    },
+    users: {
+      type: Array,
       default: null
     }
   },
@@ -128,11 +147,6 @@ export default {
     getChapterLabel(chapter) {
       let label = "Data lancio capitolo";
       return label;
-    },
-    fetchUsers() {
-      let region = this.$state.getters["getRegion"];
-      //todo
-      //this.users = ApiServer.get("users?region=" + region);
     },
     setChapterLaunch(value) {
       let d = new Date(value);
@@ -165,22 +179,72 @@ export default {
       this.chapter = { ...chapterSkeleton };
       this.$emit("close");
     },
-    saveChapter() {
-      //todo
+    async saveChapter() {
       let data = {};
-      data["director"] = "1425d188-e39f-4c4c-810e-d16c9d73e1f7";
       data["name"] = this.chapter["name"];
+      data["director"] = this.chapter["director"].id;
       if (this.chapter.coreGroupLaunchType === "actual") {
-        data["actualLaunchCoregroupDate"] = this.addDay(this.chapter.coreGroupLaunch);
+        data["actualLaunchCoregroupDate"] = this.addDay(
+          this.chapter.coreGroupLaunch
+        );
       } else {
-        data["prevLaunchCoregroupDate"] =  this.addDay(this.chapter.coreGroupLaunch);
+        data["prevLaunchCoregroupDate"] = this.addDay(
+          this.chapter.coreGroupLaunch
+        );
       }
       if (this.chapter["chapterLaunchType"] === "actual") {
-        data["actualLaunchChapterDate"] =  this.addDay(this.chapter.chapterLaunch);
+        data["actualLaunchChapterDate"] = this.addDay(
+          this.chapter.chapterLaunch
+        );
       } else {
         data["prevLaunchChapterDate"] = this.addDay(this.chapter.chapterLaunch);
       }
-      ApiServer.post(this.$store.getters["getRegion"].id + "/chapter", data);
+      try {
+        let result;
+        if (this.editMode) {
+          result = await ApiServer.put(
+            "chapter/" + this.chapter.id ,
+            data
+          );
+        } else {
+          result = await ApiServer.post(
+            Utils.getFromStorage("region").id + "/chapter",
+            data
+          );
+        }
+
+
+        let updatedChapter = { ...this.chapter};
+
+        let cgLaunch = {
+          prev: null,
+          actual: null
+        };
+
+        let cLaunch = {
+          prev: null,
+          actual: null
+        };
+
+        if(updatedChapter.coreGroupLaunchType === "actual") {
+            cgLaunch.actual = updatedChapter.coreGroupLaunch;
+        } else {
+            cgLaunch.prev = updatedChapter.coreGroupLaunch;
+        }
+
+        if(updatedChapter.chapterLaunchType === "actual") {
+            cLaunch.actual = updatedChapter.chapterLaunch;
+        } else {
+            cLaunch.prev = updatedChapter.chapterLaunch;
+        }
+
+        updatedChapter.coreGroupLaunch = cgLaunch;
+        updatedChapter.chapterLaunch = cLaunch;
+
+        this.$emit("saveChapter", updatedChapter);
+      } catch (e) {
+        this.error = true;
+      }
     },
     isCoreGroupOrChapter(item) {
       return (

@@ -1,6 +1,10 @@
 <template>
   <div class="ma-4 fill-height">
-    <ChaptersList v-on:edit="edit(item)" />
+    <ChaptersList
+      :chapters.sync="chapters"
+      :classSpec="'elevation-3'"
+      v-on:edit="openEditModal"
+    />
 
     <v-dialog
       :persistent="false"
@@ -11,7 +15,9 @@
       <EditChapter
         :show="showEditChapter"
         :editChapter.sync="editChapter"
+        :users="users"
         v-on:close="showEditChapter = false"
+        v-on:saveChapter="updateChapters"
       />
     </v-dialog>
     <v-btn fixed fab bottom right color="primary" @click="newChapter()">
@@ -29,34 +35,48 @@ export default {
   data() {
     return {
       showEditChapter: false,
-      editChapter: null
-    };
+      editChapter: null,
+      chapters: [],
+      users: [],
+      regionId: null
+    }
   },
   props: {},
-  middleware: "auth",
   components: {
     EditChapter,
     ChaptersList
   },
   methods: {
-    edit(chapter) {
+    openEditModal(chapter) {
       this.editChapter = chapter;
       this.showEditChapter = true;
+    },
+
+    updateChapters(chapter) {
+      this.showEditChapter = false;
+      this.chapters.push(chapter);
+      console.log(this.chapters[this.chapters.length - 2].chapterLaunch);
+      console.log(this.chapters[this.chapters.length - 1].chapterLaunch);
     },
 
     newChapter() {
       this.editChapter = null;
       this.showEditChapter = true;
+    },
+
+    async fetchUsersPerRegion() {
+      this.users = await ApiServer.get(this.regionId + "/users");
+    },
+
+    async fetchChapters() {
+        this.chapters = await ApiServer.get(this.regionId + "/chapters");d
+        debugger;
     }
+  },
+  created() {
+      this.regionId = Utils.getFromStorage("region").id;
+      //this.fetchChapters();
+      this.fetchUsersPerRegion();
   }
 };
 </script>
-<style lang="scss">
-.PROJECT {
-  background-color: lighten(red, 40);
-}
-
-.CORE_GROUP {
-  background-color: lighten(orange, 40);
-}
-</style>

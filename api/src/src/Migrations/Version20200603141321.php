@@ -22,7 +22,7 @@ final class Version20200603141321 extends AbstractMigration
         // this up() migration is auto-generated, please modify it to your needs
         $this->abortIf($this->connection->getDatabasePlatform()->getName() !== 'mysql', 'Migration can only be executed safely on \'mysql\'.');
 
-        $this->addSql('ALTER TABLE chapters CHANGE prev_launch_coregroup_date prev_launch_coregroup_date DATE DEFAULT NULL, CHANGE prev_launch_chatper_date prev_launch_chatper_date DATE DEFAULT NULL');
+        $this->addSql('ALTER TABLE chapters CHANGE prev_launch_coregroup_date prev_launch_coregroup_date DATE DEFAULT NULL, CHANGE prev_launch_Chapter_date prev_launch_Chapter_date DATE DEFAULT NULL');
     }
 
     public function down(Schema $schema) : void
@@ -30,6 +30,6 @@ final class Version20200603141321 extends AbstractMigration
         // this down() migration is auto-generated, please modify it to your needs
         $this->abortIf($this->connection->getDatabasePlatform()->getName() !== 'mysql', 'Migration can only be executed safely on \'mysql\'.');
 
-        $this->addSql('ALTER TABLE chapters CHANGE prev_launch_coregroup_date prev_launch_coregroup_date DATE NOT NULL, CHANGE prev_launch_chatper_date prev_launch_chatper_date DATE NOT NULL');
+        $this->addSql('ALTER TABLE chapters CHANGE prev_launch_coregroup_date prev_launch_coregroup_date DATE NOT NULL, CHANGE prev_launch_Chapter_date prev_launch_Chapter_date DATE NOT NULL');
     }
 }

@@ -3,15 +3,13 @@
     :headers="headers"
     :items="chapters"
     disable-pagination
-    class="elevation-3"
+    hide-default-footer
+    :class="classSpec"
   >
     <template v-slot:item.currentState="{ item }">
       <span :class="item.currentState">{{ item.currentState }}</span>
     </template>
-    <template v-slot:item.currentState="{ item }">
-      <span :class="item.currentState">{{ item.currentState }}</span>
-    </template>
-    <template v-slot:item.actions="{ item }">
+    <template v-slot:item.actions="{ item }" v-if="!short">
       <v-menu bottom left>
         <template v-slot:activator="{ on }">
           <v-btn dark icon v-on="on">
@@ -22,15 +20,27 @@
           <v-list-item @click="edit(item)">
             <v-list-item-title>Modifica capitolo</v-list-item-title>
           </v-list-item>
+          <v-list-item @click="launch(item)" class="{'disabled': item.currentState === 'SUSPENDED' || item.currentState === 'CLOSED'}">
+            <v-list-item-title>Lancia {{getStateToLaunch()}} </v-list-item-title>
+          </v-list-item>
+          <v-list-item @click="suspend(item)">
+            <v-list-item-title>Sospendi capitolo</v-list-item-title>
+          </v-list-item>
+          <v-list-item @click="resume(item)" class="{'disabled': item.currentStatus !== 'SUSPENDED'}">
+            <v-list-item-title>Riprendi capitolo</v-list-item-title>
+          </v-list-item>
+          <v-list-item @click="stimateResume(item)" class="{'disabled': item.currentStatus !== 'SUSPENDED'}">
+            <v-list-item-title>Stima ripresa capitolo</v-list-item-title>
+          </v-list-item>
         </v-list>
       </v-menu>
     </template>
-    <template v-slot:item.coreGroupLaunch="{ item }">
+    <template v-slot:item.coreGroupLaunch="{ item }" v-if="!short">
       <div class="d-flex flex-column justicy-center">
         <small
           class="font-italic font-weight-light"
           v-if="isPrev(item.coreGroupLaunch)"
-          >Previsional >
+          >Previsional
 
           <v-tooltip right v-if="item.warning == 'COREGROUP'">
             <template v-slot:activator="{ on }">
@@ -51,7 +61,7 @@
       </div>
     </template>
 
-    <template v-slot:item.chapterLaunch="{ item }">
+    <template v-slot:item.chapterLaunch="{ item }" v-if="!short">
       <div class="d-flex flex-column justicy-center">
         <small
           class="font-italic font-weight-light"
@@ -78,12 +88,10 @@
   </v-data-table>
 </template>
 <script>
-
 import ApiServer from "../services/ApiServer";
 import Utils from "../services/Utils";
 export default {
-  components:{
-  },
+  components: {},
   data() {
     return {
       headers: [
@@ -95,83 +103,67 @@ export default {
         { text: "Capitolo", value: "chapterLaunch" },
         { value: "actions" }
       ],
-      chapters: []
+      shortFields: ["name", "director.fullName", "members", "currentState"]
     };
   },
+  props: {
+    classSpec: {
+      type: String,
+      default: ""
+    },
+    short: {
+      type: Boolean,
+      default: false
+    },
+    chapters: {
+      type: Array,
+      default: null
+    }
+  },
   methods: {
-    edit() {
+    edit(item) {
       this.$emit("edit", item);
     },
-    async fetchChapters() {
-      if (this.$store.getters["getRegion"]) {
-        let role = this.$store.getters["getRole"]
-          ? "?role=" + this.$store.getters["getRole"]
-          : "";
-        this.chapters = await ApiServer.get(
-          this.$store.getters["getRegion"].id + "/chapters" + role
-        );
-      }
 
-      // console.log(this.chapters);
-      // this.chapters = await Promise.resolve([
-      //   {
-      //     chapterLaunch: {
-      //       prev: "2008-03",
-      //       actual: null
-      //     },
-      //     closureDate: "string",
-      //     coreGroupLaunch: {
-      //       prev: "2020-09",
-      //       actual: "2020-12"
-      //     },
-      //     currentState: "PROJECT",
-      //     director: {
-      //       id: 0,
-      //       fullName: "Luigi luigetti"
-      //     },
-      //     id: 0,
-      //     members: 10,
-      //     name: "Abn",
-      //     suspDate: null,
-      //     warning: "CHAPTER"
-      //   },
-      //   {
-      //     chapterLaunch: {
-      //       prev: "2018-04",
-      //       actual: "2020-05"
-      //     },
-      //     closureDate: null,
-      //     coreGroupLaunch: {
-      //       prev: "2020-08",
-      //       actual: "2020-07"
-      //     },
-      //     currentState: "PROJECT",
-      //     director: {
-      //       id: 0,
-      //       fullName: "Luigi poi"
-      //     },
-      //     id: 1,
-      //     members: 100,
-      //     name: "Saracap",
-      //     suspDate: null,
-      //     warning: null
-      //   }
-      // ]);
-    },
     getPrevOrActualDate(item) {
       if (item.actual != null) {
         return Utils.getMonthYear(item.actual);
-      } else {
+      } else if (item.prev) {
         return Utils.getMonthYear(item.prev);
+      } else {
+        return "";
       }
     },
 
     isPrev(item) {
-      return item.actual == null;
+      return item.prev && !item.actual;
+    },
+
+    getStateToLaunch(item) {
+      if(item.currentState === "PROJECT") {
+        return "core group";
+      } else if(item.currentState === "CORE_GROUP") {
+        return "capitolo";
+      }
     }
   },
   created() {
-    this.fetchChapters();
+    if (this.short) {
+      this.headers = this.headers.filter(h => {
+        return this.shortFields.includes(h.value);
+      });
+    }
+  },
+
+  watch: {
+    chapters: {
+      handler: function(old, n) {}
+    }
   }
 };
 </script>
+<style>
+.hidden {
+  display: none;
+}
+</style>

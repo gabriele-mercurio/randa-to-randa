@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\Director;
 use App\Entity\Region;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
@@ -81,6 +82,15 @@ class UserRepository extends ServiceEntityRepository
     }
 
     /**
+     * @param User $user
+     */
+    public function delete(User $user): void
+    {
+        $this->entityManager->remove($user);
+        $this->entityManager->flush();
+    }
+
+    /**
      * @param string $email
      *
      * @return User
@@ -101,6 +111,8 @@ class UserRepository extends ServiceEntityRepository
     }
 
     /**
+     * @param Region $region
+     *
      * @return User[]
      */
     public function getUsersPerRegion(Region $region): array
@@ -111,6 +123,25 @@ class UserRepository extends ServiceEntityRepository
             ->setParameter('dregion_id', $region->getId())
             ->getQuery()
             ->getResult();
+    }
+
+    /**
+     * @param User $user
+     *
+     * @return boolean
+     */
+    public function isInUse(User $user): bool
+    {
+        $directorRepository = $this->entityManager->getRepository(Director::class);
+        $directors = $directorRepository->findBy([
+            'user' => $user
+        ]);
+
+        if (!empty($directors)) {
+            return true;
+        }
+
+        return false;
     }
 
     public function passwordVerify(User $user, string $password): bool

@@ -240,16 +240,22 @@ class DirectorController extends AbstractController
                 $u = is_null($actAsId) ? $user : $actAs;
                 $director = $this->directorRepository->findOneBy([
                     'user' => $u,
-                    'region' => $region,
-                    'role' => [
-                        $this->directorRepository::DIRECTOR_ROLE_NATIONAL,
-                        $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE
-                    ]
+                    'role' => $this->directorRepository::DIRECTOR_ROLE_NATIONAL
                 ]);
 
                 if (is_null($director)) {
-                    $code = Response::HTTP_FORBIDDEN;
-                } else {
+                    $director = $this->directorRepository->findOneBy([
+                        'user' => $u,
+                        'region' => $region,
+                        'role' => $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE
+                    ]);
+
+                    if (is_null($director)) {
+                        $code = Response::HTTP_FORBIDDEN;
+                    }
+                }
+
+                if ($code == Response::HTTP_OK) {
                     $performerRole = $director->getRole();
                 }
             }

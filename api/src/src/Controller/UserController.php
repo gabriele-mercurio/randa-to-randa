@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Region;
 use App\Entity\User;
 use App\Formatter\UserFormatter;
+use App\Repository\DirectorRepository;
 use App\Repository\UserRepository;
 use App\Util\Util;
 use App\Util\Validator;
@@ -18,6 +19,9 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class UserController extends AbstractController
 {
+    /** @var DirectorRepository */
+    private $directorRepository;
+
     /** @var UserRepository */
     private $userRepository;
 
@@ -25,9 +29,11 @@ class UserController extends AbstractController
     private $userFormatter;
 
     public function __construct(
+        DirectorRepository $directorRepository,
         UserRepository $userRepository,
         UserFormatter $userFormatter
     ) {
+        $this->directorRepository = $directorRepository;
         $this->userRepository = $userRepository;
         $this->userFormatter = $userFormatter;
     }
@@ -115,6 +121,75 @@ class UserController extends AbstractController
     //         ], Response::HTTP_BAD_REQUEST);
     //     }
     // }
+
+    /**
+     * Delete a User
+     *
+     * @Route(path="/user/{id}", name="delete_user", methods={"DELETE"})
+     *
+     * @SWG\Parameter(
+     *     name="id",
+     *     in="path",
+     *     type="string",
+     *     description="The User's id"
+     * )
+     * @SWG\Parameter(
+     *      name="actAs",
+     *      in="formData",
+     *      type="string",
+     *      description="Optional parameter representing the emulated user id"
+     * )
+     * @SWG\Response(
+     *     response=200,
+     *     description="Returns null"
+     * )
+     * @SWG\Response(
+     *      response=409,
+     *      description="Returned when the user still has associations with the directors."
+     * )
+     * @SWG\Tag(name="Users")
+     * @Security(name="Bearer")
+     */
+    public function deleteBrand(User $user, Request $request): Response
+    {
+        /** @var User */
+        $performer = $this->getUser();
+
+        $request = Util::normalizeRequest($request);
+
+        $actAsId = $request->get("actAs");
+        $code = Response::HTTP_OK;
+
+        $checkUser = $this->userRepository->checkUser($performer, $actAsId);
+        $actAs = Util::arrayGetValue($checkUser, 'user');
+        $code = Util::arrayGetValue($checkUser, 'code');
+
+        if ($code == Response::HTTP_OK) {
+            if (!$performer->isAdmin() || !is_null($actAsId)) {
+                $u = is_null($actAsId) ? $performer : $actAs;
+                $director = $this->directorRepository->findOneBy([
+                    'user' => $u,
+                    'role' => $this->directorRepository::DIRECTOR_ROLE_NATIONAL
+                ]);
+
+                if (is_null($director)) {
+                    $code = Response::HTTP_FORBIDDEN;
+                }
+            }
+        }
+
+        if ($code == Response::HTTP_OK) {
+            if ($this->userRepository->isInUse($user)) {
+                $code = Response::HTTP_CONFLICT;
+            }
+        }
+
+        if ($code == Response::HTTP_OK) {
+            $this->brandRepository->delete($user);
+        }
+
+        return new JsonResponse(null, $code);
+    }
 
     /**
      * Edit a user

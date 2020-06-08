@@ -9,7 +9,10 @@ use App\Util\Util;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\ORM\EntityManagerInterface;
+use Swift_Mailer;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Contracts\Translation\TranslatorInterface;
+use Twig\Environment;
 
 /**
  * @method Director|null find($id, $lockMode = null, $lockVersion = null)
@@ -29,10 +32,27 @@ class DirectorRepository extends ServiceEntityRepository
     /** @var EntityManagerInterface */
     protected $entityManager;
 
-    public function __construct(ManagerRegistry $registry, EntityManagerInterface $entityManager)
-    {
+    /** @var Environment */
+    private $twig;
+
+    /** @var Swift_Mailer */
+    private $mailer;
+
+    /** @var TranslatorInterface */
+    private $translator;
+
+    public function __construct(
+        EntityManagerInterface $entityManager,
+        Environment $twig,
+        ManagerRegistry $registry,
+        Swift_Mailer $mailer,
+        TranslatorInterface $translator
+    ) {
         parent::__construct($registry, Director::class);
         $this->entityManager = $entityManager;
+        $this->mailer = $mailer;
+        $this->translator = $translator;
+        $this->twig = $twig;
     }
 
     /**
@@ -105,5 +125,23 @@ class DirectorRepository extends ServiceEntityRepository
     {
         $this->entityManager->persist($director);
         $this->entityManager->flush();
+    }
+
+    public function sendDirectorAssignmentEmail(Director $director) {
+        $email = $this->mailer->createMessage();
+
+        $data = [
+            'director' => $director,
+            'title' => $this->translator->trans('email.directorAssignment.title')
+        ];
+
+        $email
+            ->setFrom($_ENV['MAIL_NO_REPLY_ADDRESS'], $_ENV['MAIL_SENDER_NAME'])
+            ->addTo($director->getUser()->getEmail(), $director->getUser()->getFullName())
+            ->setSubject($data['title'])
+            ->setBody($this->twig->render("emails/director-assignment/html.twig", $data), "text/html")
+            ->addPart($this->twig->render("emails/director-assignment/txt.twig", $data), "text/plain");
+
+        return $this->mailer->send($email);
     }
 }

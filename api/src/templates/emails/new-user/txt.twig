@@ -1,0 +1,13 @@
+{% extends "emails/base.txt.twig" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block body %}
+{{ 'email.newUser.body.0'|trans }}
+
+{{ 'email.newUser.body.1'|trans }} {{ user.email }} {{ 'email.newUser.body.2'|trans }}
+
+{{ 'email.newUser.body.3'|trans }}
+    {{ tempPasswd}}
+{{ 'email.newUser.body.4'|trans }}
+{% endblock %}

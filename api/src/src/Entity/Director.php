@@ -35,6 +35,9 @@ class Director
     /** @ORM\ManyToOne(targetEntity="Director", fetch="LAZY") */
     private $supervisor;
 
+    /** @ORM\Column(name="free_account", type="boolean", nullable=false, options={"default":false}) */
+    private $freeAccount;
+
     /** @ORM\Column(name="pay_type", type="string", length=8) */
     private $payType;
 
@@ -122,6 +125,19 @@ class Director
     public function setSupervisor(?Director $supervisor): self
     {
         $this->supervisor = $supervisor;
+        return $this;
+    }
+
+    /** Get the value of freeAccount */
+    public function isFreeAccount(): bool
+    {
+        return !!$this->freeAccount;
+    }
+
+    /** Set the value of freeAccount */
+    public function setFreeAccount(bool $freeAccount): self
+    {
+        $this->freeAccount = !!$freeAccount;
         return $this;
     }
 

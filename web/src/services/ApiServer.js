@@ -60,6 +60,7 @@ class ApiServer {
         process.env.base_url + "/" + endpoint,
         config
       );
+      debugger;
       return ApiServer.parseResponse(response);
     } catch (e) {
       ApiServer.parseError(e);
@@ -96,6 +97,7 @@ class ApiServer {
   }
 
   static parseResponse(response) {
+    debugger;
     if (!response || !response.status) {
       return null;
     }

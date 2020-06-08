@@ -48,7 +48,6 @@ export default {
   },
   methods: {
     openEditModal(chapter) {
-      debugger;
       this.editChapter = chapter;
       this.showEditChapter = true;
     },
@@ -58,7 +57,6 @@ export default {
       this.chapters.push(chapter);
       console.log(this.chapters[this.chapters.length - 2].chapterLaunch);
       console.log(this.chapters[this.chapters.length - 1].chapterLaunch);
-      debugger;
     },
 
     newChapter() {
@@ -71,12 +69,13 @@ export default {
     },
 
     async fetchChapters() {
-        this.chapters = await ApiServer.get(this.regionId + "/chapters");
+        this.chapters = await ApiServer.get(this.regionId + "/chapters");d
+        debugger;
     }
   },
   created() {
       this.regionId = Utils.getFromStorage("region").id;
-      this.fetchChapters();
+      //this.fetchChapters();
       this.fetchUsersPerRegion();
   }
 };

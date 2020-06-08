@@ -1,7 +1,7 @@
 <template>
   <v-container class="primary pa-0 ma-0" id="container">
     <h2 class="white--text text-center py-12">Accedi a Randa to Randa</h2>
-    <v-form v-if="!getToken()" @submit.prevent="doLogin()">
+    <v-form v-if="!isLogged" @submit.prevent="doLogin()">
       <v-card class="mx-auto mb-12 elevation-12" max-width="374">
         <v-card-title class="secondary--text text-center">
           Login
@@ -75,13 +75,15 @@ export default {
       regions: [],
       regionId: null,
       timeout: 3000,
-      region: null
+      region: null,
+      isLogged: false
     };
   },
   created() {
     if (this.getToken()) {
+      this.isLogged = true;
       this.region = Utils.getFromStorage("region");
-      if(this.region) {
+      if (this.region) {
         this.goToHome();
       } else {
         this.fetchRegions();
@@ -90,22 +92,20 @@ export default {
   },
   methods: {
     async doLogin() {
-      debugger;
       Utils.removeFromStorage("region");
       let response = await ApiServer.login(this.email, this.password);
       if (response["token"] && response["user"]) {
         this.$store.commit("setUser", response["user"]);
         Utils.saveToStorage("token", response["token"]);
         this.fetchRegions();
+        this.isLogged = true;
       } else {
         this.error = true;
       }
     },
 
     getToken() {
-      console.log(Utils.getFromStorage("token"));
-      debugger;
-        return Utils.getFromStorage("token");
+      return Utils.getFromStorage("token");
     },
 
     goToHome() {

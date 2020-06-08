@@ -161,7 +161,7 @@ class ChapterController extends AbstractController
      *              type="array",
      *              @SWG\Items(
      *                  type="object",
-     *                  @SWG\Property(property="field_name", type="string", description="The type of the error; possible values are 'empty', 'in_use' or 'invalid'")
+     *                  @SWG\Property(property="field_name", type="string", description="The type of the error; possible values are 'required', 'in_use' or 'invalid'")
      *              )
      *          )
      *      )
@@ -218,7 +218,7 @@ class ChapterController extends AbstractController
             $today = Util::UTCDateTime();
 
             if (empty($name)) {
-                $fields['name'] = "empty";
+                $fields['name'] = "required";
             } elseif ($this->chapterRepository->findOneBy([
                 'name' => $name,
                 'region' => $region
@@ -227,7 +227,7 @@ class ChapterController extends AbstractController
             }
 
             if (empty($chapterDirector)) {
-                $fields['director'] = "empty";
+                $fields['director'] = "required";
             }
             $chapterDirector = $this->userRepository->find($chapterDirector);
             if (is_null($chapterDirector)) {
@@ -317,7 +317,7 @@ class ChapterController extends AbstractController
                 $this->chapterRepository::CHAPTER_CURRENT_STATE_PROJECT,
                 $this->chapterRepository::CHAPTER_CURRENT_STATE_CORE_GROUP
             ]) && is_null($prevLaunchChapterDate)) {
-                $fields['launchChapterDate'] = "empty";
+                $fields['launchChapterDate'] = "required";
             }
 
             if (!empty($fields)) {
@@ -492,7 +492,7 @@ class ChapterController extends AbstractController
      *              type="array",
      *              @SWG\Items(
      *                  type="object",
-     *                  @SWG\Property(property="field_name", type="string", description="The type of the error; possible values are 'empty', 'in_use' or 'invalid'")
+     *                  @SWG\Property(property="field_name", type="string", description="The type of the error; possible values are 'required', 'in_use' or 'invalid'")
      *              )
      *          )
      *      )
@@ -563,7 +563,7 @@ class ChapterController extends AbstractController
             if (!empty($name)) {
                 $name = trim($name);
                 if (empty($name)) {
-                    $errorFields['name'] = "empty";
+                    $errorFields['name'] = "required";
                 } elseif ($this->chapterRepository->existsOtherWithSameFields($chapter, [
                     'name' => $name,
                     'region' => $region

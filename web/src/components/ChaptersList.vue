@@ -122,7 +122,6 @@ export default {
   },
   methods: {
     edit(item) {
-      debugger;
       this.$emit("edit", item);
     },
 

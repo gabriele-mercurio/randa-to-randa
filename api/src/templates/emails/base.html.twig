@@ -2,7 +2,7 @@
 <html>
     <head>
         <meta charset="UTF-8">
-        <title>{% block title %}Welcome!{% endblock %}</title>
+        <title>{% block title %}{% endblock %}</title>
     </head>
     <body>
         <h2>{{ block('title') }}</h2>
@@ -10,7 +10,7 @@
             {% block body %}{% endblock %}
         </div>
         <div style="margin-top: 1em">
-            {% block signature %}Lo staff di Randa to Randa{% endblock %}
+            {% block signature %}{{ 'email.signatures.staff'|trans }}{% endblock %}
         </div>
     </body>
 </html>

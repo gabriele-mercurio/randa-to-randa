@@ -93,7 +93,9 @@ export default {
       return region ? region.name : null;
     },
     getToken() {
-      return Utils.getFromStorage("token");
+      let token = Utils.getFromStorage("token");
+      debugger;
+      return token;
     },
     async doLogout() {
       try {

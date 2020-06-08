@@ -54,7 +54,7 @@ class Storage implements AccessTokenInterface, ClientCredentialsInterface, UserC
             return false;
         }
 
-        return $user->passwordVerify($password);
+        return $repository->passwordVerify($user, $password);
     }
 
     /**

@@ -68,21 +68,21 @@ class DirectorController extends AbstractController
      *      name="firstName",
      *      in="formData",
      *      type="string",
-     *      description="The user name",
+     *      description="The user's name",
      *      required=true
      * )
      * @SWG\Parameter(
      *      name="lastName",
      *      in="formData",
      *      type="string",
-     *      description="The user surname",
+     *      description="The user's surname",
      *      required=true
      * )
      * @SWG\Parameter(
      *      name="email",
      *      in="formData",
      *      type="string",
-     *      description="The user email",
+     *      description="The user's email",
      *      required=true
      * )
      * @SWG\Parameter(
@@ -186,7 +186,7 @@ class DirectorController extends AbstractController
      * )
      * @SWG\Response(
      *      response=400,
-     *      description="Returned if une or more required fields are empty or if one or more fields are invalid.",
+     *      description="Returned if one or more required fields are empty or if one or more fields are invalid.",
      *      @SWG\Schema(
      *          type="object",
      *          @SWG\Property(

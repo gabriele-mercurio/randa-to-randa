@@ -113,6 +113,13 @@ class UserRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    public function passwordVerify(User $user, string $password): bool
+    {
+        $salt = $user->getSalt();
+        $ashedPassword = md5($salt . md5($password) . $salt);
+        return $user->getPassword == $ashedPassword;
+    }
+
     /**
      * @param User $user
      */

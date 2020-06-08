@@ -168,12 +168,6 @@ class User implements UserInterface
         return $this;
     }
 
-    public function passwordVerify(string $password): bool
-    {
-        $ashedPassword = md5($this->salt . md5($password) . $this->salt);
-        return $this->password == $ashedPassword;
-    }
-
     /**
      * Needed for abstract resolve
      */

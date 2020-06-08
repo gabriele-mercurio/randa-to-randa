@@ -4,14 +4,13 @@ namespace App\Controller;
 
 use App\Entity\Region;
 use App\Entity\User;
-use App\Events\UserEvent;
 use App\Formatter\UserFormatter;
 use App\Repository\UserRepository;
+use App\Util\Util;
 use App\Util\Validator;
 use Nelmio\ApiDocBundle\Annotation\Security;
 use Swagger\Annotations as SWG;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -25,17 +24,12 @@ class UserController extends AbstractController
     /** @var UserFormatter */
     private $userFormatter;
 
-    /** @var EventDispatcherInterface */
-    private $eventDispatcher;
-
     public function __construct(
         UserRepository $userRepository,
-        UserFormatter $userFormatter,
-        EventDispatcherInterface $eventDispatcher
+        UserFormatter $userFormatter
     ) {
         $this->userRepository = $userRepository;
         $this->userFormatter = $userFormatter;
-        $this->eventDispatcher = $eventDispatcher;
     }
 
     /**
@@ -84,41 +78,168 @@ class UserController extends AbstractController
      * @SWG\Tag(name="Users")
      * @Security(name="Bearer")
      */
-    public function createUser(Request $request): Response
+    // public function createUser(Request $request): Response
+    // {
+    //     $email = trim($request->request->get("email"));
+    //     $firstName = trim($request->request->get("firstName"));
+    //     $lastName = trim($request->request->get("lastName"));
+    //     $password = $request->request->get("password");
+
+    //     $errors = [];
+
+    //     if (!Validator::validateEmail($email)) {
+    //         $errors['email'] = "L'email è in un formato non valido";
+    //     } elseif (null !== $this->userRepository->getUserByEmail($email)) {
+    //         $errors['email'] = 'Email già esistente';
+    //     }
+
+    //     if (!Validator::validatePassword($password)) {
+    //         $errors['password'] = "La password deve essere di almeno 6 caratteri e contenere almeno una lettera maiuscola, una minuscola ed un numero";
+    //     }
+
+    //     if (empty($errors)) {
+    //         $user = new User();
+    //         $user->setEmail($email);
+    //         $user->setFirstName($firstName);
+    //         $user->setLastName($lastName);
+    //         $user->securePassword($password);
+
+    //         $this->eventDispatcher->dispatch(new UserEvent($user), UserEvent::BEFORE_CREATE);
+    //         $this->userRepository->save($user);
+    //         $this->eventDispatcher->dispatch(new UserEvent($user), UserEvent::CREATED);
+
+    //         return new JsonResponse($this->userFormatter->formatBasic($user));
+    //     } else {
+    //         return new JsonResponse([
+    //             "errors" => $errors
+    //         ], Response::HTTP_BAD_REQUEST);
+    //     }
+    // }
+
+    /**
+     * Edit a user
+     *
+     * @Route("/user", name="edit_user", methods={"PUT"})
+     *
+     * @SWG\Parameter(
+     *      name="id",
+     *      in="path",
+     *      type="string",
+     *      description="The id of the user to edit"
+     * )
+     * @SWG\Parameter(
+     *      name="firstName",
+     *      in="formData",
+     *      type="string",
+     *      description="The user's name"
+     * )
+     * @SWG\Parameter(
+     *      name="lastName",
+     *      in="formData",
+     *      type="string",
+     *      description="The user's surname"
+     * )
+     * @SWG\Parameter(
+     *      name="oldPassword",
+     *      in="formData",
+     *      type="string",
+     *      description="The user's current password"
+     * )
+     * @SWG\Parameter(
+     *      name="newPassword",
+     *      in="formData",
+     *      type="string",
+     *      description="The user's new password"
+     * )
+     * @SWG\Parameter(
+     *      name="confirmPassword",
+     *      in="formData",
+     *      type="string",
+     *      description="The user's new password confirmation"
+     * )
+     * @SWG\Response(
+     *      response=200,
+     *      description="Returns the updated user",
+     *      @SWG\Schema(
+     *          type="object",
+     *          @SWG\Property(property="email", type="string"),
+     *          @SWG\Property(property="fullName", type="string"),
+     *          @SWG\Property(property="id", type="string")
+     *      )
+     * )
+     * @SWG\Response(
+     *      response=400,
+     *      description="Returned if one or more fields are invalid.",
+     *      @SWG\Schema(
+     *          type="object",
+     *          @SWG\Property(
+     *              property="fields",
+     *              type="array",
+     *              @SWG\Items(
+     *                  type="object",
+     *                  @SWG\Property(property="field_name", type="string", description="The type of the error; possible values are 'required' or 'invalid'")
+     *              )
+     *          )
+     *      )
+     * )
+     * @SWG\Tag(name="Users")
+     * @Security(name="Bearer")
+     */
+    public function editUser(Request $request): Response
     {
-        $email = trim($request->request->get("email"));
-        $firstName = trim($request->request->get("firstName"));
-        $lastName = trim($request->request->get("lastName"));
-        $password = $request->request->get("password");
+        $request = Util::normalizeRequest($request);
 
-        $errors = [];
+        /** @var User */
+        $user = $this->getUser();
 
-        if (!Validator::validateEmail($email)) {
-            $errors['email'] = "L'email è in un formato non valido";
-        } elseif (null !== $this->userRepository->getUserByEmail($email)) {
-            $errors['email'] = 'Email già esistente';
+        $firstName = trim($request->get("firstName"));
+        $lastName = trim($request->get("lastName"));
+        $oldPasswd = trim($request->get("oldPassword"));
+        $newPasswd = trim($request->get("newPassword"));
+        $confirmPasswd = trim($request->get("confirmPassword"));
+        $errorFields = [];
+        $changePasswd = false;
+
+        if (!empty($oldPasswd) || !empty($newPasswd) || !empty($confirmPasswd)) {
+            $changePasswd = true;
+
+            if (empty($oldPasswd)) {
+                $errorFields['oldPassword'] = "required";
+            } elseif (!$this->userRepository->passwordVerify($user, $oldPasswd)) {
+                $errorFields['oldPassword'] = "invalid";
+            }
+
+            if (empty($newPasswd)) {
+                $errorFields['newPassword'] = "required";
+            } elseif (!Validator::validatePassword($newPasswd)) {
+                $errorFields['newPassword'] = "invalid";
+            }
+
+            if (empty($confirmPasswd)) {
+                $errorFields['confirmPassword'] = "required";
+            } elseif ($confirmPasswd !== $newPasswd) {
+                $errorFields['confirmPassword'] = "invalid";
+            }
         }
 
-        if (!Validator::validatePassword($password)) {
-            $errors['password'] = "La password deve essere di almeno 6 caratteri e contenere almeno una lettera maiuscola, una minuscola ed un numero";
-        }
+        if (empty($errorFields)) {
+            if ($changePasswd) {
+                $user->securePassword($newPasswd);
+            }
 
-        if (empty($errors)) {
-            $user = new User();
-            $user->setEmail($email);
-            $user->setFirstName($firstName);
-            $user->setLastName($lastName);
-            $user->securePassword($password);
+            if (!empty($firstName)) {
+                $user->setFirstName($firstName);
+            }
 
-            $this->eventDispatcher->dispatch(new UserEvent($user), UserEvent::BEFORE_CREATE);
-            $this->userRepository->save($user);
-            $this->eventDispatcher->dispatch(new UserEvent($user), UserEvent::CREATED);
+            if (!empty($lastName)) {
+                $user->setLastName($lastName);
+            }
+
+            $this->entityManager->flush();
 
             return new JsonResponse($this->userFormatter->formatBasic($user));
         } else {
-            return new JsonResponse([
-                "errors" => $errors
-            ], Response::HTTP_BAD_REQUEST);
+            return new JsonResponse($errorFields, Response::HTTP_BAD_REQUEST);
         }
     }
 

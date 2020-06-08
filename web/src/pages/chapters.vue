@@ -75,7 +75,7 @@ export default {
   },
   created() {
       this.regionId = Utils.getFromStorage("region").id;
-      //this.fetchChapters();
+      this.fetchChapters();
       this.fetchUsersPerRegion();
   }
 };

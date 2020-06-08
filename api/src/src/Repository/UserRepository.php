@@ -7,7 +7,10 @@ use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\ORM\EntityManagerInterface;
+use Swift_Mailer;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Contracts\Translation\TranslatorInterface;
+use Twig\Environment;
 
 /**
  * @method User|null find($id, $lockMode = null, $lockVersion = null)
@@ -20,10 +23,27 @@ class UserRepository extends ServiceEntityRepository
     /** @var EntityManagerInterface */
     protected $entityManager;
 
-    public function __construct(ManagerRegistry $registry, EntityManagerInterface $entityManager)
-    {
+    /** @var Environment */
+    private $twig;
+
+    /** @var Swift_Mailer */
+    private $mailer;
+
+    /** @var TranslatorInterface */
+    private $translator;
+
+    public function __construct(
+        EntityManagerInterface $entityManager,
+        Environment $twig,
+        ManagerRegistry $registry,
+        Swift_Mailer $mailer,
+        TranslatorInterface $translator
+    ) {
         parent::__construct($registry, User::class);
         $this->entityManager = $entityManager;
+        $this->mailer = $mailer;
+        $this->translator = $translator;
+        $this->twig = $twig;
     }
 
     /**
@@ -87,10 +107,10 @@ class UserRepository extends ServiceEntityRepository
     {
         $qb = $this->createQueryBuilder('u');
         return $qb->join('u.directors', 'd')
-                  ->where('d.region = :dregion_id')
-                  ->setParameter('dregion_id', $region->getId())
-                  ->getQuery()
-                  ->getResult();
+            ->where('d.region = :dregion_id')
+            ->setParameter('dregion_id', $region->getId())
+            ->getQuery()
+            ->getResult();
     }
 
     /**
@@ -100,5 +120,25 @@ class UserRepository extends ServiceEntityRepository
     {
         $this->entityManager->persist($user);
         $this->entityManager->flush();
+    }
+
+    public function sendNewUserEmail(User $user, string $tempPasswd)
+    {
+        $email = $this->mailer->createMessage();
+
+        $data = [
+            'tempPasswd' => $tempPasswd,
+            'title' => $this->translator->trans('email.newUser.title'),
+            'user' => $user
+        ];
+
+        $email
+            ->setFrom($_ENV['MAIL_NO_REPLY_ADDRESS'], $_ENV['MAIL_SENDER_NAME'])
+            ->addTo($user->getEmail(), $user->getFullName())
+            ->setSubject($data['title'])
+            ->setBody($this->twig->render("emails/new-user/html.twig", $data), "text/html")
+            ->addPart($this->twig->render("emails/new-user/txt.twig", $data), "text/plain");
+
+        return $this->mailer->send($email);
     }
 }

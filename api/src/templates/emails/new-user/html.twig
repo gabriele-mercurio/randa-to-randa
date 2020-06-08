@@ -1,0 +1,11 @@
+{% extends "emails/base.html.twig" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block body %}
+<p>{{ 'email.newUser.body.0'|trans }}</p>
+<p>{{ 'email.newUser.body.1'|trans }} {{ user.email }} {{ 'email.newUser.body.2'|trans }}</p>
+<p>{{ 'email.newUser.body.3'|trans }}<br />
+<blockquote>{{ tempPasswd}}</blockquote><br />
+{{ 'email.newUser.body.4'|trans }}</p>
+{% endblock %}

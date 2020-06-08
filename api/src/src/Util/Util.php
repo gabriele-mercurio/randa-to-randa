@@ -119,6 +119,30 @@ class Util
     }
 
     /**
+     * Generate a string of random chars and symbols of a given length
+     *
+     * @param int $length The length of the returned string;
+     * @return string
+     */
+    public static function generatePassword(int $length = 12): string
+    {
+        $password = "";
+        $availableCharacters = [
+            "!@#$%^&",
+            "abcdefghijkmnpqrstuvwxyz",
+            "123456789",
+            "ABCDEFGHJKLMNPQRSTUVWXYZ"
+        ];
+
+        for($i = 0; $i < $length; $i++) {
+            $group = $availableCharacters[mt_rand(0, count($availableCharacters) - 1)];
+            $pos = mt_rand(0, strlen($group) - 1);
+            $password .= $group[$pos];
+        }
+        return $password;
+    }
+
+    /**
      * @return string[]
      */
     public static function getAllowedContactTypes()

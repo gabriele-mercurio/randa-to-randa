@@ -53,6 +53,7 @@ class DirectorFixtures extends Fixture implements DependentFixtureInterface
 
             $director = new Director();
             $director->setFixedPercentage(0);
+            $director->setFreeAccount(false);
             $director->setGreenLightPercentage(25);
             $director->setGreyLightPercentage(10);
             $director->setLaunchPercentage(25);

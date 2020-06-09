@@ -148,7 +148,7 @@ class UserRepository extends ServiceEntityRepository
     {
         $salt = $user->getSalt();
         $ashedPassword = md5($salt . md5($password) . $salt);
-        return $user->getPassword == $ashedPassword;
+        return $user->getPassword() == $ashedPassword;
     }
 
     /**
@@ -158,6 +158,24 @@ class UserRepository extends ServiceEntityRepository
     {
         $this->entityManager->persist($user);
         $this->entityManager->flush();
+    }
+
+    /**
+     * @param string $term
+     *
+     * @return User[]
+     */
+    public function searchUsers(string $term): array
+    {
+        return $this->createQueryBuilder('u')
+            ->where('u.firstName LIKE :firstNameTerm')
+            ->orWhere('u.lastName LIKE :lastNameTerm')
+            ->orWhere('u.email LIKE :emailTerm')
+            ->setParameter('firstNameTerm', "$term%")
+            ->setParameter('lastNameTerm', "$term%")
+            ->setParameter('emailTerm', "%$term%")
+            ->getQuery()
+            ->getResult();
     }
 
     public function sendNewUserEmail(User $user, string $tempPasswd)

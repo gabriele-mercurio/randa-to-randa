@@ -150,7 +150,7 @@ class UserController extends AbstractController
      * @SWG\Tag(name="Users")
      * @Security(name="Bearer")
      */
-    public function deleteBrand(User $user, Request $request): Response
+    public function deleteUser(User $user, Request $request): Response
     {
         /** @var User */
         $performer = $this->getUser();
@@ -379,6 +379,55 @@ class UserController extends AbstractController
 
         return new JsonResponse(array_map(function ($user) {
             return $this->userFormatter->formatForSelectFields($user);
+        }, $users));
+    }
+
+    /**
+     * Get a list of users for autocomplete
+     *
+     * @Route(path="/user/search", name="serch_users", methods={"GET"})
+     *
+     * @SWG\Parameter(
+     *      name="term",
+     *      in="formData",
+     *      type="string",
+     *      description="The term of search"
+     * )
+     * @SWG\Response(
+     *      response=200,
+     *      description="Alist of users filtered by term",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(
+     *              type="object",
+     *              @SWG\Property(property="firstName", type="string", description="The user's first name"),
+     *              @SWG\Property(property="lastName", type="string", description="The user's last name"),
+     *              @SWG\Property(property="label", type="string", description="In the form 'Name Surname (email)'"),
+     *              @SWG\Property(property="value", type="string", description="The user's email")
+     *          )
+     *      )
+     * )
+     */
+    public function searchUsers(Request $request): Response
+    {
+        $request = Util::normalizeRequest($request);
+
+        $term = trim($request->get("term"));
+
+        if (strlen($term) < 3) {
+            return new JsonResponse([]);
+        }
+
+        $users = $this->userRepository->searchUsers($term);
+        usort($users, function ($u1, $u2) {
+            $fn1 = $u1->getFullName();
+            $fn2 = $u2->getFullName();
+
+            return $fn1 < $fn2 ? -1 : ($fn1 > $fn2 ? 1 : 0);
+        });
+
+        return new JsonResponse(array_map(function ($user) {
+            return $this->userFormatter->formatForAutocomplete($user);
         }, $users));
     }
 }

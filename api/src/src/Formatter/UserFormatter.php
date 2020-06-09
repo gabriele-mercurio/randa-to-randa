@@ -45,6 +45,21 @@ class UserFormatter
      *
      * @return array
      */
+    public function formatForAutocomplete(User $user): array
+    {
+        return [
+            'firstName' => $user->getFirstName(),
+            'lastName' => $user->getLastName(),
+            'label' => $user->getFullName() . " (" . $user->getEmail() . ")",
+            'value' => $user->getEmail()
+        ];
+    }
+
+    /**
+     * @param User $user
+     *
+     * @return array
+     */
     public function formatForSelectFields(User $user): array
     {
         $ret = $this->format($user);

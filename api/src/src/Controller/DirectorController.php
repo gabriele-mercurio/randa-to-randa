@@ -775,15 +775,15 @@ class DirectorController extends AbstractController
     }
 
     /**
-     * Get chapters
+     * Get all region area directors
      *
-     * @Route(path="/{id}/chapters", name="chapters_list", methods={"GET"})
+     * @Route(path="/{id}/directors", name="list_directors", methods={"GET"})
      *
      * @SWG\Parameter(
      *      name="id",
      *      in="path",
      *      type="string",
-     *      description="The region"
+     *      description="The region of reference"
      * )
      * @SWG\Parameter(
      *      name="role",
@@ -797,50 +797,36 @@ class DirectorController extends AbstractController
      *      type="string",
      *      description="Optional parameter representing the emulated user id"
      * )
+     * @SWG\Parameter(
+     *      name="onlyArea",
+     *      in="formData",
+     *      type="boolean"
+     * )
      * @SWG\Response(
      *      response=200,
-     *      description="Returns an array of Chapter objects",
+     *      description="Returns a list of Director object",
      *      @SWG\Schema(
      *          type="array",
      *          @SWG\Items(
      *              type="object",
+     *              @SWG\Property(property="fixedPercentage", type="integer"),
+     *              @SWG\Property(property="fullName", type="string"),
+     *              @SWG\Property(property="greenLightPercentage", type="integer"),
+     *              @SWG\Property(property="greyLightPercentage", type="integer"),
+     *              @SWG\Property(property="id", type="string"),
+     *              @SWG\Property(property="launchPercentage", type="integer"),
+     *              @SWG\Property(property="payType", type="string"),
+     *              @SWG\Property(property="redLightPercentage", type="integer"),
+     *              @SWG\Property(property="role", type="string"),
      *              @SWG\Property(
-     *                  property="chapterLaunch",
-     *                  type="object",
-     *                  @SWG\Property(property="actual", type="string", description="Actual date"),
-     *                  @SWG\Property(property="prev", type="string", description="Expected date")
-     *              ),
-     *              @SWG\Property(property="closureDate", type="string", description="Closure date"),
-     *              @SWG\Property(
-     *                  property="coreGroupLaunch",
-     *                  type="object",
-     *                  @SWG\Property(property="actual", type="string", description="Actual date"),
-     *                  @SWG\Property(property="prev", type="string", description="Expected date")
-     *              ),
-     *              @SWG\Property(property="currentState", type="string", description="Available values: PROJECT, CORE_GROUP or CHAPTER"),
-     *              @SWG\Property(
-     *                  property="director",
+     *                  property="supervisor",
      *                  type="object",
      *                  @SWG\Property(property="fullName", type="string"),
-     *                  @SWG\Property(property="id", type="integer")
+     *                  @SWG\Property(property="id", type="string")
      *              ),
-     *              @SWG\Property(property="id", type="string"),
-     *              @SWG\Property(property="members", type="integer"),
-     *              @SWG\Property(property="name", type="string"),
-     *              @SWG\Property(
-     *                  property="resume",
-     *                  type="object",
-     *                  @SWG\Property(property="actual", type="string", description="Actual date"),
-     *                  @SWG\Property(property="prev", type="string", description="Expected date")
-     *              ),
-     *              @SWG\Property(property="suspDate", type="string", description="Suspension date"),
-     *              @SWG\Property(property="warning", type="string", description="Available values: NULL, 'CORE_GROUP' or 'CHAPTER'")
+     *              @SWG\Property(property="yellowLightPercentage", type="integer")
      *          )
      *      )
-     * )
-     * @SWG\Response(
-     *      response=400,
-     *      description="Returned if role is given but is not valid."
      * )
      * @SWG\Response(
      *      response=403,
@@ -850,103 +836,57 @@ class DirectorController extends AbstractController
      *      response=404,
      *      description="Returned if actAs is given but is not a valid user id."
      * )
-     * @SWG\Tag(name="Chapters")
+     * @SWG\Tag(name="Directors")
      * @Security(name="Bearer")
      *
      * @return Response
      */
-    // public function getChapters(Region $region, Request $request): Response
-    // {
-    //     $actAs = $request->get("actAs");
-    //     $code = Response::HTTP_OK;
-    //     $role = $request->get("role");
-    //     $user = $this->getUser();
+    public function listDirectors(Region $region, Request $request): Response
+    {
+        $actAsId = $request->get("actAs");
+        $code = Response::HTTP_OK;
+        $onlyArea = !!(int)$request->get("onlyArea");
+        $role = $request->get("role");
+        $user = $this->getUser();
 
-    //     $checkUser = $this->userRepository->checkUser($user, $actAs);
-    //     $user = Util::arrayGetValue($checkUser, 'user');
-    //     $code = Util::arrayGetValue($checkUser, 'code');
+        $checkUser = $this->userRepository->checkUser($user, $actAsId);
+        $actAs = Util::arrayGetValue($checkUser, 'user');
+        $code = Util::arrayGetValue($checkUser, 'code');
 
-    //     if ($code == Response::HTTP_OK && !is_null($role) && !in_array($role, [
-    //         $this->directorRepository::DIRECTOR_ROLE_AREA,
-    //         $this->directorRepository::DIRECTOR_ROLE_ASSISTANT,
-    //         $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE
-    //     ])) {
-    //         $code = Response::HTTP_BAD_REQUEST;
-    //     }
+        if ($code == Response::HTTP_OK && !is_null($role) && $role != $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE) {
+            $code = Response::HTTP_BAD_REQUEST;
+        }
 
-    //     if ($code == Response::HTTP_OK) {
-    //         $checkDirectorRole = $this->directorRepository->checkDirectorRole($user, $region, $role);
+        if ($code == Response::HTTP_OK) {
+            $u = is_null($actAsId) ? $user : $actAs;
+            $checkDirectorRole = $this->directorRepository->checkDirectorRole($u, $region, $role);
 
-    //         $code = Util::arrayGetValue($checkDirectorRole, 'code', $code);
-    //         $director = Util::arrayGetValue($checkDirectorRole, 'director', null);
-    //     }
+            $code = Util::arrayGetValue($checkDirectorRole, 'code', $code);
+            $director = Util::arrayGetValue($checkDirectorRole, 'director', null);
+        }
 
-    //     if ($code == Response::HTTP_OK) {
-    //         $role = $user->isAdmin() && is_null($role) ? $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE : $director->getRole();
+        if ($code == Response::HTTP_OK) {
+            $criteria = [
+                'region' => $region
+            ];
 
-    //         switch ($role) {
-    //             case $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE:
-    //                 $chapters = $this->chapterRepository->findBy([
-    //                     'region' => $region
-    //                 ]);
-    //                 break;
-    //             case $this->directorRepository::DIRECTOR_ROLE_AREA:
-    //                 $directors = [
-    //                     $director->getId() => $director
-    //                 ];
-    //                 foreach ($this->directorRepository->findBy([
-    //                     'supervisor' => $director
-    //                 ]) as $d) {
-    //                     $id = $d->getId();
-    //                     if (!array_key_exists($id, $directors)) {
-    //                         $directors[$id] = $d;
-    //                     }
-    //                 }
-    //                 $directors = array_values($directors);
-    //                 $chapters = [];
+            if ($onlyArea) {
+                $criteria['role'] = $this->directorRepository::DIRECTOR_ROLE_AREA;
+            }
 
-    //                 foreach ($directors as $d) {
-    //                     foreach ($this->chapterRepository->findBy([
-    //                         'director' => $d,
-    //                         'region' => $region
-    //                     ]) as $c) {
-    //                         $id = $c->getId();
-    //                         if (!array_key_exists($id, $chapters)) {
-    //                             $chapters[$id] = $c;
-    //                         }
-    //                     }
-    //                 }
-    //                 $chapters = array_values($chapters);
-    //                 break;
-    //             case $this->directorRepository::DIRECTOR_ROLE_ASSISTANT:
-    //                 $chapters = $this->chapterRepository->findBy([
-    //                     'director' => $director,
-    //                     'region' => $region
-    //                 ]);
-    //                 break;
-    //         }
-    //         usort($chapters, function ($c1, $c2) {
-    //             $name1 = $c1->getName();
-    //             $name2 = $c2->getName();
-    //             return $name1 < $name2 ? -1 : ($name1 > $name2 ? 1 : 0);
-    //         });
+            $directors = $this->directorRepository->findBy($criteria);
+            usort($directors, function ($d1, $d2) {
+                $fn1 = $d1->getUser()->getFullName();
+                $fn2 = $d2->getUser()->getFullName();
 
-    //         return new JsonResponse(array_map(function ($c) {
-    //             $today = new DateTime();
-    //             $warning = null;
+                return $fn1 < $fn2 ? -1 : ($fn1 > $fn2 ? 1 : 0);
+            });
 
-    //             if (is_null($c->getActualLaunchCoregroupDate()) && $c->getPrevLaunchCoregroupDate() <= $today) {
-    //                 $warning = "CORE_GROUP";
-    //             } elseif (is_null($c->getActualLaunchChapterDate()) && $c->getPrevLaunchChapterDate() <= $today) {
-    //                 $warning = "CHAPTER";
-    //             }
-
-    //             $ret = $this->chapterFormatter->formatBase($c);
-    //             $ret['warning'] = $warning;
-    //             return $ret;
-    //         }, $chapters));
-    //     } else {
-    //         return new JsonResponse(null, $code);
-    //     }
-    // }
+            return new JsonResponse(array_map(function ($d) {
+                return $this->directorFormatter->formatFull($d);
+            }, $directors));
+        } else {
+            return new JsonResponse(null, $code);
+        }
+    }
 }

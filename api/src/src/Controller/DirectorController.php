@@ -775,7 +775,7 @@ class DirectorController extends AbstractController
     }
 
     /**
-     * Get all region area directors
+     * Get all region directors or only area directors per region
      *
      * @Route(path="/{id}/directors", name="list_directors", methods={"GET"})
      *

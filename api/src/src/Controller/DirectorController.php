@@ -7,6 +7,7 @@ use App\Entity\Region;
 use App\Entity\User;
 use App\Formatter\DirectorFormatter;
 use App\Repository\DirectorRepository;
+use App\Repository\RegionRepository;
 use App\Repository\UserRepository;
 use App\Util\Util;
 use App\Util\Validator;
@@ -31,6 +32,9 @@ class DirectorController extends AbstractController
     /** @var DirectorRepository */
     private $directorRepository;
 
+    /** @var RegionRepository */
+    private $regionRepository;
+
     /** @var UserRepository */
     private $userRepository;
 
@@ -38,11 +42,13 @@ class DirectorController extends AbstractController
         EntityManagerInterface $entityManager,
         DirectorFormatter $directorFormatter,
         DirectorRepository $directorRepository,
+        RegionRepository $regionRepository,
         UserRepository $userRepository
     ) {
         $this->entityManager = $entityManager;
         $this->directorFormatter = $directorFormatter;
         $this->directorRepository = $directorRepository;
+        $this->regionRepository = $regionRepository;
         $this->userRepository = $userRepository;
     }
 
@@ -107,12 +113,6 @@ class DirectorController extends AbstractController
      *      required=true
      * )
      * @SWG\Parameter(
-     *      name="region",
-     *      in="formData",
-     *      type="string",
-     *      description="The region of reference. Can be null only if we are creating a NATIONAL director"
-     * )
-     * @SWG\Parameter(
      *      name="supervisor",
      *      in="formData",
      *      type="string",
@@ -166,14 +166,14 @@ class DirectorController extends AbstractController
      *      description="Returns a Director object",
      *      @SWG\Schema(
      *          type="object",
-     *          @SWG\Property(property="fixedPercentage", type="float"),
+     *          @SWG\Property(property="fixedPercentage", type="integer"),
      *          @SWG\Property(property="fullName", type="string"),
-     *          @SWG\Property(property="greenLightPercentage", type="float"),
-     *          @SWG\Property(property="greyLightPercentage", type="float"),
+     *          @SWG\Property(property="greenLightPercentage", type="integer"),
+     *          @SWG\Property(property="greyLightPercentage", type="integer"),
      *          @SWG\Property(property="id", type="string"),
-     *          @SWG\Property(property="launchPercentage", type="float"),
+     *          @SWG\Property(property="launchPercentage", type="integer"),
      *          @SWG\Property(property="payType", type="string"),
-     *          @SWG\Property(property="redLightPercentage", type="float"),
+     *          @SWG\Property(property="redLightPercentage", type="integer"),
      *          @SWG\Property(property="role", type="string"),
      *          @SWG\Property(
      *              property="supervisor",
@@ -181,21 +181,17 @@ class DirectorController extends AbstractController
      *              @SWG\Property(property="fullName", type="string"),
      *              @SWG\Property(property="id", type="string")
      *          ),
-     *          @SWG\Property(property="yellowLightPercentage", type="float")
+     *          @SWG\Property(property="yellowLightPercentage", type="integer")
      *      )
      * )
      * @SWG\Response(
      *      response=400,
      *      description="Returned if one or more required fields are empty or if one or more fields are invalid.",
      *      @SWG\Schema(
-     *          type="object",
-     *          @SWG\Property(
-     *              property="fields",
-     *              type="array",
-     *              @SWG\Items(
-     *                  type="object",
-     *                  @SWG\Property(property="field_name", type="string", description="The type of the error; possible values are 'required', 'in_use' or 'invalid'")
-     *              )
+     *          type="array",
+     *          @SWG\Items(
+     *              type="object",
+     *              @SWG\Property(property="field_name", type="string", description="The type of the error; possible values are 'required', 'in_use' or 'invalid'")
      *          )
      *      )
      * )
@@ -426,17 +422,16 @@ class DirectorController extends AbstractController
     }
 
     /**
-     * Edit a chapter
-     * Canges to members and prevResumeDate can be made from any authorized directors; for all other fields the user must be admin or have EXECUTIVE role.
-     * Changes to launch date fields from prev to actual are not allowed: there are specific API calls to launch a coregroup or a chapter, use them instead
+     * Edit a director
+     * Canges can be made from admin or directors having at last EXECUTIVE role.
      *
-     * @Route(path="/chapter/{id}", name="edit_chapter", methods={"PUT"})
+     * @Route(path="/director/{id}", name="edit_director", methods={"PUT"})
      *
      * @SWG\Parameter(
      *      name="id",
      *      in="path",
      *      type="string",
-     *      description="The chapter"
+     *      description="The director"
      * )
      * @SWG\Parameter(
      *      name="actAs",
@@ -445,104 +440,102 @@ class DirectorController extends AbstractController
      *      description="Optional parameter representing the emulated user id"
      * )
      * @SWG\Parameter(
-     *      name="name",
+     *      name="role",
      *      in="formData",
      *      type="string",
-     *      required=true
+     *      description="Can be one of 'ASSISTANT', 'AREA', 'EXECUTIVE' or 'NATIONAL'"
      * )
      * @SWG\Parameter(
-     *      name="director",
+     *      name="isFreeAccount",
      *      in="formData",
-     *      type="string",
-     *      description="The user id of the designated chapter director",
-     *      required=true
+     *      type="boolean",
+     *      description="The new director is a free account?"
      * )
      * @SWG\Parameter(
-     *      name="members",
+     *      name="region",
      *      in="formData",
      *      type="string",
-     *      description="Optional previsioning coregroup launch date."
+     *      description="The region of reference. Can be changed only by admins or directors with NATIONAL role"
      * )
      * @SWG\Parameter(
-     *      name="prevLaunchCoregroupDate",
+     *      name="supervisor",
      *      in="formData",
      *      type="string",
-     *      description="Optional actual coregroup launch date. If this date is given prevLaunchCoregroupDate is not given."
+     *      description="An AREA director id. It is mandatory if we are changing to an ASSISTANT director"
      * )
      * @SWG\Parameter(
-     *      name="actualLaunchCoregroupDate",
+     *      name="payType",
      *      in="formData",
      *      type="string",
-     *      description="Optional actual coregroup launch date. If this date is given prevLaunchCoregroupDate is not given."
+     *      description="Can be one of 'MONTHLY' or 'ANNUAL'"
      * )
      * @SWG\Parameter(
-     *      name="prevLaunchChapterDate",
+     *      name="launchPercentage",
      *      in="formData",
      *      type="string",
-     *      description="Optional previsioning chapter launch date."
+     *      description="The perchentage that the director takes at chapter launches"
      * )
      * @SWG\Parameter(
-     *      name="actualLaunchChapterDate",
+     *      name="greenLightPercentage",
      *      in="formData",
      *      type="string",
-     *      description="Optional actual chapter launch date. If this date is given prevLaunchChapterDate is not given."
+     *      description="The perchentage that the director takes at green light"
      * )
      * @SWG\Parameter(
-     *      name="prevResumeDate",
+     *      name="yellowLightPercentage",
      *      in="formData",
      *      type="string",
-     *      description="Optional previsioning chapter resume date."
+     *      description="The perchentage that the director takes at yellow light"
+     * )
+     * @SWG\Parameter(
+     *      name="redLightPercentage",
+     *      in="formData",
+     *      type="string",
+     *      description="The perchentage that the director takes at red light"
+     * )
+     * @SWG\Parameter(
+     *      name="greyLightPercentage",
+     *      in="formData",
+     *      type="string",
+     *      description="The perchentage that the director takes at grey light"
+     * )
+     * @SWG\Parameter(
+     *      name="fixedPercentage",
+     *      in="formData",
+     *      type="string",
+     *      description="The perchentage that the director takes as alternative to all the other percentages"
      * )
      * @SWG\Response(
      *      response=200,
-     *      description="Returns a Chapter object",
+     *      description="Returns a Director object",
      *      @SWG\Schema(
      *          type="object",
+     *          @SWG\Property(property="fixedPercentage", type="integer"),
+     *          @SWG\Property(property="fullName", type="string"),
+     *          @SWG\Property(property="greenLightPercentage", type="integer"),
+     *          @SWG\Property(property="greyLightPercentage", type="integer"),
+     *          @SWG\Property(property="id", type="string"),
+     *          @SWG\Property(property="launchPercentage", type="integer"),
+     *          @SWG\Property(property="payType", type="string"),
+     *          @SWG\Property(property="redLightPercentage", type="integer"),
+     *          @SWG\Property(property="role", type="string"),
      *          @SWG\Property(
-     *              property="chapterLaunch",
-     *              type="object",
-     *              @SWG\Property(property="actual", type="string", description="Actual date"),
-     *              @SWG\Property(property="prev", type="string", description="Expected date")
-     *          ),
-     *          @SWG\Property(property="closureDate", type="string", description="Closure date"),
-     *          @SWG\Property(
-     *              property="coreGroupLaunch",
-     *              type="object",
-     *              @SWG\Property(property="actual", type="string", description="Actual date"),
-     *              @SWG\Property(property="prev", type="string", description="Expected date")
-     *          ),
-     *          @SWG\Property(property="currentState", type="string", description="Available values: PROJECT, CORE_GROUP or CHAPTER"),
-     *          @SWG\Property(
-     *              property="director",
+     *              property="supervisor",
      *              type="object",
      *              @SWG\Property(property="fullName", type="string"),
-     *              @SWG\Property(property="id", type="integer")
+     *              @SWG\Property(property="id", type="string")
      *          ),
-     *          @SWG\Property(property="id", type="string"),
-     *          @SWG\Property(property="members", type="integer"),
-     *          @SWG\Property(property="name", type="string"),
-     *          @SWG\Property(
-     *              property="resume",
-     *              type="object",
-     *              @SWG\Property(property="actual", type="string", description="Actual date"),
-     *              @SWG\Property(property="prev", type="string", description="Expected date")
-     *          ),
-     *          @SWG\Property(property="suspDate", type="string", description="Suspension date"),
-     *          @SWG\Property(property="warning", type="string", description="Available values: NULL, 'CORE_GROUP' or 'CHAPTER'")
+     *          @SWG\Property(property="yellowLightPercentage", type="integer")
      *      )
      * )
      * @SWG\Response(
      *      response=400,
      *      description="Returned if some data check errors are found.",
      *      @SWG\Schema(
-     *          type="object",
-     *          @SWG\Property(
-     *              property="fields",
-     *              type="array",
-     *              @SWG\Items(
-     *                  type="object",
-     *                  @SWG\Property(property="field_name", type="string", description="The type of the error; possible values are 'required', 'in_use' or 'invalid'")
-     *              )
+     *          type="array",
+     *          @SWG\Items(
+     *              type="object",
+     *              @SWG\Property(property="field_name", type="string", description="The type of the error; possible values are 'required', 'in_use' or 'invalid'")
      *          )
      *      )
      * )
@@ -554,297 +547,232 @@ class DirectorController extends AbstractController
      *      response=404,
      *      description="Returned if actAs is given but is not a valid user id."
      * )
-     * @SWG\Response(
-     *      response=409,
-     *      description="Returned when are given dates that change the chapter status. Use dedicated APIs instead."
-     * )
-     * @SWG\Tag(name="Chapters")
+     * @SWG\Tag(name="Directors")
      * @Security(name="Bearer")
      *
      * @return Response
      */
-    // public function editChapter(Chapter $chapter, Request $request): Response
-    // {
-    //     $request = Util::normalizeRequest($request);
+    public function editDirector(Director $director, Request $request): Response
+    {
+        $request = Util::normalizeRequest($request);
 
-    //     $actAs = $request->get("actAs");
-    //     $code = Response::HTTP_OK;
-    //     $errorFields = $fields = [];
-    //     $user = $this->getUser();
+        $actAsId = $request->get("actAs");
+        $code = Response::HTTP_OK;
+        $errorFields = [];
+        $region = $director->getRegion();
+        $user = $this->getUser();
 
-    //     $checkUser = $this->userRepository->checkUser($user, $actAs);
-    //     $user = Util::arrayGetValue($checkUser, 'user');
-    //     $code = Util::arrayGetValue($checkUser, 'code');
+        $checkUser = $this->userRepository->checkUser($user, $actAsId);
+        $actAs = Util::arrayGetValue($checkUser, 'user');
+        $code = Util::arrayGetValue($checkUser, 'code');
 
-    //     $region = $chapter->getRegion();
+        if ($code == Response::HTTP_OK) {
+            if ($user->isAdmin() && is_null($actAsId)) {
+                $performerRole = $this->directorRepository::DIRECTOR_ROLE_NATIONAL;
+            } else {
+                $u = is_null($actAsId) ? $user : $actAs;
+                $director = $this->directorRepository->findOneBy([
+                    'user' => $u,
+                    'role' => $this->directorRepository::DIRECTOR_ROLE_NATIONAL
+                ]);
 
-    //     if ($code == Response::HTTP_OK) {
-    //         if ($user->isAdmin()) {
-    //             $role = $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE;
-    //         } else {
-    //             $checkDirectorRole = $this->directorRepository->checkDirectorRole($user, $region);
-    //             $code = Util::arrayGetValue($checkDirectorRole, 'code', $code);
-    //             $director = Util::arrayGetValue($checkDirectorRole, 'director', null);
+                if (is_null($director)) {
+                    $director = $this->directorRepository->findOneBy([
+                        'user' => $u,
+                        'region' => $region,
+                        'role' => $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE
+                    ]);
 
-    //             if (!is_null($director)) {
-    //                 $role = $director->getRole();
-    //             }
-    //         }
-    //     }
+                    if (is_null($director)) {
+                        $code = Response::HTTP_FORBIDDEN;
+                    }
+                }
 
-    //     if ($code == Response::HTTP_OK) {
-    //         $name = $request->get("name");
-    //         $chapterDirector = $request->get("director");
-    //         $members = $request->get("members");
-    //         $prevLaunchCoregroupDate = $request->get("prevLaunchCoregroupDate");
-    //         $actualLaunchCoregroupDate = $request->get("actualLaunchCoregroupDate");
-    //         $prevLaunchChapterDate = $request->get("prevLaunchChapterDate");
-    //         $actualLaunchChapterDate = $request->get("actualLaunchChapterDate");
-    //         $prevResumeDate = $request->get("prevResumeDate");
+                if ($code == Response::HTTP_OK) {
+                    $performerRole = $director->getRole();
+                }
+            }
+        }
 
-    //         $today = Util::UTCDateTime();
+        if ($code == Response::HTTP_OK) {
+            $role = strtoupper(trim($request->get("role")));
+            $isFreeAccount = $request->get("isFreeAccount");
+            $newRegion = $request->get("region");
+            $supervisor = $request->get("supervisor");
+            $payType = strtoupper(trim($request->get("payType")));
+            $launchPercentage = $request->get("launchPercentage");
+            $greenLigthPercentage = $request->get("greenLightPercentage");
+            $yellowLigthPercentage = $request->get("yellowLightPercentage");
+            $redLigthPercentage = $request->get("redLightPercentage");
+            $greyLigthPercentage = $request->get("greyLightPercentage");
+            $fixedPercentage = $request->get("fixedPercentage");
 
-    //         // Check Name
-    //         if (!empty($name)) {
-    //             $name = trim($name);
-    //             if (empty($name)) {
-    //                 $errorFields['name'] = "required";
-    //             } elseif ($this->chapterRepository->existsOtherWithSameFields($chapter, [
-    //                 'name' => $name,
-    //                 'region' => $region
-    //             ])) {
-    //                 $errorFields['name'] = "in_use";
-    //             } else {
-    //                 $fields['name'] = $name;
-    //             }
-    //         }
+            $availablePayTypes = [
+                $this->directorRepository::DIRECTOR_PAY_TYPE_ANNUAL,
+                $this->directorRepository::DIRECTOR_PAY_TYPE_MONTHLY
+            ];
+            $availableRoles = [
+                $this->directorRepository::DIRECTOR_ROLE_AREA,
+                $this->directorRepository::DIRECTOR_ROLE_ASSISTANT,
+                $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE,
+                $this->directorRepository::DIRECTOR_ROLE_NATIONAL
+            ];
+            $errorFields = $fields = [];
 
-    //         // Check Chapter Director
-    //         if (!empty($chapterDirector)) {
-    //             $chapterDirector = $this->userRepository->find(trim($chapterDirector));
-    //             if (is_null($chapterDirector)) {
-    //                 $errorFields['director'] = "invalid";
-    //             } else {
-    //                 $fields['director'] = $chapterDirector;
-    //             }
-    //         }
+            if (!empty($role) && !in_array($role, $availableRoles)) {
+                $errorFields['role'] = "invalid";
+            } elseif (!empty($role)) {
+                $fields['role'] = $role;
+            }
 
-    //         // Check Members
-    //         if (!empty($members)) {
-    //             $members = (int) $members;
-    //             if (is_nan($members) || $members < 0) {
-    //                 $errorFields['members'] = "invalid";
-    //             } else {
-    //                 $fields['members'] = $members;
-    //             }
-    //         }
+            if (!empty($newRegion)) {
+                $newRegion = $this->regionRepository->find($newRegion);
+                if (is_null($newRegion)) {
+                    $errorFields['region'] = "invalid";
+                } else {
+                    $fields['region'] = $newRegion;
+                }
+            }
 
-    //         // Check Coregroup and Chapter dates
-    //         switch ($chapter->getCurrentState()) {
-    //             case $this->chapterRepository::CHAPTER_CURRENT_STATE_PROJECT:
-    //                 if (!empty($prevLaunchCoregroupDate)) {
-    //                     $prevLaunchCoregroupDate = trim($prevLaunchCoregroupDate);
-    //                     if (!empty($prevLaunchCoregroupDate)) {
-    //                         try {
-    //                             $prevLaunchCoregroupDate = Util::UTCDateTime($prevLaunchCoregroupDate);
-    //                         } catch (Exception $ex) {
-    //                             $errorFields['prevLaunchCoregroupDate'] = "invalid";
-    //                         }
+            if (!empty($payType) && !in_array($payType, $availablePayTypes)) {
+                $errorFields['payType'] = "invalid";
+            } elseif (!empty($payType)) {
+                $fields['payType'] = $payType;
+            }
 
-    //                         if (!array_key_exists('prevLaunchCoregroupDate', $errorFields)) {
-    //                             if ($prevLaunchCoregroupDate < $today) {
-    //                                 $errorFields['prevLaunchCoregroupDate'] = "invalid";
-    //                             } else {
-    //                                 $fields['prevLaunchCoregroupDate'] = $prevLaunchCoregroupDate;
-    //                             }
-    //                         }
-    //                     }
-    //                 }
+            if (!empty($launchPercentage) && !is_numeric($launchPercentage)) {
+                $errorFields['launchPercentage'] = "invalid";
+            } elseif (!empty($launchPercentage)) {
+                $fields['launchPercentage'] = $launchPercentage;
+            }
 
-    //                 if (!empty($actualLaunchCoregroupDate)) {
-    //                     $errorFields['actualLaunchCoregroupDate'] = "conflict";
-    //                 }
+            if (!empty($greenLigthPercentage) && !is_numeric($greenLigthPercentage)) {
+                $errorFields['greenLigthPercentage'] = "invalid";
+            } elseif (!empty($greenLigthPercentage)) {
+                $fields['greenLigthPercentage'] = $greenLigthPercentage;
+            }
 
-    //                 if (!empty($prevLaunchChapterDate)) {
-    //                     $prevLaunchChapterDate = trim($prevLaunchChapterDate);
-    //                     if (!empty($prevLaunchChapterDate)) {
-    //                         try {
-    //                             $prevLaunchChapterDate = Util::UTCDateTime($prevLaunchChapterDate);
-    //                         } catch (Exception $ex) {
-    //                             $errorFields['prevLaunchChapterDate'] = "invalid";
-    //                         }
+            if (!empty($yellowLigthPercentage) && !is_numeric($yellowLigthPercentage)) {
+                $errorFields['yellowLigthPercentage'] = "invalid";
+            } elseif (!empty($yellowLigthPercentage)) {
+                $fields['yellowLigthPercentage'] = $yellowLigthPercentage;
+            }
 
-    //                         if (!array_key_exists('prevLaunchChapterDate', $errorFields)) {
-    //                             if ($prevLaunchChapterDate <= $prevLaunchCoregroupDate) {
-    //                                 $errorFields['prevLaunchChapterDate'] = "invalid";
-    //                             } else {
-    //                                 $fields['prevLaunchChapterDate'] = $prevLaunchChapterDate;
-    //                             }
-    //                         }
-    //                     }
-    //                 }
+            if (!empty($redLigthPercentage) && !is_numeric($redLigthPercentage)) {
+                $errorFields['redLigthPercentage'] = "invalid";
+            } elseif (!empty($redLigthPercentage)) {
+                $fields['redLigthPercentage'] = $redLigthPercentage;
+            }
 
-    //                 if (!empty($actualLaunchChapterDate)) {
-    //                     $errorFields['actualLaunchChapterDate'] = "conflict";
-    //                 }
-    //             break;
-    //             case $this->chapterRepository::CHAPTER_CURRENT_STATE_CORE_GROUP:
-    //                 if (!empty($prevLaunchCoregroupDate)) {
-    //                     $errorFields['prevLaunchCoregroupDate'] = "conflict";
-    //                 }
+            if (!empty($greyLigthPercentage) && !is_numeric($greyLigthPercentage)) {
+                $errorFields['greyLigthPercentage'] = "invalid";
+            } elseif (!empty($greyLigthPercentage)) {
+                $fields['greyLigthPercentage'] = $greyLigthPercentage;
+            }
 
-    //                 if (!empty($actualLaunchCoregroupDate)) {
-    //                     $errorFields['actualLaunchCoregroupDate'] = "conflict";
-    //                 }
+            if (!empty($fixedPercentage) && !is_numeric($fixedPercentage)) {
+                $errorFields['fixedPercentage'] = "invalid";
+            } elseif (!empty($fixedPercentage)) {
+                $fields['fixedPercentage'] = $fixedPercentage;
+            }
 
-    //                 if (!empty($prevLaunchChapterDate)) {
-    //                     $prevLaunchChapterDate = trim($prevLaunchChapterDate);
-    //                     if (!empty($prevLaunchChapterDate)) {
-    //                         try {
-    //                             $actualLaunchChapterDate = Util::UTCDateTime($actualLaunchChapterDate);
-    //                         } catch (Exception $ex) {
-    //                             $errorFields['prevLaunchChapterDate'] = "invalid";
-    //                         }
+            switch (true) {
+                case $performerRole == $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE:
+                    if (!empty($role)) {
+                        if ($role == $this->directorRepository::DIRECTOR_ROLE_NATIONAL) {
+                            $errorFields['role'] = "too_high";
+                        }
+                    }
 
-    //                         if (!array_key_exists('prevLaunchChapterDate', $errorFields)) {
-    //                             if ($prevLaunchChapterDate <= $today) {
-    //                                 $errorFields['prevLaunchChapterDate'] = "invalid";
-    //                             } else {
-    //                                 $fields['prevLaunchChapterDate'] = $prevLaunchChapterDate;
-    //                             }
-    //                         }
-    //                     }
-    //                 }
+                    if (!empty($newRegion) && $newRegion != $region) {
+                        $errorFields['region'] = "invalid";
+                    }
+                default:
+                    if (!empty($role)) {
+                        if (!!$isFreeAccount && $role != $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE) {
+                            $errorFields['isFreeAccount'] = "invalid";
+                        } elseif (!is_null($isFreeAccount)) {
+                            $fields['isFreeAccount'] = !!$isFreeAccount;
+                        }
+                    }
 
-    //                 if (!empty($actualLaunchChapterDate)) {
-    //                     $errorFields['actualLaunchChapterDate'] = "conflict";
-    //                 }
-    //             break;
-    //             default:
-    //                 if (!empty($prevLaunchCoregroupDate)) {
-    //                     $errorFields['prevLaunchCoregroupDate'] = "conflict";
-    //                 }
+                    if ($role == $this->directorRepository::DIRECTOR_ROLE_ASSISTANT) {
+                        if (empty($supervisor)) {
+                            $errorFields['supervisor'] = "required";
+                        } else {
+                            $supervisor = $this->directorRepository->findOneBy([
+                                'id' => $supervisor,
+                                'region' => $region,
+                                'role' => $this->directorRepository::DIRECTOR_ROLE_AREA
+                            ]);
 
-    //                 if (!empty($actualLaunchCoregroupDate)) {
-    //                     $errorFields['actualLaunchCoregroupDate'] = "conflict";
-    //                 }
+                            if (is_null($supervisor)) {
+                                $errorFields['supervisor'] = "invalid";
+                            } else {
+                                $fields['supervisor'] = $supervisor;
+                            }
+                        }
+                    }
+            }
 
-    //                 if (!empty($prevLaunchChapterDate)) {
-    //                     $errorFields['prevLaunchChapterDate'] = "conflict";
-    //                 }
+            if (!empty($errorFields)) {
+                $code = Response::HTTP_BAD_REQUEST;
+            }
+        }
 
-    //                 if (!empty($actualLaunchChapterDate)) {
-    //                     $errorFields['actualLaunchChapterDate'] = "conflict";
-    //                 }
-    //             break;
-    //         }
+        if ($code == Response::HTTP_OK) {
+            if (array_key_exists('role', $fields)) {
+                $director->setRole(Util::arrayGetValue('role', $fields));
+            }
 
-    //         // Check Resume date
-    //         if (!empty($prevResumeDate)) {
-    //             $prevResumeDate = trim($prevResumeDate);
-    //             if (!empty($prevResumeDate)) {
-    //                 if ($chapter->getCurrentState() != $this->chapterRepository::CHAPTER_CURRENT_STATE_SUSPENDED) {
-    //                     $errorFields['prevResumeDate'] = "conflict";
-    //                 } else {
-    //                     try {
-    //                         $prevResumeDate = Util::UTCDateTime($prevResumeDate);
-    //                     } catch (Exception $ex) {
-    //                         $errorFields['prevResumeDate'] = "invalid";
-    //                     }
+            if (array_key_exists('isFreeAccount', $fields)) {
+                $director->setFreeAccount(Util::arrayGetValue('isFreeAccount', $fields));
+            }
 
-    //                     if (!array_key_exists('prevResumeDate', $errorFields)) {
-    //                         if ($prevResumeDate < $today) {
-    //                             $errorFields['prevResumeDate'] = "conflict";
-    //                         } else {
-    //                             $fields['prevResumeDate'] = $prevResumeDate;
-    //                         }
-    //                     }
-    //                 }
-    //             }
-    //         }
+            if (array_key_exists('region', $fields)) {
+                $director->setRegion(Util::arrayGetValue('region', $fields));
+            }
 
-    //         if (!empty($errorFields)) {
-    //             if (in_array("conflict", $errorFields)) {
-    //                 $code = Response::HTTP_CONFLICT;
-    //             } else {
-    //                 $code = Response::HTTP_BAD_REQUEST;
-    //             }
-    //         }
-    //     }
+            if (array_key_exists('supervisor', $fields)) {
+                $director->setSupervisor(Util::arrayGetValue('supervisor', $fields));
+            }
 
-    //     if ($code == Response::HTTP_OK) {
-    //         // Check allowed actions for user role
-    //         if (in_array($role, [
-    //             $this->directorRepository::DIRECTOR_ROLE_AREA,
-    //             $this->directorRepository::DIRECTOR_ROLE_ASSISTANT
-    //         ])) {
-    //             $changingFields = array_keys($fields);
-    //             $allowedFields = [
-    //                 'members',
-    //                 'prevLaunchCoregroupDate',
-    //                 'prevLaunchChapterDate',
-    //                 'prevResumeDate'
-    //             ];
-    //             if (count(array_diff($changingFields, $allowedFields))) {
-    //                 $code = Response::HTTP_FORBIDDEN;
-    //             }
-    //         } elseif ($role != $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE) {
-    //             $code = Response::HTTP_FORBIDDEN;
-    //         }
-    //     }
+            if (array_key_exists('payType', $fields)) {
+                $director->setPayType(Util::arrayGetValue('payType', $fields));
+            }
 
-    //     if ($code == Response::HTTP_OK) {
-    //         if (array_key_exists('name', $fields)) {
-    //             $chapter->setName(Util::arrayGetValue('name', $fields));
-    //         }
+            if (array_key_exists('launchPercentage', $fields)) {
+                $director->setLaunchPercentage((int)Util::arrayGetValue('launchPercentage', $fields) / 100);
+            }
 
-    //         if (array_key_exists('director', $fields)) {
-    //             $chapterDirector = Util::arrayGetValue('director', $fields);
-    //             $d = $this->directorRepository->findOneBy([
-    //                 'user' => $chapterDirector,
-    //                 'region' => $region,
-    //                 'role' => $this->directorRepository::DIRECTOR_ROLE_ASSISTANT
-    //             ]);
+            if (array_key_exists('greenLigthPercentage', $fields)) {
+                $director->setGreenLightPercentage((int)Util::arrayGetValue('greenLigthPercentage', $fields) / 100);
+            }
 
-    //             if (is_null($d)) {
-    //                 $d = new Director();
-    //                 $d->setRegion($region);
-    //                 $d->setRole($this->directorRepository::DIRECTOR_ROLE_ASSISTANT);
-    //                 $d->setUser($chapterDirector);
-    //                 $this->directorRepository->save($d);
-    //             }
+            if (array_key_exists('yellowLigthPercentage', $fields)) {
+                $director->setYellowLightPercentage((int)Util::arrayGetValue('yellowLigthPercentage', $fields) / 100);
+            }
 
-    //             $chapter->setDirector($d);
-    //         }
+            if (array_key_exists('redLigthPercentage', $fields)) {
+                $director->setRedLightPercentage((int)Util::arrayGetValue('redLigthPercentage', $fields) / 100);
+            }
 
-    //         if (array_key_exists('members', $fields)) {
-    //             $chapter->setMembers(Util::arrayGetValue('members', $fields));
-    //         }
+            if (array_key_exists('greyLigthPercentage', $fields)) {
+                $director->setGreyLightPercentage((int)Util::arrayGetValue('greyLigthPercentage', $fields) / 100);
+            }
 
-    //         if (array_key_exists('prevLaunchCoregroupDate', $fields)) {
-    //             $chapter->setPrevLaunchCoregroupDate(Util::arrayGetValue('prevLaunchCoregroupDate', $fields));
-    //         }
+            if (array_key_exists('fixedPercentage', $fields)) {
+                $director->setFixedPercentage((int)Util::arrayGetValue('fixedPercentage', $fields) / 100);
+            }
 
-    //         if (array_key_exists('actualLaunchCoregroupDate', $fields)) {
-    //             $chapter->setActualLaunchCoregroupDate(Util::arrayGetValue('actualLaunchCoregroupDate', $fields));
-    //         }
+            $this->entityManager->flush();
 
-    //         if (array_key_exists('prevLaunchChapterDate', $fields)) {
-    //             $chapter->setPrevLaunchChapterDate(Util::arrayGetValue('prevLaunchChapterDate', $fields));
-    //         }
-
-    //         if (array_key_exists('actualLaunchChapterDate', $fields)) {
-    //             $chapter->setActualLaunchChapterDate(Util::arrayGetValue('actualLaunchChapterDate', $fields));
-    //         }
-
-    //         $this->entityManager->flush();
-
-    //         return new JsonResponse($this->chapterFormatter->formatFull($chapter), Response::HTTP_CREATED);
-    //     } else {
-    //         $errorFields = empty($errorFields) ? null : $errorFields;
-    //         return new JsonResponse($errorFields, $code);
-    //     }
-    // }
+            return new JsonResponse($this->directorFormatter->formatFull($director));
+        } else {
+            $errorFields = empty($errorFields) ? null : $errorFields;
+            return new JsonResponse($errorFields, $code);
+        }
+    }
 
     /**
      * Get chapters

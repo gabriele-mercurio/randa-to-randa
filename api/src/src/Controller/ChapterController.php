@@ -155,14 +155,10 @@ class ChapterController extends AbstractController
      *      response=400,
      *      description="Returned if name is not given, director is not given or is not valid, one or more date are not well formed or if the chapter must be created in project or coregroup state and the previsioning launch chapter date is not given.",
      *      @SWG\Schema(
-     *          type="object",
-     *          @SWG\Property(
-     *              property="fields",
-     *              type="array",
-     *              @SWG\Items(
-     *                  type="object",
-     *                  @SWG\Property(property="field_name", type="string", description="The type of the error; possible values are 'required', 'in_use' or 'invalid'")
-     *              )
+     *          type="array",
+     *          @SWG\Items(
+     *              type="object",
+     *              @SWG\Property(property="field_name", type="string", description="The type of the error; possible values are 'required', 'in_use' or 'invalid'")
      *          )
      *      )
      * )
@@ -486,14 +482,10 @@ class ChapterController extends AbstractController
      *      response=400,
      *      description="Returned if some data check errors are found.",
      *      @SWG\Schema(
-     *          type="object",
-     *          @SWG\Property(
-     *              property="fields",
-     *              type="array",
-     *              @SWG\Items(
-     *                  type="object",
-     *                  @SWG\Property(property="field_name", type="string", description="The type of the error; possible values are 'required', 'in_use' or 'invalid'")
-     *              )
+     *          type="array",
+     *          @SWG\Items(
+     *              type="object",
+     *              @SWG\Property(property="field_name", type="string", description="The type of the error; possible values are 'required', 'in_use' or 'invalid'")
      *          )
      *      )
      * )
@@ -551,10 +543,7 @@ class ChapterController extends AbstractController
             $actualLaunchCoregroupDate = $request->get("actualLaunchCoregroupDate");
             $prevLaunchChapterDate = $request->get("prevLaunchChapterDate");
             $actualLaunchChapterDate = $request->get("actualLaunchChapterDate");
-            $suspDate = $request->get("suspDate");
             $prevResumeDate = $request->get("prevResumeDate");
-            $actualResumeDate = $request->get("actualResumeDate");
-            $closureDate = $request->get("closureDate");
 
             $errorFields = $fields = [];
             $today = Util::UTCDateTime();

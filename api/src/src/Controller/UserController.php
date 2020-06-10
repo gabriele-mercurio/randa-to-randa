@@ -246,14 +246,10 @@ class UserController extends AbstractController
      *      response=400,
      *      description="Returned if one or more fields are invalid.",
      *      @SWG\Schema(
-     *          type="object",
-     *          @SWG\Property(
-     *              property="fields",
-     *              type="array",
-     *              @SWG\Items(
-     *                  type="object",
-     *                  @SWG\Property(property="field_name", type="string", description="The type of the error; possible values are 'required' or 'invalid'")
-     *              )
+     *          type="array",
+     *          @SWG\Items(
+     *              type="object",
+     *              @SWG\Property(property="field_name", type="string", description="The type of the error; possible values are 'required' or 'invalid'")
      *          )
      *      )
      * )
@@ -407,6 +403,8 @@ class UserController extends AbstractController
      *          )
      *      )
      * )
+     * @SWG\Tag(name="Users")
+     * @Security(name="Bearer")
      */
     public function searchUsers(Request $request): Response
     {

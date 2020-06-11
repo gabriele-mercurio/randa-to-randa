@@ -166,11 +166,14 @@ class DirectorController extends AbstractController
      *      description="Returns a Director object",
      *      @SWG\Schema(
      *          type="object",
+     *          @SWG\Property(property="email", type="integer"),
+     *          @SWG\Property(property="firstName", type="integer"),
      *          @SWG\Property(property="fixedPercentage", type="integer"),
      *          @SWG\Property(property="fullName", type="string"),
      *          @SWG\Property(property="greenLightPercentage", type="integer"),
      *          @SWG\Property(property="greyLightPercentage", type="integer"),
      *          @SWG\Property(property="id", type="string"),
+     *          @SWG\Property(property="lastName", type="integer"),
      *          @SWG\Property(property="launchPercentage", type="integer"),
      *          @SWG\Property(property="payType", type="string"),
      *          @SWG\Property(property="redLightPercentage", type="integer"),
@@ -510,11 +513,14 @@ class DirectorController extends AbstractController
      *      description="Returns a Director object",
      *      @SWG\Schema(
      *          type="object",
+     *          @SWG\Property(property="email", type="integer"),
+     *          @SWG\Property(property="firstName", type="integer"),
      *          @SWG\Property(property="fixedPercentage", type="integer"),
      *          @SWG\Property(property="fullName", type="string"),
      *          @SWG\Property(property="greenLightPercentage", type="integer"),
      *          @SWG\Property(property="greyLightPercentage", type="integer"),
      *          @SWG\Property(property="id", type="string"),
+     *          @SWG\Property(property="lastName", type="integer"),
      *          @SWG\Property(property="launchPercentage", type="integer"),
      *          @SWG\Property(property="payType", type="string"),
      *          @SWG\Property(property="redLightPercentage", type="integer"),
@@ -809,11 +815,14 @@ class DirectorController extends AbstractController
      *          type="array",
      *          @SWG\Items(
      *              type="object",
+     *              @SWG\Property(property="email", type="integer"),
+     *              @SWG\Property(property="firstName", type="integer"),
      *              @SWG\Property(property="fixedPercentage", type="integer"),
      *              @SWG\Property(property="fullName", type="string"),
      *              @SWG\Property(property="greenLightPercentage", type="integer"),
      *              @SWG\Property(property="greyLightPercentage", type="integer"),
      *              @SWG\Property(property="id", type="string"),
+     *              @SWG\Property(property="lastName", type="integer"),
      *              @SWG\Property(property="launchPercentage", type="integer"),
      *              @SWG\Property(property="payType", type="string"),
      *              @SWG\Property(property="redLightPercentage", type="integer"),
@@ -888,5 +897,63 @@ class DirectorController extends AbstractController
         } else {
             return new JsonResponse(null, $code);
         }
+    }
+
+    /**
+     * Importer for users and directors from the old DB
+     *
+     * @Route(path="/directors/import", name="director_importer", methods={"PATCH"})
+     *
+     * @SWG\Response(
+     *      response=200,
+     *      description="All users and directors has been imported correctly"
+     * )
+     * @SWG\Response(
+     *      response=500,
+     *      description="Some import error occured",
+     *      @SWG\Schema(type="string", description="The error message")
+     * )
+     * @SWG\Tag(name="Directors")
+     * @Security(name="none")
+     *
+     * @return Response
+     */
+    public function importDirectorssFromOldDB(): Response
+    {
+        // //Entity managers and repositories
+        // /** @var EntityManagerInterface */
+        // $em = $this->getDoctrine()->getManager('default');
+
+        // /** @var RegionRepository */
+        // $regionRepository = $this->getDoctrine()->getRepository(Region::class, 'default');
+
+        // /** @var OldRegionRepository */
+        // $oldRegionRepository = $this->getDoctrine()->getRepository(OldRegion::class, 'OldDB');
+
+        // //Truncate the Region table
+        // $classMetaData = $em->getClassMetadata(Region::class);
+        // $connection = $em->getConnection();
+        // $dbPlatform = $connection->getDatabasePlatform();
+        // $connection->query('SET FOREIGN_KEY_CHECKS=0');
+        // $q = $dbPlatform->getTruncateTableSql($classMetaData->getTableName());
+        // $connection->executeUpdate($q);
+        // $connection->query('SET FOREIGN_KEY_CHECKS=1');
+
+        // //Retrieve data from old table
+        // $oldRegions = $oldRegionRepository->findAll();
+
+        // //Fill the new Region table
+        // try {
+        //     foreach ($oldRegions as $oldRegion) {
+        //         $region = new Region();
+        //         $region->setName($oldRegion->getNome());
+        //         $region->setNotes($oldRegion->getNotaP());
+        //         $regionRepository->save($region);
+        //     }
+        // } catch (Exception $ex) {
+        //     return new JsonResponse($ex->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
+        // }
+
+        return new JsonResponse();
     }
 }

@@ -19,11 +19,14 @@ class DirectorFormatter
     private function format(Director $director): array
     {
         $details = [
+            'email'                 => $director->getUser()->getEmail(),
+            'firstName'             => $director->getUser()->getFirstName(),
             'fixedPercentage'       => $director->getFixedPercentage(),
             'fullName'              => $director->getUser()->getFullName(),
             'greenLightPercentage'  => $director->getGreenLightPercentage(),
             'greyLightPercentage'   => $director->getGreyLightPercentage(),
             'id'                    => $director->getId(),
+            'lastName'              => $director->getUser()->getLastName(),
             'launchPercentage'      => $director->getLaunchPercentage(),
             'payType'               => $director->getPayType(),
             'redLightPercentage'    => $director->getRedLightPercentage(),

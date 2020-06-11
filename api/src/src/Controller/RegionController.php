@@ -2,9 +2,14 @@
 
 namespace App\Controller;
 
+use App\Entity\Region;
 use App\Formatter\RegionFormatter;
 use App\Repository\DirectorRepository;
+use App\Repository\RegionRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Nelmio\ApiDocBundle\Annotation\Security;
+use OldDB\Entity\Region as OldRegion;
+use OldDB\Repository\RegionRepository as OldRegionRepository;
 use Swagger\Annotations as SWG;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -84,5 +89,55 @@ class RegionController extends AbstractController
         return new JsonResponse(array_map(function ($region) {
             return $this->regionFormatter->formatBase($region);
         }, $regions));
+    }
+
+    /**
+     * Importer for regions from the old DB
+     *
+     * @Route(path="/regions/import", name="region_importer", methods={"PATCH"})
+     *
+     * @SWG\Response(
+     *      response=200,
+     *      description="All regions has been imported correctly"
+     * )
+     * @SWG\Response(
+     *      response=500,
+     *      description="Some import error occured",
+     *      @SWG\Schema(type="string", description="The error message")
+     * )
+     */
+    public function importRegionsFromOldDB(): Response
+    {
+        //Entity managers and repositories
+        /** @var EntityManagerInterface */
+        $em = $this->getDoctrine()->getManager('default');
+
+        /** @var RegionRepository */
+        $regionRepository = $this->getDoctrine()->getRepository(Region::class, 'default');
+
+        /** @var OldRegionRepository */
+        $oldRegionRepository = $this->getDoctrine()->getRepository(OldRegion::class, 'OldDB');
+
+        //Truncate the Region table
+        $classMetaData = $em->getClassMetadata(Region::class);
+        $connection = $em->getConnection();
+        $dbPlatform = $connection->getDatabasePlatform();
+        $connection->query('SET FOREIGN_KEY_CHECKS=0');
+        $q = $dbPlatform->getTruncateTableSql($classMetaData->getTableName());
+        $connection->executeUpdate($q);
+        $connection->query('SET FOREIGN_KEY_CHECKS=1');
+
+        //Retrieve data from old table
+        $oldRegions = $oldRegionRepository->findAll();
+
+        //Fill the new Region table
+        foreach ($oldRegions as $oldRegion) {
+            $region = new Region();
+            $region->setName($oldRegion->getNome());
+            $region->setNotes($oldRegion->getNotaP());
+            $regionRepository->save($region);
+        }
+
+        return new JsonResponse();
     }
 }

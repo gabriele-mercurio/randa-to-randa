@@ -1,24 +1,51 @@
 doctrine:
-    dbal:
+  dbal:
+    default_connection: default
+    connections:
+      default:
         # configure these for your database server
-        driver: 'pdo_mysql'
-        server_version: '5.7'
         charset: utf8mb4
         default_table_options:
-            charset: utf8mb4
-            collate: utf8mb4_unicode_ci
-
-        url: '%env(resolve:DATABASE_URL)%'
+          charset: utf8mb4
+          collate: utf8mb4_unicode_ci
+        driver: "pdo_mysql"
         mapping_types:
           enum: string
-    orm:
-        auto_generate_proxy_classes: true
-        naming_strategy: doctrine.orm.naming_strategy.underscore
+        server_version: "5.7"
+        url: "%env(resolve:DATABASE_URL)%"
+      # old_db:
+      #   # configure these for your database server
+      #   charset: utf8mb4
+      #   default_table_options:
+      #     charset: utf8mb4
+      #     collate: utf8mb4_unicode_ci
+      #   driver: "pdo_mysql"
+      #   mapping_types:
+      #     enum: string
+      #   server_version: "5.7"
+      #   url: "%env(resolve:OLD_DATABASE_URL)%"
+  orm:
+    default_entity_manager: default
+    entity_managers:
+      default:
         auto_mapping: true
+        connection: default
         mappings:
-            App:
-                is_bundle: false
-                type: annotation
-                dir: '%kernel.project_dir%/src/Entity'
-                prefix: 'App\Entity'
-                alias: App
+          App:
+            alias: App
+            dir: "%kernel.project_dir%/src/Entity"
+            is_bundle: false
+            prefix: 'App\Entity'
+            type: annotation
+        naming_strategy: doctrine.orm.naming_strategy.underscore
+      # old_db:
+      #   auto_mapping: true
+      #   connection: old_db
+      #   mappings:
+      #     OldDB:
+      #       alias: OldDB
+      #       dir: "%kernel.project_dir%/src/OldDB/Entity"
+      #       is_bundle: false
+      #       prefix: 'OldDB\Entity'
+      #       type: annotation
+      #   naming_strategy: doctrine.orm.naming_strategy.underscore

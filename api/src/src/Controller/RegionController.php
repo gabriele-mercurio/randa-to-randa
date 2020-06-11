@@ -7,6 +7,7 @@ use App\Formatter\RegionFormatter;
 use App\Repository\DirectorRepository;
 use App\Repository\RegionRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use Nelmio\ApiDocBundle\Annotation\Security;
 use OldDB\Entity\Region as OldRegion;
 use OldDB\Repository\RegionRepository as OldRegionRepository;
@@ -105,6 +106,10 @@ class RegionController extends AbstractController
      *      description="Some import error occured",
      *      @SWG\Schema(type="string", description="The error message")
      * )
+     * @SWG\Tag(name="Regions")
+     * @Security(name="none")
+     *
+     * @return Response
      */
     public function importRegionsFromOldDB(): Response
     {
@@ -131,11 +136,15 @@ class RegionController extends AbstractController
         $oldRegions = $oldRegionRepository->findAll();
 
         //Fill the new Region table
-        foreach ($oldRegions as $oldRegion) {
-            $region = new Region();
-            $region->setName($oldRegion->getNome());
-            $region->setNotes($oldRegion->getNotaP());
-            $regionRepository->save($region);
+        try {
+            foreach ($oldRegions as $oldRegion) {
+                $region = new Region();
+                $region->setName($oldRegion->getNome());
+                $region->setNotes($oldRegion->getNotaP());
+                $regionRepository->save($region);
+            }
+        } catch (Exception $ex) {
+            return new JsonResponse($ex->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
         return new JsonResponse();

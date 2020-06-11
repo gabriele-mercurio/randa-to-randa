@@ -1,8 +1,8 @@
 <?php
 
-namespace OldDB\Repository;
+namespace App\OldDB\Repository;
 
-use OldDB\Entity\Region;
+use App\OldDB\Entity\Region;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 

@@ -1,11 +1,12 @@
 <?php
 
-namespace OldDB\Entity;
+namespace App\OldDB\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use App\OldDB\Entity\Region;
 
 /**
- * @ORM\Entity(repositoryClass="OldDB\Repository\DirectorRepository")
+ * @ORM\Entity(repositoryClass="App\OldDB\Repository\DirectorRepository")
  * @ORM\Table(name="Director")
  */
 class Director
@@ -18,7 +19,7 @@ class Director
     private $id;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Region")
+     * @ORM\ManyToOne(targetEntity="App\OldDB\Region")
      * @ORM\JoinColumn(name="id_Region", type="integer")
      */
     private $region;

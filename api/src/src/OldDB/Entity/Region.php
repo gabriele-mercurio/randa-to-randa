@@ -1,11 +1,11 @@
 <?php
 
-namespace OldDB\Entity;
+namespace App\OldDB\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity(repositoryClass="OldDB\Repository\RegionRepository")
+ * @ORM\Entity(repositoryClass="App\OldDB\Repository\RegionRepository")
  * @ORM\Table(name="Region2")
  */
 class Region

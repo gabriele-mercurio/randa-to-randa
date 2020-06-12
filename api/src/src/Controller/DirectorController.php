@@ -402,22 +402,22 @@ class DirectorController extends AbstractController
             $director->setYellowLightPercentage($yellowLigthPercentage);
             $this->directorRepository->save($director);
 
-            try {
-                if ($isNewUser) {
-                    $send = $this->userRepository->sendNewUserEmail($newUser, $tempPasswd);
-                    if (!$send) {
-                        throw new Exception("email_not_sent", 500);
-                    }
-                }
+            // try {
+            //     if ($isNewUser) {
+            //         $send = $this->userRepository->sendNewUserEmail($newUser, $tempPasswd);
+            //         if (!$send) {
+            //             throw new Exception("email_not_sent", 500);
+            //         }
+            //     }
 
-                $send = $this->directorRepository->sendDirectorAssignmentEmail($director);
-                if (!$send) {
-                    throw new Exception("email_not_sent", 500);
-                }
-            } catch (Exception $e) {
-                $code = $e->getCode() === 500 ? Response::HTTP_INTERNAL_SERVER_ERROR : Response::HTTP_BAD_REQUEST;
-                return new JsonResponse($e->getMessage(), $code);
-            }
+            //     $send = $this->directorRepository->sendDirectorAssignmentEmail($director);
+            //     if (!$send) {
+            //         throw new Exception("email_not_sent", 500);
+            //     }
+            // } catch (Exception $e) {
+            //     $code = $e->getCode() === 500 ? Response::HTTP_INTERNAL_SERVER_ERROR : Response::HTTP_BAD_REQUEST;
+            //     return new JsonResponse($e->getMessage(), $code);
+            // }
 
             return new JsonResponse($this->directorFormatter->formatFull($director), Response::HTTP_CREATED);
         } else {
@@ -713,6 +713,7 @@ class DirectorController extends AbstractController
                                 'region' => $region,
                                 'role' => $this->directorRepository::DIRECTOR_ROLE_AREA
                             ]);
+
 
                             if (is_null($supervisor)) {
                                 $errorFields['supervisor'] = "invalid";

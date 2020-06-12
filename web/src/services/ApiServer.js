@@ -1,6 +1,8 @@
 import axios from "axios";
 import Utils from "./Utils";
 
+let store;
+
 class ApiServer {
   static commonRequestConfig = {
     headers: {
@@ -32,13 +34,9 @@ class ApiServer {
 
   static async logout() {
     try {
-      let data = await axios.post(process.env.base_url + "/revoke");
+      await ApiServer.post("revoke");
       ApiServer.revokeToken();
-      let me = await ApiServer.get("me");
-      return {
-        token: data.data.access_token,
-        user: me
-      };
+      return true;
     } catch (e) {
       return false;
     }
@@ -60,7 +58,6 @@ class ApiServer {
         process.env.base_url + "/" + endpoint,
         config
       );
-      debugger;
       return ApiServer.parseResponse(response);
     } catch (e) {
       ApiServer.parseError(e);
@@ -97,7 +94,6 @@ class ApiServer {
   }
 
   static parseResponse(response) {
-    debugger;
     if (!response || !response.status) {
       return null;
     }
@@ -113,8 +109,8 @@ class ApiServer {
   static parseError(error) {
     switch (error.response.status) {
       case 401:
-        Utils.removeFromStorage("token");
-        Utils.removeFromStorage("region");
+        store.commit("setToken", null);
+        store.commit("setRegion", null);
         window.location = "login";
         break;
       default:
@@ -165,6 +161,12 @@ class ApiServer {
         ];
     }
   }
+}
+
+if (process.browser) {
+  window.onNuxtReady(({ $store }) => {
+    store = $store;
+  });
 }
 
 export default ApiServer;

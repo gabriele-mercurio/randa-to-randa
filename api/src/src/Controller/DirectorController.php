@@ -6,6 +6,8 @@ use App\Entity\Director;
 use App\Entity\Region;
 use App\Entity\User;
 use App\Formatter\DirectorFormatter;
+use App\OldDB\Entity\Director as OldDirector;
+use App\OldDB\Repository\DirectorRepository as OldDirectorRepository;
 use App\Repository\DirectorRepository;
 use App\Repository\RegionRepository;
 use App\Repository\UserRepository;
@@ -920,39 +922,168 @@ class DirectorController extends AbstractController
      */
     public function importDirectorssFromOldDB(): Response
     {
-        // //Entity managers and repositories
-        // /** @var EntityManagerInterface */
-        // $em = $this->getDoctrine()->getManager('default');
+        //Entity managers and repositories
+        /** @var EntityManagerInterface */
+        $em = $this->getDoctrine()->getManager('default');
 
-        // /** @var RegionRepository */
-        // $regionRepository = $this->getDoctrine()->getRepository(Region::class, 'default');
+        /** @var DirectorRepository */
+        $directorRepository = $this->getDoctrine()->getRepository(Director::class, 'default');
 
-        // /** @var OldRegionRepository */
-        // $oldRegionRepository = $this->getDoctrine()->getRepository(OldRegion::class, 'OldDB');
+        /** @var RegionRepository */
+        $regionRepository = $this->getDoctrine()->getRepository(Region::class, 'default');
 
-        // //Truncate the Region table
-        // $classMetaData = $em->getClassMetadata(Region::class);
-        // $connection = $em->getConnection();
-        // $dbPlatform = $connection->getDatabasePlatform();
-        // $connection->query('SET FOREIGN_KEY_CHECKS=0');
-        // $q = $dbPlatform->getTruncateTableSql($classMetaData->getTableName());
-        // $connection->executeUpdate($q);
-        // $connection->query('SET FOREIGN_KEY_CHECKS=1');
+        /** @var UserRepository */
+        $userRepository = $this->getDoctrine()->getRepository(User::class, 'default');
 
-        // //Retrieve data from old table
-        // $oldRegions = $oldRegionRepository->findAll();
+        /** @var OldDirectorRepository */
+        $oldDirectorRepository = $this->getDoctrine()->getRepository(OldDirector::class, 'OldDB');
 
-        // //Fill the new Region table
-        // try {
-        //     foreach ($oldRegions as $oldRegion) {
-        //         $region = new Region();
-        //         $region->setName($oldRegion->getNome());
-        //         $region->setNotes($oldRegion->getNotaP());
-        //         $regionRepository->save($region);
-        //     }
-        // } catch (Exception $ex) {
-        //     return new JsonResponse($ex->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
-        // }
+        //Retrieve data from old table
+        $oldDirectors = $oldDirectorRepository->findAll();
+
+        //Create users and directors data arrays
+        $users = [];
+
+        /** @var OldDirector */
+        $oldDirector = null;
+
+        foreach ($oldDirectors as $oldDirector) {
+            $email = $oldDirector->getEmail();
+
+            if (!array_key_exists($email, $users)) {
+                $fullName = explode(" ", strtolower($oldDirector->getNome()));
+
+                foreach ($fullName as &$name) {
+                    $name = ucfirst($name);
+                }
+
+                $firstName = array_shift($fullName);
+
+                if (count($fullName) == 1) {
+                    $lastName = $fullName[0];
+                } elseif (count($fullName) > 1) {
+                    if (!in_array($fullName[0], ["De", "Di", "Lo"])) {
+                        $firstName .= " " . array_shift($fullName);
+                    }
+
+                    $lastName = implode(" ", $fullName);
+                }
+
+                $users[$email] = [
+                    'directors' => [],
+                    'email' => $email,
+                    'firstName' => $firstName,
+                    'lastName' => $lastName,
+                    'password' => $oldDirector->getPassword()
+                ];
+            }
+
+            $users[$email]['directors'][] = [
+                'area' => $oldDirector->getArea(),
+                'compArea' => $oldDirector->getCompArea(),
+                'compenso' => strtoupper($oldDirector->getCompenso()),
+                'compFisso' => $oldDirector->getCompFisso(),
+                'greenLight' => $oldDirector->getGreenLight(),
+                'greyLight' => $oldDirector->getGreyLight(),
+                'id' => $oldDirector->getId(),
+                'lancio' => $oldDirector->getLancio(),
+                'level' => $oldDirector->getLevel(), //0-assistant, 1-executive, 2-area, 3-national
+                'redLight' => $oldDirector->getRedLight(),
+                'region' => $oldDirector->getRegion(),
+                'yellowLight' => $oldDirector->getYellowLight()
+            ];
+        }
+
+        //Truncate the User and Director tables
+        $userClassMetaData = $em->getClassMetadata(User::class);
+        $directorClassMetaData = $em->getClassMetadata(Director::class);
+        $connection = $em->getConnection();
+        $dbPlatform = $connection->getDatabasePlatform();
+        $connection->query('SET FOREIGN_KEY_CHECKS=0');
+        $q = $dbPlatform->getTruncateTableSql($userClassMetaData->getTableName());
+        $connection->executeUpdate($q);
+        $q = $dbPlatform->getTruncateTableSql($directorClassMetaData->getTableName());
+        $connection->executeUpdate($q);
+        $connection->query('SET FOREIGN_KEY_CHECKS=1');
+
+        //Fill the new User and Director table
+        try {
+            $assistants = $areas = $regions = [];
+
+            foreach ($users as $oldUser) {
+                $user = new User();
+                $user->setEmail($oldUser['email']);
+                $user->setFirstName($oldUser['firstName']);
+                $user->setLastName($oldUser['lastName']);
+                $user->securePassword($oldUser['password']);
+                $userRepository->save($user);
+
+                foreach ($oldUser['directors'] as $oldDirector) {
+                    //PayType
+                    $payType = $oldDirector['compenso'] == 'MENSILE' ? $directorRepository::DIRECTOR_PAY_TYPE_MONTHLY : $directorRepository::DIRECTOR_PAY_TYPE_ANNUAL;
+
+                    //Region
+                    $regionName = $oldDirector['region']->getNome();
+                    $regionIndex = md5($regionName);
+                    if (!array_key_exists($regionIndex, $regions)) {
+                        $regions[$regionIndex] = $regionRepository->findOneBy([
+                            'name' => $regionName
+                        ]);
+                    }
+                    $region = $regions[$regionIndex];
+
+                    //Role
+                    switch ($oldDirector['level']) {
+                        case 0:
+                            $role = $directorRepository::DIRECTOR_ROLE_ASSISTANT;
+                        break;
+                        case 1:
+                            $role = $directorRepository::DIRECTOR_ROLE_EXECUTIVE;
+                        break;
+                        case 2:
+                            $role = $directorRepository::DIRECTOR_ROLE_AREA;
+                        break;
+                        case 3:
+                            $role = $directorRepository::DIRECTOR_ROLE_NATIONAL;
+                        break;
+                    }
+
+                    $director = new Director();
+                    $director->setAreaPercentage($oldDirector['compArea']);
+                    $director->setFixedPercentage($oldDirector['compFisso']);
+                    $director->setGreenLightPercentage($oldDirector['greenLight']);
+                    $director->setGreyLightPercentage($oldDirector['greyLight']);
+                    $director->setLaunchPercentage($oldDirector['lancio']);
+                    $director->setPayType($payType);
+                    $director->setRedLightPercentage($oldDirector['redLight']);
+                    $director->setRegion($region);
+                    $director->setRole($role);
+                    $director->setUser($user);
+                    $director->setYellowLightPercentage($oldDirector['yellowLight']);
+                    $directorRepository->save($director);
+
+                    //Supervisors assignments
+                    if ($oldDirector['level'] == 0 && !in_array($oldDirector['area'], [0, $oldDirector['id']])) {
+                        $assistants[$director->getId()] = $oldDirector['area'];
+                    }
+
+                    if ($oldDirector['level'] == 2) {
+                        $areas[$oldDirector['id']] = $director;
+                    }
+                }
+            }
+
+            foreach ($assistants as $assistantId => $areaIndex) {
+                $area = Util::arrayGetValue($areas, $areaIndex, null);
+                if (!is_null($area)) {
+                    $assistant = $directorRepository->find($assistantId);
+                    $assistant->setSupervisor($area);
+                    $em->flush();
+                }
+            }
+        } catch (Exception $ex) {
+            return new JsonResponse($ex->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
 
         return new JsonResponse();
     }

@@ -123,6 +123,9 @@ class RegionController extends AbstractController
         /** @var OldRegionRepository */
         $oldRegionRepository = $this->getDoctrine()->getRepository(OldRegion::class, 'OldDB');
 
+        //Retrieve data from old table
+        $oldRegions = $oldRegionRepository->findAll();
+
         //Truncate the Region table
         $classMetaData = $em->getClassMetadata(Region::class);
         $connection = $em->getConnection();
@@ -131,9 +134,6 @@ class RegionController extends AbstractController
         $q = $dbPlatform->getTruncateTableSql($classMetaData->getTableName());
         $connection->executeUpdate($q);
         $connection->query('SET FOREIGN_KEY_CHECKS=1');
-
-        //Retrieve data from old table
-        $oldRegions = $oldRegionRepository->findAll();
 
         //Fill the new Region table
         try {

@@ -59,6 +59,9 @@ class Director
     /** @ORM\Column(name="fixed_percentage", type="float", options={"default":0}) */
     private $fixedPercentage;
 
+    /** @ORM\Column(name="area_percentage", type="float", options={"default":0}) */
+    private $areaPercentage;
+
     /**
      * @var Collection|Chapter[]
      *
@@ -229,6 +232,19 @@ class Director
     public function setFixedPercentage(float $fixedPercentage): self
     {
         $this->fixedPercentage = $fixedPercentage;
+        return $this;
+    }
+
+    /** Get the value of areaPercentage */
+    public function getAreaPercentage(): float
+    {
+        return $this->areaPercentage;
+    }
+
+    /** Set the value of areaPercentage */
+    public function setAreaPercentage(float $areaPercentage): self
+    {
+        $this->areaPercentage = $areaPercentage;
         return $this;
     }
 

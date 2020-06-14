@@ -20,7 +20,7 @@ class Region
      */
     private $id;
 
-    /** @ORM\Column(type="string", length=32) */
+    /** @ORM\Column(type="string", length=50) */
     private $name;
 
     /** @ORM\Column(type="text", nullable=true) */

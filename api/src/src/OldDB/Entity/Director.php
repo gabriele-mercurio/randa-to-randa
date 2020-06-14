@@ -19,8 +19,8 @@ class Director
     private $id;
 
     /**
-     * @ORM\ManyToOne(targetEntity="App\OldDB\Region")
-     * @ORM\JoinColumn(name="id_Region", type="integer")
+     * @ORM\ManyToOne(targetEntity="Region")
+     * @ORM\JoinColumn(name="id_Region")
      */
     private $region;
 

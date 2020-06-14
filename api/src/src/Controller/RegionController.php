@@ -4,13 +4,13 @@ namespace App\Controller;
 
 use App\Entity\Region;
 use App\Formatter\RegionFormatter;
+use App\OldDB\Entity\Region as OldRegion;
+use App\OldDB\Repository\RegionRepository as OldRegionRepository;
 use App\Repository\DirectorRepository;
 use App\Repository\RegionRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Nelmio\ApiDocBundle\Annotation\Security;
-use OldDB\Entity\Region as OldRegion;
-use OldDB\Repository\RegionRepository as OldRegionRepository;
 use Swagger\Annotations as SWG;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -95,7 +95,7 @@ class RegionController extends AbstractController
     /**
      * Importer for regions from the old DB
      *
-     * @Route(path="/regions/import", name="region_importer", methods={"PATCH"})
+     * @Route(path="/regions/import", name="region_importer", methods={"GET","PATCH"})
      *
      * @SWG\Response(
      *      response=200,
@@ -121,7 +121,7 @@ class RegionController extends AbstractController
         $regionRepository = $this->getDoctrine()->getRepository(Region::class, 'default');
 
         /** @var OldRegionRepository */
-        $oldRegionRepository = $this->getDoctrine()->getRepository(OldRegion::class, 'OldDB');
+        $oldRegionRepository = $this->getDoctrine()->getRepository(OldRegion::class, 'old_db');
 
         //Retrieve data from old table
         $oldRegions = $oldRegionRepository->findAll();
@@ -129,21 +129,30 @@ class RegionController extends AbstractController
         //Truncate the Region table
         $classMetaData = $em->getClassMetadata(Region::class);
         $connection = $em->getConnection();
-        $dbPlatform = $connection->getDatabasePlatform();
-        $connection->query('SET FOREIGN_KEY_CHECKS=0');
-        $q = $dbPlatform->getTruncateTableSql($classMetaData->getTableName());
-        $connection->executeUpdate($q);
-        $connection->query('SET FOREIGN_KEY_CHECKS=1');
+        $connection->beginTransaction();
+        try {
+            $connection->query('SET FOREIGN_KEY_CHECKS=0');
+            $connection->query('DELETE FROM ' . $classMetaData->getTableName());
+            $connection->query('SET FOREIGN_KEY_CHECKS=1');
+            $connection->commit();
+        } catch (Exception $ex) {
+            $connection->rollBack();
+            die("Oooops!");
+        }
 
         //Fill the new Region table
+        $connection->beginTransaction();
         try {
             foreach ($oldRegions as $oldRegion) {
                 $region = new Region();
                 $region->setName($oldRegion->getNome());
                 $region->setNotes($oldRegion->getNotaP());
-                $regionRepository->save($region);
+                $em->persist($region);
+                $em->flush();
             }
+            $connection->commit();
         } catch (Exception $ex) {
+            $connection->rollBack();
             return new JsonResponse($ex->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 

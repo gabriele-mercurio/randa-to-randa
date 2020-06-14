@@ -22,13 +22,13 @@ class User implements UserInterface
      */
     private $id;
 
-    /** @ORM\Column(name="first_name", type="string") */
+    /** @ORM\Column(name="first_name", type="string", length=50) */
     private $firstName;
 
-    /** @ORM\Column(name="last_name", type="string") */
+    /** @ORM\Column(name="last_name", type="string", length=50) */
     private $lastName;
 
-    /** @ORM\Column(type="string", unique=true) */
+    /** @ORM\Column(type="string", unique=true, length=100) */
     private $email;
 
     /** @ORM\Column(type="string", length=32) */
@@ -37,8 +37,8 @@ class User implements UserInterface
     /** @ORM\Column(type="string", length=32) */
     private $password;
 
-    /** @ORM\Column(type="json") */
-    private $roles = [];
+    /** @ORM\Column(type="string", length=10) */
+    private $roles = "[]";
 
     /** @ORM\Column(name="is_admin", type="boolean", options={"default":false}) */
     private $isAdmin;
@@ -122,7 +122,7 @@ class User implements UserInterface
 
     public function getRoles(): array
     {
-        $roles = $this->roles;
+        $roles = json_decode($this->roles, true);
         // guarantee every user at least has ROLE_USER
         $roles[] = 'ROLE_USER';
         return array_unique($roles);
@@ -130,7 +130,7 @@ class User implements UserInterface
 
     public function setRoles(array $roles): self
     {
-        $this->roles = $roles;
+        $this->roles = json_encode($roles);
         return $this;
     }
 

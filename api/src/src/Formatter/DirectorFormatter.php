@@ -19,6 +19,7 @@ class DirectorFormatter
     private function format(Director $director): array
     {
         $details = [
+            'areaPercentage'        => $director->getAreaPercentage(),
             'email'                 => $director->getUser()->getEmail(),
             'firstName'             => $director->getUser()->getFirstName(),
             'fixedPercentage'       => $director->getFixedPercentage(),

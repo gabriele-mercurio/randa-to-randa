@@ -158,6 +158,12 @@ class DirectorController extends AbstractController
      *      description="The perchentage that the director takes at grey light"
      * )
      * @SWG\Parameter(
+     *      name="areaPercentage",
+     *      in="formData",
+     *      type="string",
+     *      description="The perchentage that the area director takes"
+     * )
+     * @SWG\Parameter(
      *      name="fixedPercentage",
      *      in="formData",
      *      type="string",
@@ -168,6 +174,7 @@ class DirectorController extends AbstractController
      *      description="Returns a Director object",
      *      @SWG\Schema(
      *          type="object",
+     *          @SWG\Property(property="areaPercentage", type="integer"),
      *          @SWG\Property(property="email", type="integer"),
      *          @SWG\Property(property="firstName", type="integer"),
      *          @SWG\Property(property="fixedPercentage", type="integer"),
@@ -276,6 +283,7 @@ class DirectorController extends AbstractController
             $yellowLigthPercentage = $request->get("yellowLightPercentage");
             $redLigthPercentage = $request->get("redLightPercentage");
             $greyLigthPercentage = $request->get("greyLightPercentage");
+            $areaPercentage = $request->get("areaPercentage");
             $fixedPercentage = $request->get("fixedPercentage");
 
             $availablePayTypes = [
@@ -334,6 +342,11 @@ class DirectorController extends AbstractController
                 }
             }
 
+
+            if (!empty($areaPercentage) && ($role != $this->directorRepository::DIRECTOR_ROLE_AREA && $role != $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE)) {
+                $errorFields['areaPercentage'] = "invalid333";
+            }
+
             if (empty($payType)) {
                 $errorFields['payType'] = "required";
             } elseif (!in_array($payType, $availablePayTypes)) {
@@ -380,6 +393,7 @@ class DirectorController extends AbstractController
         }
 
         if ($code == Response::HTTP_OK) {
+            $areaPercentage = empty($areaPercentage) ? 0 : $areaPercentage / 100;
             $fixedPercentage = empty($fixedPercentage) ? 0 : $fixedPercentage / 100;
             $greenLigthPercentage = empty($greenLigthPercentage) ? 0 : $greenLigthPercentage / 100;
             $greyLigthPercentage = empty($greyLigthPercentage) ? 0 : $greyLigthPercentage / 100;
@@ -388,6 +402,7 @@ class DirectorController extends AbstractController
             $yellowLigthPercentage = empty($yellowLigthPercentage) ? 0 : $yellowLigthPercentage / 100;
 
             $director = new Director();
+            $director->setAreaPercentage($areaPercentage);
             $director->setFixedPercentage($fixedPercentage);
             $director->setFreeAccount($isFreeAccount);
             $director->setGreenLightPercentage($greenLigthPercentage);
@@ -505,6 +520,12 @@ class DirectorController extends AbstractController
      *      description="The perchentage that the director takes at grey light"
      * )
      * @SWG\Parameter(
+     *      name="areaPercentage",
+     *      in="formData",
+     *      type="string",
+     *      description="The perchentage that the area director takes"
+     * )
+     * @SWG\Parameter(
      *      name="fixedPercentage",
      *      in="formData",
      *      type="string",
@@ -515,6 +536,7 @@ class DirectorController extends AbstractController
      *      description="Returns a Director object",
      *      @SWG\Schema(
      *          type="object",
+     *          @SWG\Property(property="areaPercentage", type="integer"),
      *          @SWG\Property(property="email", type="integer"),
      *          @SWG\Property(property="firstName", type="integer"),
      *          @SWG\Property(property="fixedPercentage", type="integer"),
@@ -609,6 +631,7 @@ class DirectorController extends AbstractController
             $supervisor = $request->get("supervisor");
             $payType = strtoupper(trim($request->get("payType")));
             $launchPercentage = $request->get("launchPercentage");
+            $areaPercentage = $request->get("areaPercentage");
             $greenLigthPercentage = $request->get("greenLightPercentage");
             $yellowLigthPercentage = $request->get("yellowLightPercentage");
             $redLigthPercentage = $request->get("redLightPercentage");
@@ -676,6 +699,17 @@ class DirectorController extends AbstractController
                 $errorFields['greyLigthPercentage'] = "invalid";
             } elseif (!empty($greyLigthPercentage)) {
                 $fields['greyLigthPercentage'] = $greyLigthPercentage;
+            }
+
+            if (!empty($areaPercentage) && !is_numeric($areaPercentage)) {
+                $errorFields['areaPercentage'] = "invalid2";
+            } elseif (!empty($areaPercentage)) {
+                $actualRole = Util::arrayGetValue($fields, 'role', $director->getRole());
+                if ($actualRole != $this->directorRepository::DIRECTOR_ROLE_AREA || $actualRole != $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE ) {
+                    $errorFields['areaPercentage'] = "invalid3";
+                } else {
+                    $fields['areaPercentage'] = $areaPercentage;
+                }
             }
 
             if (!empty($fixedPercentage) && !is_numeric($fixedPercentage)) {
@@ -751,27 +785,31 @@ class DirectorController extends AbstractController
             }
 
             if (array_key_exists('launchPercentage', $fields)) {
-                $director->setLaunchPercentage((int)Util::arrayGetValue('launchPercentage', $fields) / 100);
+                $director->setLaunchPercentage((int)Util::arrayGetValue('launchPercentage', $fields, 0) / 100);
             }
 
             if (array_key_exists('greenLigthPercentage', $fields)) {
-                $director->setGreenLightPercentage((int)Util::arrayGetValue('greenLigthPercentage', $fields) / 100);
+                $director->setGreenLightPercentage((int)Util::arrayGetValue('greenLigthPercentage', $fields, 0) / 100);
             }
 
             if (array_key_exists('yellowLigthPercentage', $fields)) {
-                $director->setYellowLightPercentage((int)Util::arrayGetValue('yellowLigthPercentage', $fields) / 100);
+                $director->setYellowLightPercentage((int)Util::arrayGetValue('yellowLigthPercentage', $fields, 0) / 100);
             }
 
             if (array_key_exists('redLigthPercentage', $fields)) {
-                $director->setRedLightPercentage((int)Util::arrayGetValue('redLigthPercentage', $fields) / 100);
+                $director->setRedLightPercentage((int)Util::arrayGetValue('redLigthPercentage', $fields, 0) / 100);
             }
 
             if (array_key_exists('greyLigthPercentage', $fields)) {
-                $director->setGreyLightPercentage((int)Util::arrayGetValue('greyLigthPercentage', $fields) / 100);
+                $director->setGreyLightPercentage((int)Util::arrayGetValue('greyLigthPercentage', $fields, 0) / 100);
+            }
+
+            if (array_key_exists('areaPercentage', $fields)) {
+                $director->setAreaPercentage((int)Util::arrayGetValue('areaPercentage', $fields, 0) / 100);
             }
 
             if (array_key_exists('fixedPercentage', $fields)) {
-                $director->setFixedPercentage((int)Util::arrayGetValue('fixedPercentage', $fields) / 100);
+                $director->setFixedPercentage((int)Util::arrayGetValue('fixedPercentage', $fields, 0) / 100);
             }
 
             $this->entityManager->flush();
@@ -818,6 +856,7 @@ class DirectorController extends AbstractController
      *          type="array",
      *          @SWG\Items(
      *              type="object",
+     *              @SWG\Property(property="areaPercentage", type="integer"),
      *              @SWG\Property(property="email", type="integer"),
      *              @SWG\Property(property="firstName", type="integer"),
      *              @SWG\Property(property="fixedPercentage", type="integer"),

@@ -2,6 +2,7 @@
 
 namespace App\OldDB\Entity;
 
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -70,6 +71,13 @@ class Region
 
     /** @ORM\Column(name="NotaReso", type="text") */
     private $notaReso;
+
+    /**
+     * @var Collection|Director[]
+     *
+     * @ORM\OneToMany(targetEntity="Director", mappedBy="region")
+     */
+    private $directors;
 
     /** Get the value of id */
     public function getId(): int
@@ -309,5 +317,13 @@ class Region
     {
         $this->notaReso = $notaReso;
         return $this;
+    }
+
+    /**
+     * @return Collection|Director[]
+     */
+    public function getDirectors()
+    {
+        return $this->directors;
     }
 }

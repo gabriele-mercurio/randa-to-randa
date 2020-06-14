@@ -342,10 +342,6 @@ class DirectorController extends AbstractController
                 }
             }
 
-            if (!empty($areaPercentage) && $role != $this->directorRepository::DIRECTOR_ROLE_AREA) {
-                $errorFields['areaPercentage'] = "invalid";
-            }
-
             if (empty($payType)) {
                 $errorFields['payType'] = "required";
             } elseif (!in_array($payType, $availablePayTypes)) {
@@ -634,6 +630,7 @@ class DirectorController extends AbstractController
             $yellowLigthPercentage = $request->get("yellowLightPercentage");
             $redLigthPercentage = $request->get("redLightPercentage");
             $greyLigthPercentage = $request->get("greyLightPercentage");
+            $areaPercentage = $request->get("areaPercentage");
             $fixedPercentage = $request->get("fixedPercentage");
 
             $availablePayTypes = [
@@ -702,12 +699,7 @@ class DirectorController extends AbstractController
             if (!empty($areaPercentage) && !is_numeric($areaPercentage)) {
                 $errorFields['areaPercentage'] = "invalid";
             } elseif (!empty($areaPercentage)) {
-                $actualRole = Util::arrayGetValue($fields, 'role', $director->getRole());
-                if ($actualRole != $this->directorRepository::DIRECTOR_ROLE_AREA) {
-                    $errorFields['areaPercentage'] = "invalid";
-                } else {
-                    $fields['areaPercentage'] = $areaPercentage;
-                }
+                $fields['areaPercentage'] = $areaPercentage;
             }
 
             if (!empty($fixedPercentage) && !is_numeric($fixedPercentage)) {
@@ -941,7 +933,7 @@ class DirectorController extends AbstractController
     /**
      * Importer for users and directors from the old DB
      *
-     * @Route(path="/directors/import", name="director_importer", methods={"PATCH"})
+     * @Route(path="/directors/import", name="director_importer", methods={"GET","PATCH"})
      *
      * @SWG\Response(
      *      response=200,
@@ -973,7 +965,7 @@ class DirectorController extends AbstractController
         $userRepository = $this->getDoctrine()->getRepository(User::class, 'default');
 
         /** @var OldDirectorRepository */
-        $oldDirectorRepository = $this->getDoctrine()->getRepository(OldDirector::class, 'OldDB');
+        $oldDirectorRepository = $this->getDoctrine()->getRepository(OldDirector::class, 'old_db');
 
         //Retrieve data from old table
         $oldDirectors = $oldDirectorRepository->findAll();
@@ -1035,13 +1027,17 @@ class DirectorController extends AbstractController
         $userClassMetaData = $em->getClassMetadata(User::class);
         $directorClassMetaData = $em->getClassMetadata(Director::class);
         $connection = $em->getConnection();
-        $dbPlatform = $connection->getDatabasePlatform();
-        $connection->query('SET FOREIGN_KEY_CHECKS=0');
-        $q = $dbPlatform->getTruncateTableSql($userClassMetaData->getTableName());
-        $connection->executeUpdate($q);
-        $q = $dbPlatform->getTruncateTableSql($directorClassMetaData->getTableName());
-        $connection->executeUpdate($q);
-        $connection->query('SET FOREIGN_KEY_CHECKS=1');
+        $connection->beginTransaction();
+        try {
+            $connection->query('SET FOREIGN_KEY_CHECKS=0');
+            $connection->query('DELETE FROM ' . $userClassMetaData->getTableName());
+            $connection->query('DELETE FROM ' . $directorClassMetaData->getTableName());
+            $connection->query('SET FOREIGN_KEY_CHECKS=1');
+            $connection->commit();
+        } catch (Exception $ex) {
+            $connection->rollBack();
+            die("Oooops!");
+        }
 
         //Fill the new User and Director table
         try {

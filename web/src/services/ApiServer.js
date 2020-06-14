@@ -98,7 +98,7 @@ class ApiServer {
     if (response.status.toString().startsWith("4")) {
       window.location = "login";
     }
-    if (!response.data || !(response.status.toString().startsWith("2"))) {
+    if (!response.data || !response.status.toString().startsWith("2")) {
       return null;
     }
     return response["data"];
@@ -118,14 +118,15 @@ class ApiServer {
         store.commit("setRegion", null);
         errorResponse.message = "Errore di autenticazione";
         window.location = "login";
-        return false;
+        break;
       case 422:
         errorResponse.message = "Errore nell'assoziazione dei dati.";
-        return errorResponse;
+        break;
       default:
         //window.location = "login";
-        return false;
+        break;
     }
+    return errorResponse;
   }
 
   static getData(endpoint) {

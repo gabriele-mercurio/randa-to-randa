@@ -6,13 +6,11 @@ use App\Entity\Chapter;
 use App\Entity\Director;
 use App\Entity\Region;
 use App\Formatter\ChapterFormatter;
-use App\Formatter\DirectorFormatter;
-use App\Formatter\RegionFormatter;
 use App\Repository\ChapterRepository;
 use App\Repository\DirectorRepository;
 use App\Repository\UserRepository;
 use App\Util\Util;
-use DateTime;
+use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Nelmio\ApiDocBundle\Annotation\Security;
 use Swagger\Annotations as SWG;
@@ -30,14 +28,11 @@ class ChapterController extends AbstractController
     /** @var ChapterRepository */
     private $chapterRepository;
 
-    /** @var DirectorFormatter */
-    private $directorFormatter;
-
     /** @var DirectorRepository */
     private $directorRepository;
 
-    /** @var RegionFormatter */
-    private $regionFormatter;
+    /** @var EntityManagerInterface */
+    private $entityManager;
 
     /** @var UserRepository */
     private $userRepository;
@@ -45,17 +40,148 @@ class ChapterController extends AbstractController
     public function __construct(
         ChapterFormatter $chapterFormatter,
         ChapterRepository $chapterRepository,
-        DirectorFormatter $directorFormatter,
         DirectorRepository $directorRepository,
-        RegionFormatter $regionFormatter,
+        EntityManagerInterface $entityManager,
         UserRepository $userRepository
     ) {
         $this->chapterFormatter = $chapterFormatter;
         $this->chapterRepository = $chapterRepository;
-        $this->directorFormatter = $directorFormatter;
         $this->directorRepository = $directorRepository;
-        $this->regionFormatter = $regionFormatter;
+        $this->entityManager = $entityManager;
         $this->userRepository = $userRepository;
+    }
+
+    /**
+     * Close the Chapter
+     *
+     * @Route(path="/chapter/{id}/close", name="close_chapter", methods={"PUT"})
+     *
+     * @SWG\Parameter(
+     *      name="id",
+     *      in="path",
+     *      type="string",
+     *      description="The chapter"
+     * )
+     * @SWG\Parameter(
+     *      name="role",
+     *      in="query",
+     *      type="string",
+     *      description="Optional parameter to get data relative to the specified given role"
+     * )
+     * @SWG\Parameter(
+     *      name="actAs",
+     *      in="query",
+     *      type="string",
+     *      description="Optional parameter representing the emulated user id"
+     * )
+     * @SWG\Response(
+     *      response=200,
+     *      description="Returns a Chapter object",
+     *      @SWG\Schema(
+     *          type="object",
+     *          @SWG\Property(
+     *              property="chapterLaunch",
+     *              type="object",
+     *              @SWG\Property(property="actual", type="string", description="Actual date"),
+     *              @SWG\Property(property="prev", type="string", description="Expected date")
+     *          ),
+     *          @SWG\Property(property="closureDate", type="string", description="Closure date"),
+     *          @SWG\Property(
+     *              property="coreGroupLaunch",
+     *              type="object",
+     *              @SWG\Property(property="actual", type="string", description="Actual date"),
+     *              @SWG\Property(property="prev", type="string", description="Expected date")
+     *          ),
+     *          @SWG\Property(property="currentState", type="string", description="Available values: PROJECT, CORE_GROUP or CHAPTER"),
+     *          @SWG\Property(
+     *              property="director",
+     *              type="object",
+     *              @SWG\Property(property="fullName", type="string"),
+     *              @SWG\Property(property="id", type="integer")
+     *          ),
+     *          @SWG\Property(property="id", type="string"),
+     *          @SWG\Property(property="members", type="integer"),
+     *          @SWG\Property(property="name", type="string"),
+     *          @SWG\Property(
+     *              property="resume",
+     *              type="object",
+     *              @SWG\Property(property="actual", type="string", description="Actual date"),
+     *              @SWG\Property(property="prev", type="string", description="Expected date")
+     *          ),
+     *          @SWG\Property(property="suspDate", type="string", description="Suspension date"),
+     *          @SWG\Property(property="warning", type="string", description="Available values: NULL, 'CORE_GROUP' or 'CHAPTER'")
+     *      )
+     * )
+     * @SWG\Response(
+     *      response=400,
+     *      description="Returned if role is given but is not valid."
+     * )
+     * @SWG\Response(
+     *      response=403,
+     *      description="Returned if actAs is given but the current user is not an admin, if a valid role is given but the user has not that role for the specified region or the role is not enought for the operation."
+     * )
+     * @SWG\Response(
+     *      response=404,
+     *      description="Returned if actAs is given but is not a valid user id."
+     * )
+     * @SWG\Tag(name="Chapters")
+     * @Security(name="Bearer")
+     *
+     * @return Response
+     */
+    public function closeChapter(Chapter $chapter, Request $request): Response
+    {
+        $actAs = $request->get("actAs");
+        $code = Response::HTTP_OK;
+        $role = $request->get("role");
+        $user = $this->getUser();
+        $isAdmin = $user->isAdmin();
+
+        $checkUser = $this->userRepository->checkUser($user, $actAs);
+        $user = Util::arrayGetValue($checkUser, 'user');
+        $code = Util::arrayGetValue($checkUser, 'code');
+
+        if ($code == Response::HTTP_OK) {
+            if (!is_null($role) && $role != $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE) {
+                $code = Response::HTTP_BAD_REQUEST;
+            }
+        }
+
+        if ($code == Response::HTTP_OK) {
+            $region = $chapter->getRegion();
+            $checkDirectorRole = $this->directorRepository->checkDirectorRole($user, $region, $role);
+
+            $code = Util::arrayGetValue($checkDirectorRole, 'code', $code);
+            $director = Util::arrayGetValue($checkDirectorRole, 'director', null);
+        }
+
+        if ($code == Response::HTTP_OK) {
+            $role = $isAdmin && is_null($actAs) ? $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE : $director->getRole();
+            if (!in_array($role, [
+                $this->directorRepository::DIRECTOR_ROLE_NATIONAL,
+                $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE
+            ])) {
+                $code = Response::HTTP_FORBIDDEN;
+            }
+        }
+
+        if ($code == Response::HTTP_OK) {
+            if ($chapter->getCurrentState() == $this->chapterRepository::CHAPTER_CURRENT_STATE_CLOSED) {
+                $code = Response::HTTP_BAD_REQUEST;
+            }
+        }
+
+        if ($code == Response::HTTP_OK) {
+            $today = Util::UTCDateTime();
+
+            $chapter->setClosureDate($today);
+            $chapter->setCurrentState($this->chapterRepository::CHAPTER_CURRENT_STATE_CLOSED);
+            $this->entityManager->flush();
+
+            return new JsonResponse($this->chapterFormatter->formatBase($chapter));
+        } else {
+            return new JsonResponse(null, $code);
+        }
     }
 
     /**
@@ -715,7 +841,6 @@ class ChapterController extends AbstractController
                 $this->directorRepository->save($d);
             }
 
-            $chapter = new Chapter();
             $chapter->setActualLaunchChapterDate($actualLaunchChapterDate);
             $chapter->setActualLaunchCoregroupDate($actualLaunchCoregroupDate);
             $chapter->setCurrentState($state);
@@ -724,7 +849,7 @@ class ChapterController extends AbstractController
             $chapter->setPrevLaunchChapterDate($prevLaunchChapterDate);
             $chapter->setPrevLaunchCoregroupDate($prevLaunchCoregroupDate);
             $chapter->setRegion($region);
-            $this->chapterRepository->save($chapter);
+            $this->entityManager->flush();
 
             return new JsonResponse($this->chapterFormatter->formatFull($chapter), Response::HTTP_CREATED);
         } else {
@@ -816,13 +941,13 @@ class ChapterController extends AbstractController
      */
     public function getChapters(Region $region, Request $request): Response
     {
-        $actAs = $request->get("actAs");
+        $actAsId = $request->get("actAs");
         $code = Response::HTTP_OK;
         $role = $request->get("role");
         $user = $this->getUser();
 
-        $checkUser = $this->userRepository->checkUser($user, $actAs);
-        $user = Util::arrayGetValue($checkUser, 'user');
+        $checkUser = $this->userRepository->checkUser($user, $actAsId);
+        $actAs = Util::arrayGetValue($checkUser, 'user');
         $code = Util::arrayGetValue($checkUser, 'code');
 
         if ($code == Response::HTTP_OK && !is_null($role) && !in_array($role, [
@@ -834,7 +959,8 @@ class ChapterController extends AbstractController
         }
 
         if ($code == Response::HTTP_OK) {
-            $checkDirectorRole = $this->directorRepository->checkDirectorRole($user, $region, $role);
+            $u = is_null($actAsId) ? $user : $actAs;
+            $checkDirectorRole = $this->directorRepository->checkDirectorRole($u, $region, $role);
 
             $code = Util::arrayGetValue($checkDirectorRole, 'code', $code);
             $director = Util::arrayGetValue($checkDirectorRole, 'director', null);
@@ -891,7 +1017,7 @@ class ChapterController extends AbstractController
             });
 
             return new JsonResponse(array_map(function ($c) {
-                $today = new DateTime();
+                $today = Util::UTCDateTime();
                 $warning = null;
 
                 if (is_null($c->getActualLaunchCoregroupDate()) && $c->getPrevLaunchCoregroupDate() <= $today) {
@@ -904,6 +1030,538 @@ class ChapterController extends AbstractController
                 $ret['warning'] = $warning;
                 return $ret;
             }, $chapters));
+        } else {
+            return new JsonResponse(null, $code);
+        }
+    }
+
+    /**
+     * Launch the Chapter
+     *
+     * @Route(path="/chapter/{id}/launch", name="launch_chapter", methods={"PUT"})
+     *
+     * @SWG\Parameter(
+     *      name="id",
+     *      in="path",
+     *      type="string",
+     *      description="The chapter"
+     * )
+     * @SWG\Parameter(
+     *      name="role",
+     *      in="query",
+     *      type="string",
+     *      description="Optional parameter to get data relative to the specified given role"
+     * )
+     * @SWG\Parameter(
+     *      name="actAs",
+     *      in="query",
+     *      type="string",
+     *      description="Optional parameter representing the emulated user id"
+     * )
+     * @SWG\Response(
+     *      response=200,
+     *      description="Returns a Chapter object",
+     *      @SWG\Schema(
+     *          type="object",
+     *          @SWG\Property(
+     *              property="chapterLaunch",
+     *              type="object",
+     *              @SWG\Property(property="actual", type="string", description="Actual date"),
+     *              @SWG\Property(property="prev", type="string", description="Expected date")
+     *          ),
+     *          @SWG\Property(property="closureDate", type="string", description="Closure date"),
+     *          @SWG\Property(
+     *              property="coreGroupLaunch",
+     *              type="object",
+     *              @SWG\Property(property="actual", type="string", description="Actual date"),
+     *              @SWG\Property(property="prev", type="string", description="Expected date")
+     *          ),
+     *          @SWG\Property(property="currentState", type="string", description="Available values: PROJECT, CORE_GROUP or CHAPTER"),
+     *          @SWG\Property(
+     *              property="director",
+     *              type="object",
+     *              @SWG\Property(property="fullName", type="string"),
+     *              @SWG\Property(property="id", type="integer")
+     *          ),
+     *          @SWG\Property(property="id", type="string"),
+     *          @SWG\Property(property="members", type="integer"),
+     *          @SWG\Property(property="name", type="string"),
+     *          @SWG\Property(
+     *              property="resume",
+     *              type="object",
+     *              @SWG\Property(property="actual", type="string", description="Actual date"),
+     *              @SWG\Property(property="prev", type="string", description="Expected date")
+     *          ),
+     *          @SWG\Property(property="suspDate", type="string", description="Suspension date"),
+     *          @SWG\Property(property="warning", type="string", description="Available values: NULL, 'CORE_GROUP' or 'CHAPTER'")
+     *      )
+     * )
+     * @SWG\Response(
+     *      response=400,
+     *      description="Returned if role is given but is not valid."
+     * )
+     * @SWG\Response(
+     *      response=403,
+     *      description="Returned if actAs is given but the current user is not an admin, if a valid role is given but the user has not that role for the specified region or the role is not enought for the operation."
+     * )
+     * @SWG\Response(
+     *      response=404,
+     *      description="Returned if actAs is given but is not a valid user id."
+     * )
+     * @SWG\Tag(name="Chapters")
+     * @Security(name="Bearer")
+     *
+     * @return Response
+     */
+    public function launchChapter(Chapter $chapter, Request $request): Response
+    {
+        $actAs = $request->get("actAs");
+        $code = Response::HTTP_OK;
+        $role = $request->get("role");
+        $user = $this->getUser();
+        $isAdmin = $user->isAdmin();
+
+        $checkUser = $this->userRepository->checkUser($user, $actAs);
+        $user = Util::arrayGetValue($checkUser, 'user');
+        $code = Util::arrayGetValue($checkUser, 'code');
+
+        if ($code == Response::HTTP_OK) {
+            if (!is_null($role) && $role != $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE) {
+                $code = Response::HTTP_BAD_REQUEST;
+            }
+        }
+
+        if ($code == Response::HTTP_OK) {
+            $region = $chapter->getRegion();
+            $checkDirectorRole = $this->directorRepository->checkDirectorRole($user, $region, $role);
+
+            $code = Util::arrayGetValue($checkDirectorRole, 'code', $code);
+            $director = Util::arrayGetValue($checkDirectorRole, 'director', null);
+        }
+
+        if ($code == Response::HTTP_OK) {
+            $role = $isAdmin && is_null($actAs) ? $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE : $director->getRole();
+            if (!in_array($role, [
+                $this->directorRepository::DIRECTOR_ROLE_NATIONAL,
+                $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE
+            ])) {
+                $code = Response::HTTP_FORBIDDEN;
+            }
+        }
+
+        if ($code == Response::HTTP_OK) {
+            if ($chapter->getCurrentState() != $this->chapterRepository::CHAPTER_CURRENT_STATE_CORE_GROUP) {
+                $code = Response::HTTP_BAD_REQUEST;
+            }
+        }
+
+        if ($code == Response::HTTP_OK) {
+            $today = Util::UTCDateTime();
+
+            $chapter->setActualLaunchChapterDate($today);
+            $chapter->setCurrentState($this->chapterRepository::CHAPTER_CURRENT_STATE_CHAPTER);
+            $this->entityManager->flush();
+
+            return new JsonResponse($this->chapterFormatter->formatBase($chapter));
+        } else {
+            return new JsonResponse(null, $code);
+        }
+    }
+
+    /**
+     * Launch the CoreGroup
+     *
+     * @Route(path="/chapter/{id}/launch-coregroup", name="launch_coregroup", methods={"PUT"})
+     *
+     * @SWG\Parameter(
+     *      name="id",
+     *      in="path",
+     *      type="string",
+     *      description="The chapter"
+     * )
+     * @SWG\Parameter(
+     *      name="role",
+     *      in="query",
+     *      type="string",
+     *      description="Optional parameter to get data relative to the specified given role"
+     * )
+     * @SWG\Parameter(
+     *      name="actAs",
+     *      in="query",
+     *      type="string",
+     *      description="Optional parameter representing the emulated user id"
+     * )
+     * @SWG\Response(
+     *      response=200,
+     *      description="Returns a Chapter object",
+     *      @SWG\Schema(
+     *          type="object",
+     *          @SWG\Property(
+     *              property="chapterLaunch",
+     *              type="object",
+     *              @SWG\Property(property="actual", type="string", description="Actual date"),
+     *              @SWG\Property(property="prev", type="string", description="Expected date")
+     *          ),
+     *          @SWG\Property(property="closureDate", type="string", description="Closure date"),
+     *          @SWG\Property(
+     *              property="coreGroupLaunch",
+     *              type="object",
+     *              @SWG\Property(property="actual", type="string", description="Actual date"),
+     *              @SWG\Property(property="prev", type="string", description="Expected date")
+     *          ),
+     *          @SWG\Property(property="currentState", type="string", description="Available values: PROJECT, CORE_GROUP or CHAPTER"),
+     *          @SWG\Property(
+     *              property="director",
+     *              type="object",
+     *              @SWG\Property(property="fullName", type="string"),
+     *              @SWG\Property(property="id", type="integer")
+     *          ),
+     *          @SWG\Property(property="id", type="string"),
+     *          @SWG\Property(property="members", type="integer"),
+     *          @SWG\Property(property="name", type="string"),
+     *          @SWG\Property(
+     *              property="resume",
+     *              type="object",
+     *              @SWG\Property(property="actual", type="string", description="Actual date"),
+     *              @SWG\Property(property="prev", type="string", description="Expected date")
+     *          ),
+     *          @SWG\Property(property="suspDate", type="string", description="Suspension date"),
+     *          @SWG\Property(property="warning", type="string", description="Available values: NULL, 'CORE_GROUP' or 'CHAPTER'")
+     *      )
+     * )
+     * @SWG\Response(
+     *      response=400,
+     *      description="Returned if role is given but is not valid."
+     * )
+     * @SWG\Response(
+     *      response=403,
+     *      description="Returned if actAs is given but the current user is not an admin, if a valid role is given but the user has not that role for the specified region or the role is not enought for the operation."
+     * )
+     * @SWG\Response(
+     *      response=404,
+     *      description="Returned if actAs is given but is not a valid user id."
+     * )
+     * @SWG\Tag(name="Chapters")
+     * @Security(name="Bearer")
+     *
+     * @return Response
+     */
+    public function launchCoreGroup(Chapter $chapter, Request $request): Response
+    {
+        $actAs = $request->get("actAs");
+        $code = Response::HTTP_OK;
+        $role = $request->get("role");
+        $user = $this->getUser();
+        $isAdmin = $user->isAdmin();
+
+        $checkUser = $this->userRepository->checkUser($user, $actAs);
+        $user = Util::arrayGetValue($checkUser, 'user');
+        $code = Util::arrayGetValue($checkUser, 'code');
+
+        if ($code == Response::HTTP_OK) {
+            if (!is_null($role) && $role != $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE) {
+                $code = Response::HTTP_BAD_REQUEST;
+            }
+        }
+
+        if ($code == Response::HTTP_OK) {
+            $region = $chapter->getRegion();
+            $checkDirectorRole = $this->directorRepository->checkDirectorRole($user, $region, $role);
+
+            $code = Util::arrayGetValue($checkDirectorRole, 'code', $code);
+            $director = Util::arrayGetValue($checkDirectorRole, 'director', null);
+        }
+
+        if ($code == Response::HTTP_OK) {
+            $role = $isAdmin && is_null($actAs) ? $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE : $director->getRole();
+            if (!in_array($role, [
+                $this->directorRepository::DIRECTOR_ROLE_NATIONAL,
+                $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE
+            ])) {
+                $code = Response::HTTP_FORBIDDEN;
+            }
+        }
+
+        if ($code == Response::HTTP_OK) {
+            if ($chapter->getCurrentState() != $this->chapterRepository::CHAPTER_CURRENT_STATE_PROJECT) {
+                $code = Response::HTTP_BAD_REQUEST;
+            }
+        }
+
+        if ($code == Response::HTTP_OK) {
+            $today = Util::UTCDateTime();
+
+            $chapter->setActualLaunchCoregroupDate($today);
+            $chapter->setCurrentState($this->chapterRepository::CHAPTER_CURRENT_STATE_CORE_GROUP);
+            $this->entityManager->flush();
+
+            return new JsonResponse($this->chapterFormatter->formatBase($chapter));
+        } else {
+            return new JsonResponse(null, $code);
+        }
+    }
+
+    /**
+     * Resume the Chapter
+     *
+     * @Route(path="/chapter/{id}/resume", name="resume_chapter", methods={"PUT"})
+     *
+     * @SWG\Parameter(
+     *      name="id",
+     *      in="path",
+     *      type="string",
+     *      description="The chapter"
+     * )
+     * @SWG\Parameter(
+     *      name="role",
+     *      in="query",
+     *      type="string",
+     *      description="Optional parameter to get data relative to the specified given role"
+     * )
+     * @SWG\Parameter(
+     *      name="actAs",
+     *      in="query",
+     *      type="string",
+     *      description="Optional parameter representing the emulated user id"
+     * )
+     * @SWG\Response(
+     *      response=200,
+     *      description="Returns a Chapter object",
+     *      @SWG\Schema(
+     *          type="object",
+     *          @SWG\Property(
+     *              property="chapterLaunch",
+     *              type="object",
+     *              @SWG\Property(property="actual", type="string", description="Actual date"),
+     *              @SWG\Property(property="prev", type="string", description="Expected date")
+     *          ),
+     *          @SWG\Property(property="closureDate", type="string", description="Closure date"),
+     *          @SWG\Property(
+     *              property="coreGroupLaunch",
+     *              type="object",
+     *              @SWG\Property(property="actual", type="string", description="Actual date"),
+     *              @SWG\Property(property="prev", type="string", description="Expected date")
+     *          ),
+     *          @SWG\Property(property="currentState", type="string", description="Available values: PROJECT, CORE_GROUP or CHAPTER"),
+     *          @SWG\Property(
+     *              property="director",
+     *              type="object",
+     *              @SWG\Property(property="fullName", type="string"),
+     *              @SWG\Property(property="id", type="integer")
+     *          ),
+     *          @SWG\Property(property="id", type="string"),
+     *          @SWG\Property(property="members", type="integer"),
+     *          @SWG\Property(property="name", type="string"),
+     *          @SWG\Property(
+     *              property="resume",
+     *              type="object",
+     *              @SWG\Property(property="actual", type="string", description="Actual date"),
+     *              @SWG\Property(property="prev", type="string", description="Expected date")
+     *          ),
+     *          @SWG\Property(property="suspDate", type="string", description="Suspension date"),
+     *          @SWG\Property(property="warning", type="string", description="Available values: NULL, 'CORE_GROUP' or 'CHAPTER'")
+     *      )
+     * )
+     * @SWG\Response(
+     *      response=400,
+     *      description="Returned if role is given but is not valid."
+     * )
+     * @SWG\Response(
+     *      response=403,
+     *      description="Returned if actAs is given but the current user is not an admin, if a valid role is given but the user has not that role for the specified region or the role is not enought for the operation."
+     * )
+     * @SWG\Response(
+     *      response=404,
+     *      description="Returned if actAs is given but is not a valid user id."
+     * )
+     * @SWG\Tag(name="Chapters")
+     * @Security(name="Bearer")
+     *
+     * @return Response
+     */
+    public function resumeChapter(Chapter $chapter, Request $request): Response
+    {
+        $actAs = $request->get("actAs");
+        $code = Response::HTTP_OK;
+        $role = $request->get("role");
+        $user = $this->getUser();
+        $isAdmin = $user->isAdmin();
+
+        $checkUser = $this->userRepository->checkUser($user, $actAs);
+        $user = Util::arrayGetValue($checkUser, 'user');
+        $code = Util::arrayGetValue($checkUser, 'code');
+
+        if ($code == Response::HTTP_OK) {
+            if (!is_null($role) && $role != $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE) {
+                $code = Response::HTTP_BAD_REQUEST;
+            }
+        }
+
+        if ($code == Response::HTTP_OK) {
+            $region = $chapter->getRegion();
+            $checkDirectorRole = $this->directorRepository->checkDirectorRole($user, $region, $role);
+
+            $code = Util::arrayGetValue($checkDirectorRole, 'code', $code);
+            $director = Util::arrayGetValue($checkDirectorRole, 'director', null);
+        }
+
+        if ($code == Response::HTTP_OK) {
+            $role = $isAdmin && is_null($actAs) ? $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE : $director->getRole();
+            if (!in_array($role, [
+                $this->directorRepository::DIRECTOR_ROLE_NATIONAL,
+                $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE
+            ])) {
+                $code = Response::HTTP_FORBIDDEN;
+            }
+        }
+
+        if ($code == Response::HTTP_OK) {
+            if ($chapter->getCurrentState() != $this->chapterRepository::CHAPTER_CURRENT_STATE_SUSPENDED) {
+                $code = Response::HTTP_BAD_REQUEST;
+            }
+        }
+
+        if ($code == Response::HTTP_OK) {
+            $today = Util::UTCDateTime();
+
+            $chapter->setActualResumeDate($today);
+            $chapter->setCurrentState($this->chapterRepository::CHAPTER_CURRENT_STATE_CHAPTER);
+            $this->entityManager->flush();
+
+            return new JsonResponse($this->chapterFormatter->formatBase($chapter));
+        } else {
+            return new JsonResponse(null, $code);
+        }
+    }
+
+    /**
+     * Suspend the Chapter
+     *
+     * @Route(path="/chapter/{id}/suspend", name="suspend_chapter", methods={"PUT"})
+     *
+     * @SWG\Parameter(
+     *      name="id",
+     *      in="path",
+     *      type="string",
+     *      description="The chapter"
+     * )
+     * @SWG\Parameter(
+     *      name="role",
+     *      in="query",
+     *      type="string",
+     *      description="Optional parameter to get data relative to the specified given role"
+     * )
+     * @SWG\Parameter(
+     *      name="actAs",
+     *      in="query",
+     *      type="string",
+     *      description="Optional parameter representing the emulated user id"
+     * )
+     * @SWG\Response(
+     *      response=200,
+     *      description="Returns a Chapter object",
+     *      @SWG\Schema(
+     *          type="object",
+     *          @SWG\Property(
+     *              property="chapterLaunch",
+     *              type="object",
+     *              @SWG\Property(property="actual", type="string", description="Actual date"),
+     *              @SWG\Property(property="prev", type="string", description="Expected date")
+     *          ),
+     *          @SWG\Property(property="closureDate", type="string", description="Closure date"),
+     *          @SWG\Property(
+     *              property="coreGroupLaunch",
+     *              type="object",
+     *              @SWG\Property(property="actual", type="string", description="Actual date"),
+     *              @SWG\Property(property="prev", type="string", description="Expected date")
+     *          ),
+     *          @SWG\Property(property="currentState", type="string", description="Available values: PROJECT, CORE_GROUP or CHAPTER"),
+     *          @SWG\Property(
+     *              property="director",
+     *              type="object",
+     *              @SWG\Property(property="fullName", type="string"),
+     *              @SWG\Property(property="id", type="integer")
+     *          ),
+     *          @SWG\Property(property="id", type="string"),
+     *          @SWG\Property(property="members", type="integer"),
+     *          @SWG\Property(property="name", type="string"),
+     *          @SWG\Property(
+     *              property="resume",
+     *              type="object",
+     *              @SWG\Property(property="actual", type="string", description="Actual date"),
+     *              @SWG\Property(property="prev", type="string", description="Expected date")
+     *          ),
+     *          @SWG\Property(property="suspDate", type="string", description="Suspension date"),
+     *          @SWG\Property(property="warning", type="string", description="Available values: NULL, 'CORE_GROUP' or 'CHAPTER'")
+     *      )
+     * )
+     * @SWG\Response(
+     *      response=400,
+     *      description="Returned if role is given but is not valid."
+     * )
+     * @SWG\Response(
+     *      response=403,
+     *      description="Returned if actAs is given but the current user is not an admin, if a valid role is given but the user has not that role for the specified region or the role is not enought for the operation."
+     * )
+     * @SWG\Response(
+     *      response=404,
+     *      description="Returned if actAs is given but is not a valid user id."
+     * )
+     * @SWG\Tag(name="Chapters")
+     * @Security(name="Bearer")
+     *
+     * @return Response
+     */
+    public function suspendChapter(Chapter $chapter, Request $request): Response
+    {
+        $actAs = $request->get("actAs");
+        $code = Response::HTTP_OK;
+        $role = $request->get("role");
+        $user = $this->getUser();
+        $isAdmin = $user->isAdmin();
+
+        $checkUser = $this->userRepository->checkUser($user, $actAs);
+        $user = Util::arrayGetValue($checkUser, 'user');
+        $code = Util::arrayGetValue($checkUser, 'code');
+
+        if ($code == Response::HTTP_OK) {
+            if (!is_null($role) && $role != $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE) {
+                $code = Response::HTTP_BAD_REQUEST;
+            }
+        }
+
+        if ($code == Response::HTTP_OK) {
+            $region = $chapter->getRegion();
+            $checkDirectorRole = $this->directorRepository->checkDirectorRole($user, $region, $role);
+
+            $code = Util::arrayGetValue($checkDirectorRole, 'code', $code);
+            $director = Util::arrayGetValue($checkDirectorRole, 'director', null);
+        }
+
+        if ($code == Response::HTTP_OK) {
+            $role = $isAdmin && is_null($actAs) ? $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE : $director->getRole();
+            if (!in_array($role, [
+                $this->directorRepository::DIRECTOR_ROLE_NATIONAL,
+                $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE
+            ])) {
+                $code = Response::HTTP_FORBIDDEN;
+            }
+        }
+
+        if ($code == Response::HTTP_OK) {
+            if ($chapter->getCurrentState() != $this->chapterRepository::CHAPTER_CURRENT_STATE_CHAPTER) {
+                $code = Response::HTTP_BAD_REQUEST;
+            }
+        }
+
+        if ($code == Response::HTTP_OK) {
+            $today = Util::UTCDateTime();
+
+            $chapter->setSuspDate($today);
+            $chapter->setCurrentState($this->chapterRepository::CHAPTER_CURRENT_STATE_SUSPENDED);
+            $this->entityManager->flush();
+
+            return new JsonResponse($this->chapterFormatter->formatBase($chapter));
         } else {
             return new JsonResponse(null, $code);
         }

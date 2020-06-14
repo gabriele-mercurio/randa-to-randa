@@ -83,9 +83,7 @@ class DirectorRepository extends ServiceEntityRepository
 
         $directors = $this->findBy($params);
 
-        if (empty($directors)) {
-            $response['code'] = Response::HTTP_FORBIDDEN;
-        } else {
+        if (!empty($directors)) {
             if (count($directors) > 1) {
                 $maxFoundedRole = $this::DIRECTOR_ROLE_ASSISTANT;
                 foreach ($directors as $director) {
@@ -104,6 +102,20 @@ class DirectorRepository extends ServiceEntityRepository
             }
 
             $response['director'] = Util::arrayGetValue($directors, 0, null);
+        } else {
+            if (!is_null($role)) {
+                $response['code'] = Response::HTTP_FORBIDDEN;
+            } else {
+                unset($params['region']);
+                $params['role'] = $this::DIRECTOR_ROLE_NATIONAL;
+                $directors = $this->findBy($params);
+
+                if (!empty($directors)) {
+                    $response['director'] = Util::arrayGetValue($directors, 0, null);
+                } else {
+                    $response['code'] = Response::HTTP_FORBIDDEN;
+                }
+            }
         }
 
         return $response;

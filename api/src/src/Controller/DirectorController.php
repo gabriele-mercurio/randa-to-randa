@@ -837,7 +837,7 @@ class DirectorController extends AbstractController
      * )
      * @SWG\Parameter(
      *      name="onlyArea",
-     *      in="formData",
+     *      in="query",
      *      type="boolean"
      * )
      * @SWG\Response(

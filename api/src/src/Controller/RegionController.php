@@ -113,6 +113,9 @@ class RegionController extends AbstractController
      */
     public function importRegionsFromOldDB(): Response
     {
+        //TODO: Rimuovere o commentare la riga qui sotto se si intende rieseguire l'importazione
+        return new JsonResponse();
+
         //Entity managers and repositories
         /** @var EntityManagerInterface */
         $em = $this->getDoctrine()->getManager('default');

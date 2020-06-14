@@ -8,6 +8,8 @@ use App\Entity\User;
 use App\Formatter\DirectorFormatter;
 use App\OldDB\Entity\Director as OldDirector;
 use App\OldDB\Repository\DirectorRepository as OldDirectorRepository;
+use App\OldDB\Entity\Region as OldRegion;
+use App\OldDB\Repository\RegionRepository as OldRegionRepository;
 use App\Repository\DirectorRepository;
 use App\Repository\RegionRepository;
 use App\Repository\UserRepository;
@@ -951,6 +953,9 @@ class DirectorController extends AbstractController
      */
     public function importDirectorssFromOldDB(): Response
     {
+        //TODO: Rimuovere o commentare la riga qui sotto se si intende rieseguire l'importazione
+        return new JsonResponse();
+
         //Entity managers and repositories
         /** @var EntityManagerInterface */
         $em = $this->getDoctrine()->getManager('default');
@@ -966,6 +971,9 @@ class DirectorController extends AbstractController
 
         /** @var OldDirectorRepository */
         $oldDirectorRepository = $this->getDoctrine()->getRepository(OldDirector::class, 'old_db');
+
+        /** @var OldRegionRepository */
+        $oldRegionRepository = $this->getDoctrine()->getRepository(OldRegion::class, 'old_db');
 
         //Retrieve data from old table
         $oldDirectors = $oldDirectorRepository->findAll();
@@ -1007,6 +1015,16 @@ class DirectorController extends AbstractController
                 ];
             }
 
+            $compArea = $oldDirector->getCompArea();
+            $region = $oldDirector->getRegion($oldRegionRepository);
+
+            //TODO: rimuovere in caso di riesecuzione e dopo la risoluzione dei problemi sotto elencati
+            // Inserito perché Christian Golino ha un director associato a una regione inesistente e
+            // Gabriele Pinto ha un director con un compenso per Area del 13300%
+            if ($compArea > 1 || is_null($region)) {
+                continue;
+            }
+
             $users[$email]['directors'][] = [
                 'area' => $oldDirector->getArea(),
                 'compArea' => $oldDirector->getCompArea(),
@@ -1018,7 +1036,7 @@ class DirectorController extends AbstractController
                 'lancio' => $oldDirector->getLancio(),
                 'level' => $oldDirector->getLevel(), //0-assistant, 1-executive, 2-area, 3-national
                 'redLight' => $oldDirector->getRedLight(),
-                'region' => $oldDirector->getRegion(),
+                'region' => $region,
                 'yellowLight' => $oldDirector->getYellowLight()
             ];
         }
@@ -1047,6 +1065,7 @@ class DirectorController extends AbstractController
                 $user = new User();
                 $user->setEmail($oldUser['email']);
                 $user->setFirstName($oldUser['firstName']);
+                $user->setIsAdmin(false);
                 $user->setLastName($oldUser['lastName']);
                 $user->securePassword($oldUser['password']);
                 $userRepository->save($user);
@@ -1084,6 +1103,7 @@ class DirectorController extends AbstractController
                     $director = new Director();
                     $director->setAreaPercentage($oldDirector['compArea']);
                     $director->setFixedPercentage($oldDirector['compFisso']);
+                    $director->setFreeAccount(false);
                     $director->setGreenLightPercentage($oldDirector['greenLight']);
                     $director->setGreyLightPercentage($oldDirector['greyLight']);
                     $director->setLaunchPercentage($oldDirector['lancio']);

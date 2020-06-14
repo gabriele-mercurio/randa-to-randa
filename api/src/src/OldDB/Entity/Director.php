@@ -4,6 +4,7 @@ namespace App\OldDB\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use App\OldDB\Entity\Region;
+use App\OldDB\Repository\RegionRepository;
 
 /**
  * @ORM\Entity(repositoryClass="App\OldDB\Repository\DirectorRepository")
@@ -18,11 +19,8 @@ class Director
      */
     private $id;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="Region")
-     * @ORM\JoinColumn(name="id_Region")
-     */
-    private $region;
+    /** @ORM\Column(name="id_Region", type="integer") */
+    private $regionId;
 
     /** @ORM\Column(name="Nome", type="text") */
     private $nome;
@@ -42,16 +40,16 @@ class Director
     /** @ORM\Column(name="Lancio", type="float", options={"default":0}) */
     private $lancio;
 
-    /** @ORM\Column(name="GreenLigth", type="float", options={"default":0}) */
+    /** @ORM\Column(name="GreenLight", type="float", options={"default":0}) */
     private $greenLight;
 
-    /** @ORM\Column(name="YellowLigth", type="float", options={"default":0}) */
+    /** @ORM\Column(name="YellowLight", type="float", options={"default":0}) */
     private $yellowLight;
 
-    /** @ORM\Column(name="RedLigth", type="float", options={"default":0}) */
+    /** @ORM\Column(name="RedLight", type="float", options={"default":0}) */
     private $redLight;
 
-    /** @ORM\Column(name="GreyLigth", type="float", options={"default":0}) */
+    /** @ORM\Column(name="GreyLight", type="float", options={"default":0}) */
     private $greyLight;
 
     /** @ORM\Column(name="CompArea", type="float", options={"default":0}) */
@@ -60,7 +58,7 @@ class Director
     /** @ORM\Column(name="Area", type="integer") */
     private $area;
 
-    /** @ORM\Column(type="integer") */
+    /** @ORM\Column(name="chkPw", type="integer") */
     private $chkPw;
 
     /** @ORM\Column(name="CompFisso", type="float", options={"default":0}) */
@@ -72,16 +70,20 @@ class Director
         return $this->id;
     }
 
-    /** Get the value of region */
-    public function getRegion(): Region
+    /**
+     * Get the value of region
+     *
+     * @return Region|null
+     */
+    public function getRegion(RegionRepository $regionRepository): ?Region
     {
-        return $this->region;
+        return $regionRepository->find($this->regionId);
     }
 
     /** Set the value of region */
     public function setRegion(Region $region): self
     {
-        $this->region = $region;
+        $this->regionId = $region->getId();
         return $this;
     }
 

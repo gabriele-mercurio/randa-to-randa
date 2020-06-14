@@ -87,15 +87,15 @@ class DirectorRepository extends ServiceEntityRepository
             $response['code'] = Response::HTTP_FORBIDDEN;
         } else {
             if (count($directors) > 1) {
-                $maxFoundedRole = $this->directorRepository::DIRECTOR_ROLE_ASSISTANT;
+                $maxFoundedRole = $this::DIRECTOR_ROLE_ASSISTANT;
                 foreach ($directors as $director) {
                     $role = $director->getRole();
-                    if ($role == $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE) {
-                        $maxFoundedRole = $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE;
+                    if ($role == $this::DIRECTOR_ROLE_EXECUTIVE) {
+                        $maxFoundedRole = $this::DIRECTOR_ROLE_EXECUTIVE;
                         break;
                     }
-                    if ($role == $this->directorRepository::DIRECTOR_ROLE_AREA) {
-                        $maxFoundedRole = $this->directorRepository::DIRECTOR_ROLE_AREA;
+                    if ($role == $this::DIRECTOR_ROLE_AREA) {
+                        $maxFoundedRole = $this::DIRECTOR_ROLE_AREA;
                     }
                 }
                 $directors = array_filter($directors, function ($d) use($maxFoundedRole) {

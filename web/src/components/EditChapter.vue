@@ -207,8 +207,9 @@ export default {
             data
           );
         } else {
+          let region = this.$store.getters["getRegion"];
           result = await ApiServer.post(
-            Utils.getFromStorage("region").id + "/chapter",
+            region.id + "/chapter",
             data
           );
         }

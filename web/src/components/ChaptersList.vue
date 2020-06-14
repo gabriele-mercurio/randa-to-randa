@@ -21,7 +21,9 @@
             <v-list-item-title>Modifica capitolo</v-list-item-title>
           </v-list-item>
           <v-list-item @click="launch(item)" class="{'disabled': item.currentState === 'SUSPENDED' || item.currentState === 'CLOSED'}">
-            <v-list-item-title>Lancia {{getStateToLaunch()}} </v-list-item-title>
+            <v-list-item-title>
+              <v-icon>mdi-rocket-launch-outline</v-icon>
+              Lancia {{getStateToLaunch(item)}} </v-list-item-title>
           </v-list-item>
           <v-list-item @click="suspend(item)">
             <v-list-item-title>Sospendi capitolo</v-list-item-title>

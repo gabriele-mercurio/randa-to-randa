@@ -1,5 +1,6 @@
 import axios from "axios";
-import Utils from "./Utils";
+
+let store;
 
 class ApiServer {
   static commonRequestConfig = {
@@ -32,13 +33,9 @@ class ApiServer {
 
   static async logout() {
     try {
-      let data = await axios.post(process.env.base_url + "/revoke");
+      await ApiServer.post("revoke");
       ApiServer.revokeToken();
-      let me = await ApiServer.get("me");
-      return {
-        token: data.data.access_token,
-        user: me
-      };
+      return true;
     } catch (e) {
       return false;
     }
@@ -60,11 +57,9 @@ class ApiServer {
         process.env.base_url + "/" + endpoint,
         config
       );
-      debugger;
       return ApiServer.parseResponse(response);
     } catch (e) {
-      ApiServer.parseError(e);
-      return null;
+      return ApiServer.parseError(e);
     }
   }
 
@@ -78,7 +73,7 @@ class ApiServer {
       );
       return ApiServer.parseResponse(response);
     } catch (e) {
-      return null;
+      return ApiServer.parseError(e);
     }
   }
 
@@ -92,35 +87,46 @@ class ApiServer {
       );
       return ApiServer.parseResponse(response);
     } catch (e) {
-      return null;
+      return ApiServer.parseError(e);
     }
   }
 
   static parseResponse(response) {
-    debugger;
     if (!response || !response.status) {
       return null;
     }
     if (response.status.toString().startsWith("4")) {
       window.location = "login";
     }
-    if (!response.data || response.status !== 200) {
+    if (!response.data || !response.status.toString().startsWith("2")) {
       return null;
     }
     return response["data"];
   }
 
   static parseError(error) {
-    switch (error.response.status) {
+    let status = error.response ? error.response.status : null;
+    let errorResponse = {
+      error: true,
+      message: "",
+      errorCode: status
+    };
+
+    switch (status) {
       case 401:
-        Utils.removeFromStorage("token");
-        Utils.removeFromStorage("region");
+        store.commit("setToken", null);
+        store.commit("setRegion", null);
+        errorResponse.message = "Errore di autenticazione";
         window.location = "login";
+        break;
+      case 422:
+        errorResponse.message = "Errore nell'assoziazione dei dati.";
         break;
       default:
         //window.location = "login";
         break;
     }
+    return errorResponse;
   }
 
   static getData(endpoint) {
@@ -165,6 +171,12 @@ class ApiServer {
         ];
     }
   }
+}
+
+if (process.browser) {
+  window.onNuxtReady(({ $store }) => {
+    store = $store;
+  });
 }
 
 export default ApiServer;

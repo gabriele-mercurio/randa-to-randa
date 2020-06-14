@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <nav v-if="getToken() && getRegionName()">
+    <nav v-if="getToken() && getRegion()">
       <v-navigation-drawer v-model="drawer" absolute temporary right>
         <v-list nav dense>
           <v-list-item-group active-class="secondary--text text--accent-4">
@@ -41,21 +41,36 @@
         <v-btn class="white--text" text link to="/chapters">
           Capitoli
         </v-btn>
-        <v-btn class="white--text" text to="/pippo">
+        <v-btn class="white--text" text to="/randa">
           Randa
           <v-icon>mdi-menu-down</v-icon>
         </v-btn>
-        <v-btn class="white--text" text to="/pippo">
-          Directors
-          <v-icon>mdi-menu-down</v-icon>
-        </v-btn>
-        <v-btn class="white--text" text to="/pippo">
+        <v-menu offset-y>
+          <template v-slot:activator="{ on }">
+            <v-btn class="white--text" text v-on="on">
+              Directors
+              <v-icon>mdi-menu-down</v-icon>
+            </v-btn>
+          </template>
+          <v-list>
+            <v-list-item>
+              <v-btn text to="/directors">
+                Gestione
+              </v-btn>
+            </v-list-item>
+            <v-list-item>
+              Compensi
+            </v-list-item>
+          </v-list>
+        </v-menu>
+
+        <v-btn class="white--text" text to="/economics">
           Economics
         </v-btn>
         <v-spacer></v-spacer>
         <v-toolbar-title class="d-flex flex-row align-center">
           <div>
-            {{ getUser() }} <small>({{ getRegionName() }})</small>
+            {{ getUser() }} <small>({{ getRegion().name }})</small>
           </div>
           <v-btn icon @click="drawer = true" class="white--text">
             <v-icon>mdi-account</v-icon></v-btn
@@ -74,13 +89,14 @@ import Utils from "../services/Utils";
 export default {
   data() {
     return {
-      drawer: false,
-      region: Utils.getFromStorage("region")
+      drawer: false
     };
   },
   methods: {
     getUser() {
-      return this.$store.getters["getUser"] ? this.$store.getters["getUser"].fullName : "";
+      return this.$store.getters["getUser"]
+        ? this.$store.getters["getUser"].fullName
+        : "";
     },
     changeRegion() {
       Utils.removeFromStorage("region");
@@ -89,36 +105,35 @@ export default {
       });
     },
     getRegionName() {
-      let region = Utils.getFromStorage("region");
-      return region ? region.name : null;
+      return this.getRegion() ? this.getRegion().name : "";
     },
     getToken() {
-      let token = Utils.getFromStorage("token");
-      debugger;
-      return token;
+      return this.$store.getters["getToken"];
+    },
+    getRegion() {
+      return this.$store.getters["getRegion"];
     },
     async doLogout() {
       try {
-        await ApiServer.logout();
-        Utils.removeFromStorage("token");
-        Utils.removeFromStorage("region");
+        let response = await ApiServer.logout();
+        this.$store.commit("setToken", null);
+        this.$store.commit("setRegion", null);
         this.$router.push("/login");
       } catch (e) {}
     }
   },
 
   created() {
-    let token = Utils.getFromStorage("token");
-    if (token) {
-      ApiServer.setToken(token);
-      if (!Utils.getFromStorage("region")) {
+    setTimeout(() => {
+      if (this.getToken()) {
+        ApiServer.setToken(this.getToken());
+        if (!this.getRegion()) {
+          this.$router.push("login");
+        } 
+      } else {
         this.$router.push("login");
       }
-    } else {
-      this.$router.push({
-        path: "/login"
-      });
-    }
+    });
   }
 };
 </script>

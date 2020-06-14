@@ -80,15 +80,12 @@ export default {
     };
   },
   created() {
-    if (this.getToken()) {
-      this.isLogged = true;
-      this.region = Utils.getFromStorage("region");
-      if (this.region) {
-        this.goToHome();
-      } else {
+    setTimeout(() => {
+      if (this.getToken()) {
+        this.isLogged = true;
         this.fetchRegions();
       }
-    }
+    });
   },
   methods: {
     async doLogin() {
@@ -96,7 +93,7 @@ export default {
       let response = await ApiServer.login(this.email, this.password);
       if (response["token"] && response["user"]) {
         this.$store.commit("setUser", response["user"]);
-        Utils.saveToStorage("token", response["token"]);
+        this.$store.commit("setToken", response["token"]);
         this.fetchRegions();
         this.isLogged = true;
       } else {
@@ -105,7 +102,10 @@ export default {
     },
 
     getToken() {
-      return Utils.getFromStorage("token");
+      return this.$store.getters["getToken"];
+    },
+    getRegion() {
+      return this.$store.getters["getRegion"];
     },
 
     goToHome() {
@@ -119,7 +119,7 @@ export default {
     },
 
     selectRegion() {
-      Utils.saveToStorage("region", this.region);
+      this.$store.commit("setRegion", this.region);
       this.goToHome();
     }
   }

@@ -55,6 +55,7 @@ class DirectorFixtures extends Fixture implements DependentFixtureInterface
             $director->setFixedPercentage(0);
             $director->setFreeAccount(false);
             $director->setGreenLightPercentage(25);
+            $director->setAreaPercentage(25);
             $director->setGreyLightPercentage(10);
             $director->setLaunchPercentage(25);
             $director->setPayType(mt_rand(1, 2) == 1 ? $this->directorRepository::DIRECTOR_PAY_TYPE_ANNUAL : $this->directorRepository::DIRECTOR_PAY_TYPE_MONTHLY);

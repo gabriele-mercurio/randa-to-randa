@@ -39,7 +39,7 @@ export default {
       chapters: [],
       users: [],
       regionId: null
-    }
+    };
   },
   props: {},
   components: {
@@ -69,14 +69,15 @@ export default {
     },
 
     async fetchChapters() {
-        this.chapters = await ApiServer.get(this.regionId + "/chapters");d
-        debugger;
+      this.chapters = await ApiServer.get(this.regionId + "/chapters");
     }
   },
   created() {
-      this.regionId = Utils.getFromStorage("region").id;
+    setTimeout(() => {
+      this.regionId = this.$store.getters["getRegion"].id;
       this.fetchChapters();
       this.fetchUsersPerRegion();
+    });
   }
 };
 </script>

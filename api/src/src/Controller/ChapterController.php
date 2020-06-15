@@ -131,11 +131,13 @@ class ChapterController extends AbstractController
      */
     public function closeChapter(Chapter $chapter, Request $request): Response
     {
+        $request = Util::normalizeRequest($request);
+
         $actAs = $request->get("actAs");
         $code = Response::HTTP_OK;
         $role = $request->get("role");
         $user = $this->getUser();
-        $isAdmin = $user->isAdmin();
+        $isAdmin = $user->isAdmin() && is_null($actAs);
 
         $checkUser = $this->userRepository->checkUser($user, $actAs);
         $user = Util::arrayGetValue($checkUser, 'user');
@@ -147,16 +149,17 @@ class ChapterController extends AbstractController
             }
         }
 
-        if ($code == Response::HTTP_OK) {
+        if ($code == Response::HTTP_OK && !$isAdmin) {
             $region = $chapter->getRegion();
             $checkDirectorRole = $this->directorRepository->checkDirectorRole($user, $region, $role);
 
             $code = Util::arrayGetValue($checkDirectorRole, 'code', $code);
             $director = Util::arrayGetValue($checkDirectorRole, 'director', null);
+            $role = $director ? $director->getRole() : null;
         }
 
         if ($code == Response::HTTP_OK) {
-            $role = $isAdmin && is_null($actAs) ? $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE : $director->getRole();
+            $role = $isAdmin ? $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE : $role;
             if (!in_array($role, [
                 $this->directorRepository::DIRECTOR_ROLE_NATIONAL,
                 $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE
@@ -309,12 +312,13 @@ class ChapterController extends AbstractController
         $code = Response::HTTP_OK;
         $fields = [];
         $user = $this->getUser();
+        $isAdmin = $user->isAdmin() && is_null($actAsId);
 
         $checkUser = $this->userRepository->checkUser($user, $actAsId);
         $actAs = Util::arrayGetValue($checkUser, 'user');
         $code = Util::arrayGetValue($checkUser, 'code');
 
-        if ($code == Response::HTTP_OK && (!$user->isAdmin() || !is_null($actAsId))) {
+        if ($code == Response::HTTP_OK && !$isAdmin) {
             $u = is_null($actAsId) ? $user : $actAs;
             $director = $this->directorRepository->findOneBy([
                 'user' => $u,
@@ -654,10 +658,7 @@ class ChapterController extends AbstractController
                 $checkDirectorRole = $this->directorRepository->checkDirectorRole($user, $region);
                 $code = Util::arrayGetValue($checkDirectorRole, 'code', $code);
                 $director = Util::arrayGetValue($checkDirectorRole, 'director', null);
-
-                if (!is_null($director)) {
-                    $role = $director->getRole();
-                }
+                $role = $director ? $director->getRole() : null;
             }
         }
 
@@ -945,6 +946,7 @@ class ChapterController extends AbstractController
         $code = Response::HTTP_OK;
         $role = $request->get("role");
         $user = $this->getUser();
+        $isAdmin = $user->isAdmin() && is_null($actAsId);
 
         $checkUser = $this->userRepository->checkUser($user, $actAsId);
         $actAs = Util::arrayGetValue($checkUser, 'user');
@@ -958,16 +960,19 @@ class ChapterController extends AbstractController
             $code = Response::HTTP_BAD_REQUEST;
         }
 
-        if ($code == Response::HTTP_OK) {
+        if ($code == Response::HTTP_OK && !$isAdmin) {
             $u = is_null($actAsId) ? $user : $actAs;
             $checkDirectorRole = $this->directorRepository->checkDirectorRole($u, $region, $role);
 
             $code = Util::arrayGetValue($checkDirectorRole, 'code', $code);
             $director = Util::arrayGetValue($checkDirectorRole, 'director', null);
+            $role = $director ? $director->getRole() : null;
         }
 
         if ($code == Response::HTTP_OK) {
-            $role = $user->isAdmin() && is_null($role) ? $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE : $director->getRole();
+            if ($isAdmin) {
+                $role = is_null($role) ? $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE : $role;
+            }
 
             switch ($role) {
                 case $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE:
@@ -976,9 +981,8 @@ class ChapterController extends AbstractController
                     ]);
                     break;
                 case $this->directorRepository::DIRECTOR_ROLE_AREA:
-                    $directors = [
-                        $director->getId() => $director
-                    ];
+                    $directors = $chapters = [];
+                    $directors[$director->getId()] = $director;
                     foreach ($this->directorRepository->findBy([
                         'supervisor' => $director
                     ]) as $d) {
@@ -988,7 +992,6 @@ class ChapterController extends AbstractController
                         }
                     }
                     $directors = array_values($directors);
-                    $chapters = [];
 
                     foreach ($directors as $d) {
                         foreach ($this->chapterRepository->findBy([
@@ -1115,11 +1118,13 @@ class ChapterController extends AbstractController
      */
     public function launchChapter(Chapter $chapter, Request $request): Response
     {
+        $request = Util::normalizeRequest($request);
+
         $actAs = $request->get("actAs");
         $code = Response::HTTP_OK;
         $role = $request->get("role");
         $user = $this->getUser();
-        $isAdmin = $user->isAdmin();
+        $isAdmin = $user->isAdmin() && is_null($actAs);
 
         $checkUser = $this->userRepository->checkUser($user, $actAs);
         $user = Util::arrayGetValue($checkUser, 'user');
@@ -1131,16 +1136,17 @@ class ChapterController extends AbstractController
             }
         }
 
-        if ($code == Response::HTTP_OK) {
+        if ($code == Response::HTTP_OK && !$isAdmin) {
             $region = $chapter->getRegion();
             $checkDirectorRole = $this->directorRepository->checkDirectorRole($user, $region, $role);
 
             $code = Util::arrayGetValue($checkDirectorRole, 'code', $code);
             $director = Util::arrayGetValue($checkDirectorRole, 'director', null);
+            $role = $director ? $director->getRole() : null;
         }
 
         if ($code == Response::HTTP_OK) {
-            $role = $isAdmin && is_null($actAs) ? $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE : $director->getRole();
+            $role = $isAdmin ? $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE : $role;
             if (!in_array($role, [
                 $this->directorRepository::DIRECTOR_ROLE_NATIONAL,
                 $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE
@@ -1248,11 +1254,13 @@ class ChapterController extends AbstractController
      */
     public function launchCoreGroup(Chapter $chapter, Request $request): Response
     {
+        $request = Util::normalizeRequest($request);
+
         $actAs = $request->get("actAs");
         $code = Response::HTTP_OK;
         $role = $request->get("role");
         $user = $this->getUser();
-        $isAdmin = $user->isAdmin();
+        $isAdmin = $user->isAdmin() && is_null($actAs);
 
         $checkUser = $this->userRepository->checkUser($user, $actAs);
         $user = Util::arrayGetValue($checkUser, 'user');
@@ -1264,16 +1272,17 @@ class ChapterController extends AbstractController
             }
         }
 
-        if ($code == Response::HTTP_OK) {
+        if ($code == Response::HTTP_OK && !$isAdmin) {
             $region = $chapter->getRegion();
             $checkDirectorRole = $this->directorRepository->checkDirectorRole($user, $region, $role);
 
             $code = Util::arrayGetValue($checkDirectorRole, 'code', $code);
             $director = Util::arrayGetValue($checkDirectorRole, 'director', null);
+            $role = $director ? $director->getRole() : null;
         }
 
         if ($code == Response::HTTP_OK) {
-            $role = $isAdmin && is_null($actAs) ? $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE : $director->getRole();
+            $role = $isAdmin ? $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE : $role;
             if (!in_array($role, [
                 $this->directorRepository::DIRECTOR_ROLE_NATIONAL,
                 $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE
@@ -1381,11 +1390,13 @@ class ChapterController extends AbstractController
      */
     public function resumeChapter(Chapter $chapter, Request $request): Response
     {
+        $request = Util::normalizeRequest($request);
+
         $actAs = $request->get("actAs");
         $code = Response::HTTP_OK;
         $role = $request->get("role");
         $user = $this->getUser();
-        $isAdmin = $user->isAdmin();
+        $isAdmin = $user->isAdmin() && is_null($actAs);
 
         $checkUser = $this->userRepository->checkUser($user, $actAs);
         $user = Util::arrayGetValue($checkUser, 'user');
@@ -1397,16 +1408,17 @@ class ChapterController extends AbstractController
             }
         }
 
-        if ($code == Response::HTTP_OK) {
+        if ($code == Response::HTTP_OK && !$isAdmin) {
             $region = $chapter->getRegion();
             $checkDirectorRole = $this->directorRepository->checkDirectorRole($user, $region, $role);
 
             $code = Util::arrayGetValue($checkDirectorRole, 'code', $code);
             $director = Util::arrayGetValue($checkDirectorRole, 'director', null);
+            $role = $director ? $director->getRole() : null;
         }
 
         if ($code == Response::HTTP_OK) {
-            $role = $isAdmin && is_null($actAs) ? $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE : $director->getRole();
+            $role = $isAdmin ? $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE : $role;
             if (!in_array($role, [
                 $this->directorRepository::DIRECTOR_ROLE_NATIONAL,
                 $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE
@@ -1514,11 +1526,13 @@ class ChapterController extends AbstractController
      */
     public function suspendChapter(Chapter $chapter, Request $request): Response
     {
+        $request = Util::normalizeRequest($request);
+
         $actAs = $request->get("actAs");
         $code = Response::HTTP_OK;
         $role = $request->get("role");
         $user = $this->getUser();
-        $isAdmin = $user->isAdmin();
+        $isAdmin = $user->isAdmin() && is_null($actAs);
 
         $checkUser = $this->userRepository->checkUser($user, $actAs);
         $user = Util::arrayGetValue($checkUser, 'user');
@@ -1530,16 +1544,17 @@ class ChapterController extends AbstractController
             }
         }
 
-        if ($code == Response::HTTP_OK) {
+        if ($code == Response::HTTP_OK && !$isAdmin) {
             $region = $chapter->getRegion();
             $checkDirectorRole = $this->directorRepository->checkDirectorRole($user, $region, $role);
 
             $code = Util::arrayGetValue($checkDirectorRole, 'code', $code);
             $director = Util::arrayGetValue($checkDirectorRole, 'director', null);
+            $role = $director ? $director->getRole() : null;
         }
 
         if ($code == Response::HTTP_OK) {
-            $role = $isAdmin && is_null($actAs) ? $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE : $director->getRole();
+            $role = $isAdmin ? $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE : $role;
             if (!in_array($role, [
                 $this->directorRepository::DIRECTOR_ROLE_NATIONAL,
                 $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE

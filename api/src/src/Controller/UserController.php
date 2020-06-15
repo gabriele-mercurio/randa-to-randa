@@ -152,29 +152,26 @@ class UserController extends AbstractController
      */
     public function deleteUser(User $user, Request $request): Response
     {
-        /** @var User */
-        $performer = $this->getUser();
-
         $request = Util::normalizeRequest($request);
 
         $actAsId = $request->get("actAs");
         $code = Response::HTTP_OK;
+        $performer = $this->getUser();
+        $isAdmin = $performer->isAdmin() && is_null($actAsId);
 
         $checkUser = $this->userRepository->checkUser($performer, $actAsId);
         $actAs = Util::arrayGetValue($checkUser, 'user');
         $code = Util::arrayGetValue($checkUser, 'code');
 
-        if ($code == Response::HTTP_OK) {
-            if (!$performer->isAdmin() || !is_null($actAsId)) {
-                $u = is_null($actAsId) ? $performer : $actAs;
-                $director = $this->directorRepository->findOneBy([
-                    'user' => $u,
-                    'role' => $this->directorRepository::DIRECTOR_ROLE_NATIONAL
-                ]);
+        if ($code == Response::HTTP_OK && !$isAdmin) {
+            $u = is_null($actAsId) ? $performer : $actAs;
+            $director = $this->directorRepository->findOneBy([
+                'user' => $u,
+                'role' => $this->directorRepository::DIRECTOR_ROLE_NATIONAL
+            ]);
 
-                if (is_null($director)) {
-                    $code = Response::HTTP_FORBIDDEN;
-                }
+            if (is_null($director)) {
+                $code = Response::HTTP_FORBIDDEN;
             }
         }
 

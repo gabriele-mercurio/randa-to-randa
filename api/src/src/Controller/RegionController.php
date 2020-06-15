@@ -64,8 +64,7 @@ class RegionController extends AbstractController
     public function getRegions(): Response
     {
         $user = $this->getUser();
-        $directors = [];
-        $regions = [];
+        $directors = $regions = [];
 
         if ($user->isAdmin()) {
             $regions = $this->regionRepository->findAll();

@@ -49,7 +49,7 @@
     <v-card-actions class="d-flex justify-end align-center">
       <div width="100%">
         <v-btn type="submit" normal text color="primary" @click="emitClose()">
-          Annulla
+          {{$t('cancel')}}
         </v-btn>
         <v-btn
           type="submit"
@@ -59,7 +59,7 @@
           @click="saveChapter()"
           :disabled="!isFormValid()"
         >
-          Salva
+          {{$t('save')}}
         </v-btn>
       </div>
     </v-card-actions>

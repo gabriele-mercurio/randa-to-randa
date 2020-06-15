@@ -3,9 +3,9 @@
 {% block title %}{{ title }}{% endblock %}
 
 {% block body %}
-<p>{{ 'email.directorAssignment.body.0'!trans }}</p>
-<p>{{ 'email.directorAssignment.body.1'!trans }} {{ ('directors.' ~ director.role)|trans }}
-{{ 'email.directorAssignment.body.2'!trans }} {{ director.region.name }}<p>
+<p>{{ 'email.directorAssignment.body.0'|trans }}</p>
+<p>{{ 'email.directorAssignment.body.1'|trans }} {{ ('directors.' ~ director.role)|trans }}
+{{ 'email.directorAssignment.body.2'|trans }} {{ director.region.name }}<p>
 {% if director.role == 'ASSISTANT' %}
   <p>{{ 'email.directorAssignment.body.3'|trans }}</p>
 {% endif %}

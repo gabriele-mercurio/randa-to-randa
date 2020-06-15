@@ -28,7 +28,7 @@
       </template>
       <v-date-picker v-model="date" type="month" color="primary" no-title>
         <v-spacer></v-spacer>
-        <v-btn text color="primary" @click="menu = false">Annulla</v-btn>
+        <v-btn text color="primary" @click="menu = false">{{$t('cancel')}}</v-btn>
         <v-btn text color="primary" @click="setDate()">OK</v-btn>
       </v-date-picker>
     </v-menu>

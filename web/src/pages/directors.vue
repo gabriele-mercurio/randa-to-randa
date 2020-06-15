@@ -78,20 +78,28 @@ export default {
       try {
         let region = await this.$store.getters["getRegion"].id;
         this.areaDirectors = await ApiServer.get(
-          region + "/directors?onlyArea=true"
+          region + "/directors?onlyArea=1"
         );
       } catch (e) {
         console.log(e);
       }
     },
-    saveDirector(e) {
+    async fetchDirectors() {
+      this.directors = await ApiServer.get(
+        this.$store.getters["getRegion"].id + "/directors"
+      );
+      this.$store.commit("directors/setDirectors", this.directors);
+    },
+    saveDirector(director) {
       this.snackbarSuccess = true;
       this.snackbarMessage = "Director creato correttamente!";
+      this.directors.push(director);
     }
   },
   async created() {
     setTimeout(() => {
       this.fetchAreaDirectors();
+      this.fetchDirectors();
     });
   }
 };

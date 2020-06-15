@@ -122,6 +122,8 @@ class ApiServer {
       case 422:
         errorResponse.message = "Errore nell'assoziazione dei dati.";
         break;
+      case 403:
+        errorResponse.message = "Non autorizzato";
       default:
         //window.location = "login";
         break;
@@ -174,7 +176,9 @@ class ApiServer {
 }
 
 if (process.browser) {
-  window.onNuxtReady(({ $store }) => {
+  window.onNuxtReady(({ $store, $t }) => {
+    console.log($t);
+    debugger;
     store = $store;
   });
 }

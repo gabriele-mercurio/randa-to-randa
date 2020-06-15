@@ -83,7 +83,11 @@ export default {
     setTimeout(() => {
       if (this.getToken()) {
         this.isLogged = true;
-        this.fetchRegions();
+        if (this.getRegion()) {
+          this.$router.push("home");
+        } else {
+          this.fetchRegions();
+        }
       }
     });
   },

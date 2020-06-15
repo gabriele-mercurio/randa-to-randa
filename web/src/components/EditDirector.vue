@@ -1,7 +1,7 @@
 <template>
   <v-card id="editDirector">
     <v-card-title class="headline primary white--text" primary-title>
-      {{ getEditModeString() }} Direttore
+      {{ getEditModeString() }}  {{$t('director')}}
     </v-card-title>
     <v-card-text class="pa-5">
       <form>
@@ -93,6 +93,7 @@
           <v-col cols="6" class="py-0 my-0" v-if="isAdmin()">
             <v-checkbox
               v-model="director.isAdmin"
+              :disabled="director.isFreeAccount"
               label="Amministratore"
             ></v-checkbox>
           </v-col>
@@ -120,6 +121,7 @@
                 required
                 prepend-icon="mdi-margin"
                 class="pt-0 mt-0"
+                :disabled="director.isFreeAccount"
                 type="number"
               ></v-text-field>
             </v-container>
@@ -133,6 +135,7 @@
                 prepend-icon="mdi-margin"
                 class="pt-0 mt-0"
                 type="number"
+                :disabled="director.isFreeAccount"
               ></v-text-field>
             </v-container>
           </v-col>
@@ -144,6 +147,7 @@
               v-model="director.greenLightPercentage"
               label="Green light"
               required
+              :disabled="director.isFreeAccount"
             >
               <template v-slot:prepend>
                 <LightCircle :color="'green'" />
@@ -153,6 +157,7 @@
           <v-col cols="3" class="py-0 my-0">
             <v-text-field
               v-model="director.yellowLightPercentage"
+              :disabled="director.isFreeAccount"
               label="Yellow light"
               required
             >
@@ -165,6 +170,7 @@
             <v-text-field
               v-model="director.redLightPercentage"
               label="Red light"
+              :disabled="director.isFreeAccount"
               required
             >
               <template v-slot:prepend>
@@ -174,6 +180,7 @@
           </v-col>
           <v-col cols="3" class="py-0 my-0">
             <v-text-field
+              :disabled="director.isFreeAccount"
               v-model="director.greyLightPercentage"
               label="Grey light"
               required
@@ -189,7 +196,8 @@
     <v-card-actions class="d-flex justify-end align-center">
       <div width="100%">
         <v-btn type="submit" normal text color="primary" @click="emitClose()">
-          Annulla
+          {{$t('cancel')}}
+          
         </v-btn>
         <v-btn
           type="submit"
@@ -199,7 +207,7 @@
           @click="saveDirector()"
           :disabled="!isFormValid()"
         >
-          Salva
+          {{$t('save')}}
         </v-btn>
       </div>
     </v-card-actions>
@@ -210,7 +218,6 @@
         <v-icon>mdi-close</v-icon>
       </v-btn>
     </v-snackbar>
-    
   </v-card>
 </template>
 <script>
@@ -262,7 +269,7 @@ export default {
       rules: {
         email: val => {
           const pattern = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-          return pattern.test(val) || "Must be a valid e-mail.";
+          return pattern.test(val) || this.$t('invalid_email');
         }
       }
     };
@@ -324,7 +331,7 @@ export default {
       }
     },
     getEditModeString() {
-      return this.editChapter ? "Modifica" : "Crea";
+      return this.editChapter ? this.$t('edit') : this.$t('create');
     },
     fetchUsers() {
       let region = this.$state.getters["getRegion"];
@@ -338,28 +345,32 @@ export default {
     async saveDirector() {
       let data = {};
       data = { ...this.director };
+      if (data.role !== "ASSISTANT") {
+        data.supervisor = null;
+      }
 
       let region = this.$store.getters["getRegion"].id;
-      let response = this.editMode ? await ApiServer.put("director/" + this.director.id, data) : response = await ApiServer.post(region + "/director", data);
+      let response = this.editMode
+        ? await ApiServer.put("director/" + this.director.id, data)
+        : (response = await ApiServer.post(region + "/director", data));
 
       if (!response.error) {
         this.successSnackbar = true;
         if (this.editMode) {
-          this.snackbarMessage = "Director modificato correttamente";
+          this.snackbarMessage = this.$t('director') + " " + this.$t('successfuly_edited');
         } else {
-          this.snackbarMessage = "Director creato correttamente";
+          this.snackbarMessage = this.$t('director') + " " + this.$t('successfuly_created');
         }
         this.emitClose();
-        let directors = this.$store.getters["directors/getDirectors"]; 
+        let directors = this.$store.getters["directors/getDirectors"];
         directors.push(response);
         this.$store.commit("directors/setDirectors", directors);
-        debugger;
 
         this.$emit("saveDirector", response);
       } else {
         this.errorSnackbar = true;
         if (response.errorCode == 422) {
-          this.snackbarMessage = "L'utente con questo ruolo è già esistente.";
+          this.snackbarMessage = this.$t("user_with_role_exists");
         } else {
           this.snackbarMessage = response.message;
         }

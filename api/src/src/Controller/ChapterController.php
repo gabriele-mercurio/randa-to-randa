@@ -139,6 +139,7 @@ class ChapterController extends AbstractController
         $user = $this->getUser();
         $isAdmin = $user->isAdmin() && is_null($actAs);
 
+
         $checkUser = $this->userRepository->checkUser($user, $actAs);
         $user = Util::arrayGetValue($checkUser, 'user');
         $code = Util::arrayGetValue($checkUser, 'code');
@@ -945,12 +946,16 @@ class ChapterController extends AbstractController
         $actAsId = $request->get("actAs");
         $code = Response::HTTP_OK;
         $role = $request->get("role");
+
         $user = $this->getUser();
         $isAdmin = $user->isAdmin() && is_null($actAsId);
 
         $checkUser = $this->userRepository->checkUser($user, $actAsId);
         $actAs = Util::arrayGetValue($checkUser, 'user');
         $code = Util::arrayGetValue($checkUser, 'code');
+
+
+        //$role = $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE;
 
         if ($code == Response::HTTP_OK && !is_null($role) && !in_array($role, [
             $this->directorRepository::DIRECTOR_ROLE_AREA,

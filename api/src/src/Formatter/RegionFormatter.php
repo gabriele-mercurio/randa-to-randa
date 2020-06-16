@@ -20,8 +20,7 @@ class RegionFormatter
     {
         $details = [
             'id'    => $region->getId(),
-            'name'  => $region->getName(),
-            'notes' => $region->getNotes()
+            'name'  => $region->getName()
         ];
 
         return $details;
@@ -44,6 +43,8 @@ class RegionFormatter
      */
     public function formatFull(Region $region): array
     {
-        return $this->format($region);
+        return array_merge($this->format($region), [
+            'notes' => $region->getNotes()
+        ]);
     }
 }

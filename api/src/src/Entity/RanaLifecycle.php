@@ -76,13 +76,13 @@ class RanaLifecycle
     }
 
     /** Get the value of currentState */
-    public function getcurrentState(): string
+    public function getCurrentState(): string
     {
         return $this->currentState;
     }
 
     /** Set the value of currentState */
-    public function setcurrentState(string $currentState): self
+    public function setCurrentState(string $currentState): self
     {
         $this->currentState = $currentState;
         return $this;

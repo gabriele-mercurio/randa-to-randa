@@ -6,11 +6,14 @@ export const state = () => ({
   export const mutations = {
     setDirectors(state, directors) {
       state.directors = directors;
+    },
+    addDirector(state, director) {
+      state.directors.push(director);
     }
   };
   
   export const getters = {
-    getDirecctors(state) {
+    getDirectors(state) {
       return state.directors;
     }
   };

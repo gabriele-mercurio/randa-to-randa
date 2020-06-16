@@ -55,8 +55,6 @@ export default {
     updateChapters(chapter) {
       this.showEditChapter = false;
       this.chapters.push(chapter);
-      console.log(this.chapters[this.chapters.length - 2].chapterLaunch);
-      console.log(this.chapters[this.chapters.length - 1].chapterLaunch);
     },
 
     newChapter() {

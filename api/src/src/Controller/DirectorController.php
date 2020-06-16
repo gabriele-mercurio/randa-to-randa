@@ -238,38 +238,50 @@ class DirectorController extends AbstractController
         $code = Response::HTTP_OK;
         $errorFields = [];
         $user = $this->getUser();
-        $isAdmin = $user->isAdmin() && is_null($actAsId);
 
         $checkUser = $this->userRepository->checkUser($user, $actAsId);
         $actAs = Util::arrayGetValue($checkUser, 'user');
         $code = Util::arrayGetValue($checkUser, 'code');
 
-        if ($code == Response::HTTP_OK && !$isAdmin) {
-            $u = is_null($actAsId) ? $user : $actAs;
-            $checkDirectorRole = $this->directorRepository->checkDirectorRole($u, $region);
-
-            $code = Util::arrayGetValue($checkDirectorRole, 'code', $code);
-            $director = Util::arrayGetValue($checkDirectorRole, 'director', null);
-            $performerRole = $director->getRole();
-        }
-
         if ($code == Response::HTTP_OK) {
-            $performerRole = $isAdmin ? $this->directorRepository::DIRECTOR_ROLE_NATIONAL : $performerRole;
-            if (!in_array($performerRole, [
-                $this->directorRepository::DIRECTOR_ROLE_NATIONAL,
-                $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE
-            ])) {
-                $code = Response::HTTP_FORBIDDEN;
+
+            if ($user->isAdmin() && is_null($actAsId)) {
+                $performerRole = $this->directorRepository::DIRECTOR_ROLE_NATIONAL;
+            } else {
+
+                $u = is_null($actAsId) ? $user : $actAs;
+                $director = $this->directorRepository->findOneBy([
+                    'user' => $u,
+                    'role' => $this->directorRepository::DIRECTOR_ROLE_NATIONAL
+                ]);
+
+                if (is_null($director)) {
+
+                    $director = $this->directorRepository->findOneBy([
+                        'user' => $u,
+                        'region' => $region,
+                        'role' => $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE
+                    ]);
+
+                    if (is_null($director)) {
+                        $code = Response::HTTP_FORBIDDEN;
+                    }
+                }
+
+                if ($code == Response::HTTP_OK) {
+                    $performerRole = $director->getRole();
+                }
             }
         }
 
         if ($code == Response::HTTP_OK) {
+
             $firstName = trim($request->get("firstName"));
             $lastName = trim($request->get("lastName"));
             $email = trim($request->get("email"));
-            $isAdmin = !!(int)$request->get("isAdmin");
+            $isAdmin = !!(int) $request->get("isAdmin");
             $role = strtoupper(trim($request->get("role")));
-            $isFreeAccount = !!(int)$request->get("isFreeAccount");
+            $isFreeAccount = !!(int) $request->get("isFreeAccount");
             $supervisor = $request->get("supervisor");
             $payType = strtoupper(trim($request->get("payType")));
             $launchPercentage = $request->get("launchPercentage");
@@ -367,6 +379,8 @@ class DirectorController extends AbstractController
                 $this->userRepository->save($newUser);
             }
 
+
+
             // Check for the director existance
             if (!$isNewUser) {
                 $oldDirector = $this->directorRepository->findOneBy([
@@ -380,6 +394,8 @@ class DirectorController extends AbstractController
                 }
             }
         }
+
+
 
         if ($code == Response::HTTP_OK) {
             $areaPercentage = empty($areaPercentage) ? 0 : $areaPercentage / 100;
@@ -406,8 +422,10 @@ class DirectorController extends AbstractController
             $director->setYellowLightPercentage($yellowLigthPercentage);
             $this->directorRepository->save($director);
 
+
             try {
                 if ($isNewUser) {
+
                     $send = $this->userRepository->sendNewUserEmail($newUser, $tempPasswd);
                     if (!$send) {
                         throw new Exception("email_not_sent", 500);
@@ -422,6 +440,9 @@ class DirectorController extends AbstractController
                 $code = $e->getCode() === 500 ? Response::HTTP_INTERNAL_SERVER_ERROR : Response::HTTP_BAD_REQUEST;
                 return new JsonResponse($e->getMessage(), $code);
             }
+
+
+
 
             return new JsonResponse($this->directorFormatter->formatFull($director), Response::HTTP_CREATED);
         } else {
@@ -580,28 +601,36 @@ class DirectorController extends AbstractController
         $errorFields = [];
         $region = $director->getRegion();
         $user = $this->getUser();
-        $isAdmin = $user->isAdmin() && is_null($actAsId);
 
         $checkUser = $this->userRepository->checkUser($user, $actAsId);
         $actAs = Util::arrayGetValue($checkUser, 'user');
         $code = Util::arrayGetValue($checkUser, 'code');
 
-        if ($code == Response::HTTP_OK && !$isAdmin) {
-            $u = is_null($actAsId) ? $user : $actAs;
-            $checkDirectorRole = $this->directorRepository->checkDirectorRole($u, $region);
-
-            $code = Util::arrayGetValue($checkDirectorRole, 'code', $code);
-            $director = Util::arrayGetValue($checkDirectorRole, 'director', null);
-            $performerRole = $director->getRole();
-        }
-
         if ($code == Response::HTTP_OK) {
-            $performerRole = $isAdmin ? $this->directorRepository::DIRECTOR_ROLE_NATIONAL : $performerRole;
-            if (!in_array($performerRole, [
-                $this->directorRepository::DIRECTOR_ROLE_NATIONAL,
-                $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE
-            ])) {
-                $code = Response::HTTP_FORBIDDEN;
+            if ($user->isAdmin() && is_null($actAsId)) {
+                $performerRole = $this->directorRepository::DIRECTOR_ROLE_NATIONAL;
+            } else {
+                $u = is_null($actAsId) ? $user : $actAs;
+                $director = $this->directorRepository->findOneBy([
+                    'user' => $u,
+                    'role' => $this->directorRepository::DIRECTOR_ROLE_NATIONAL
+                ]);
+
+                if (is_null($director)) {
+                    $director = $this->directorRepository->findOneBy([
+                        'user' => $u,
+                        'region' => $region,
+                        'role' => $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE
+                    ]);
+
+                    if (is_null($director)) {
+                        $code = Response::HTTP_FORBIDDEN;
+                    }
+                }
+
+                if ($code == Response::HTTP_OK) {
+                    $performerRole = $director->getRole();
+                }
             }
         }
 
@@ -696,8 +725,10 @@ class DirectorController extends AbstractController
 
             switch (true) {
                 case $performerRole == $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE:
-                    if (!empty($role) && $role == $this->directorRepository::DIRECTOR_ROLE_NATIONAL) {
-                        $errorFields['role'] = "too_high";
+                    if (!empty($role)) {
+                        if ($role == $this->directorRepository::DIRECTOR_ROLE_NATIONAL) {
+                            $errorFields['role'] = "too_high";
+                        }
                     }
 
                     if (!empty($newRegion) && $newRegion != $region) {
@@ -737,52 +768,53 @@ class DirectorController extends AbstractController
         }
 
         if ($code == Response::HTTP_OK) {
+            
             if (array_key_exists('role', $fields)) {
-                $director->setRole(Util::arrayGetValue('role', $fields));
+                $director->setRole(Util::arrayGetValue($fields, 'role'));
             }
 
             if (array_key_exists('isFreeAccount', $fields)) {
-                $director->setFreeAccount(Util::arrayGetValue('isFreeAccount', $fields));
+                $director->setFreeAccount(Util::arrayGetValue($fields, 'isFreeAccount'));
             }
 
             if (array_key_exists('region', $fields)) {
-                $director->setRegion(Util::arrayGetValue('region', $fields));
+                $director->setRegion(Util::arrayGetValue($fields, 'region'));
             }
 
             if (array_key_exists('supervisor', $fields)) {
-                $director->setSupervisor(Util::arrayGetValue('supervisor', $fields));
+                $director->setSupervisor(Util::arrayGetValue($fields, 'supervisor'));
             }
 
             if (array_key_exists('payType', $fields)) {
-                $director->setPayType(Util::arrayGetValue('payType', $fields));
+                $director->setPayType(Util::arrayGetValue($fields, 'payType'));
             }
 
             if (array_key_exists('launchPercentage', $fields)) {
-                $director->setLaunchPercentage((int)Util::arrayGetValue('launchPercentage', $fields, 0) / 100);
+                $director->setLaunchPercentage((int) Util::arrayGetValue($fields, 'launchPercentage', 0) / 100);
             }
 
             if (array_key_exists('greenLigthPercentage', $fields)) {
-                $director->setGreenLightPercentage((int)Util::arrayGetValue('greenLigthPercentage', $fields, 0) / 100);
+                $director->setGreenLightPercentage((int) Util::arrayGetValue($fields, 'greenLigthPercentage', 0) / 100);
             }
 
             if (array_key_exists('yellowLigthPercentage', $fields)) {
-                $director->setYellowLightPercentage((int)Util::arrayGetValue('yellowLigthPercentage', $fields, 0) / 100);
+                $director->setYellowLightPercentage((int) Util::arrayGetValue($fields, 'yellowLigthPercentage', 0) / 100);
             }
 
             if (array_key_exists('redLigthPercentage', $fields)) {
-                $director->setRedLightPercentage((int)Util::arrayGetValue('redLigthPercentage', $fields, 0) / 100);
+                $director->setRedLightPercentage((int) Util::arrayGetValue($fields, 'redLigthPercentage', 0) / 100);
             }
 
             if (array_key_exists('greyLigthPercentage', $fields)) {
-                $director->setGreyLightPercentage((int)Util::arrayGetValue('greyLigthPercentage', $fields, 0) / 100);
+                $director->setGreyLightPercentage((int) Util::arrayGetValue($fields, 'greyLigthPercentage', 0) / 100);
             }
 
             if (array_key_exists('areaPercentage', $fields)) {
-                $director->setAreaPercentage((int)Util::arrayGetValue('areaPercentage', $fields, 0) / 100);
+                $director->setAreaPercentage((int) Util::arrayGetValue($fields, 'areaPercentage', 0) / 100);
             }
 
             if (array_key_exists('fixedPercentage', $fields)) {
-                $director->setFixedPercentage((int)Util::arrayGetValue('fixedPercentage', $fields, 0) / 100);
+                $director->setFixedPercentage((int) Util::arrayGetValue($fields, 'fixedPercentage', 0) / 100);
             }
 
             $this->entityManager->flush();
@@ -869,32 +901,24 @@ class DirectorController extends AbstractController
     {
         $actAsId = $request->get("actAs");
         $code = Response::HTTP_OK;
-        $onlyArea = !!(int)$request->get("onlyArea");
+        $onlyArea = !!(int) $request->get("onlyArea");
         $role = $request->get("role");
         $user = $this->getUser();
-        $isAdmin = $user->isAdmin() && is_null($actAsId);
 
         $checkUser = $this->userRepository->checkUser($user, $actAsId);
         $actAs = Util::arrayGetValue($checkUser, 'user');
         $code = Util::arrayGetValue($checkUser, 'code');
 
-        if ($code == Response::HTTP_OK && !$isAdmin) {
+        if ($code == Response::HTTP_OK && !is_null($role) && $role != $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE) {
+            $code = Response::HTTP_BAD_REQUEST;
+        }
+
+        if ($code == Response::HTTP_OK) {
             $u = is_null($actAsId) ? $user : $actAs;
             $checkDirectorRole = $this->directorRepository->checkDirectorRole($u, $region, $role);
 
             $code = Util::arrayGetValue($checkDirectorRole, 'code', $code);
             $director = Util::arrayGetValue($checkDirectorRole, 'director', null);
-            $role = $director ? $director->getRole() : null;
-        }
-
-        if ($code == Response::HTTP_OK) {
-            $role = $isAdmin ? $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE : $role;
-            if (!in_array($role, [
-                $this->directorRepository::DIRECTOR_ROLE_NATIONAL,
-                $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE
-            ])) {
-                $code = Response::HTTP_FORBIDDEN;
-            }
         }
 
         if ($code == Response::HTTP_OK) {
@@ -1078,16 +1102,16 @@ class DirectorController extends AbstractController
                     switch ($oldDirector['level']) {
                         case 0:
                             $role = $directorRepository::DIRECTOR_ROLE_ASSISTANT;
-                        break;
+                            break;
                         case 1:
                             $role = $directorRepository::DIRECTOR_ROLE_EXECUTIVE;
-                        break;
+                            break;
                         case 2:
                             $role = $directorRepository::DIRECTOR_ROLE_AREA;
-                        break;
+                            break;
                         case 3:
                             $role = $directorRepository::DIRECTOR_ROLE_NATIONAL;
-                        break;
+                            break;
                     }
 
                     $director = new Director();

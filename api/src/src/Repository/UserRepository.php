@@ -195,6 +195,9 @@ class UserRepository extends ServiceEntityRepository
             ->setBody($this->twig->render("emails/new-user/html.twig", $data), "text/html")
             ->addPart($this->twig->render("emails/new-user/txt.twig", $data), "text/plain");
 
-        return $this->mailer->send($email);
+        $response = $this->mailer->send($email);
+
+
+        return $response;
     }
 }

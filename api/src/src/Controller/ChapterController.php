@@ -139,6 +139,7 @@ class ChapterController extends AbstractController
         $user = $this->getUser();
         $isAdmin = $user->isAdmin() && is_null($actAs);
 
+
         $checkUser = $this->userRepository->checkUser($user, $actAs);
         $user = Util::arrayGetValue($checkUser, 'user');
         $code = Util::arrayGetValue($checkUser, 'code');
@@ -785,6 +786,10 @@ class ChapterController extends AbstractController
                 if (!is_null($actualLaunchChapterDate)) {
                     $actualLaunchChapterDate = Util::UTCDateTime($actualLaunchChapterDate);
                 }
+                if (!is_null($prevResumeDate)) {
+                    $prevResumeDate = Util::UTCDateTime($prevResumeDate);
+                }
+                
             } catch (Exception $ex) {
                 $code = Response::HTTP_BAD_REQUEST;
                 $fields['launchChapterDate'] = "invalid";
@@ -844,6 +849,7 @@ class ChapterController extends AbstractController
 
             $chapter->setActualLaunchChapterDate($actualLaunchChapterDate);
             $chapter->setActualLaunchCoregroupDate($actualLaunchCoregroupDate);
+            $chapter->setPrevResumeDate($prevResumeDate);
             $chapter->setCurrentState($state);
             $chapter->setDirector($d);
             $chapter->setName($name);
@@ -945,12 +951,14 @@ class ChapterController extends AbstractController
         $actAsId = $request->get("actAs");
         $code = Response::HTTP_OK;
         $role = $request->get("role");
+
         $user = $this->getUser();
         $isAdmin = $user->isAdmin() && is_null($actAsId);
 
         $checkUser = $this->userRepository->checkUser($user, $actAsId);
         $actAs = Util::arrayGetValue($checkUser, 'user');
         $code = Util::arrayGetValue($checkUser, 'code');
+
 
         if ($code == Response::HTTP_OK && !is_null($role) && !in_array($role, [
             $this->directorRepository::DIRECTOR_ROLE_AREA,
@@ -1125,13 +1133,13 @@ class ChapterController extends AbstractController
         $role = $request->get("role");
         $user = $this->getUser();
         $isAdmin = $user->isAdmin() && is_null($actAs);
-
+        
         $checkUser = $this->userRepository->checkUser($user, $actAs);
         $user = Util::arrayGetValue($checkUser, 'user');
         $code = Util::arrayGetValue($checkUser, 'code');
 
         if ($code == Response::HTTP_OK) {
-            if (!is_null($role) && $role != $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE) {
+            if (!$isAdmin || (!is_null($role) && $role != $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE)) {
                 $code = Response::HTTP_BAD_REQUEST;
             }
         }
@@ -1267,7 +1275,7 @@ class ChapterController extends AbstractController
         $code = Util::arrayGetValue($checkUser, 'code');
 
         if ($code == Response::HTTP_OK) {
-            if (!is_null($role) && $role != $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE) {
+            if (!$isAdmin || (!is_null($role) && $role != $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE)) {
                 $code = Response::HTTP_BAD_REQUEST;
             }
         }

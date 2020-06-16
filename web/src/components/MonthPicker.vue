@@ -19,7 +19,7 @@
           :disabled="disabled"
           :error-messages="invalidInterval"
         >
-          <template v-slot:append>
+          <template v-if="appendMessage" v-slot:append>
             <small class="font-italic font-weight-light">{{
               getPastDateMessage()
             }}</small>
@@ -28,7 +28,7 @@
       </template>
       <v-date-picker v-model="date" type="month" color="primary" no-title>
         <v-spacer></v-spacer>
-        <v-btn text color="primary" @click="menu = false">Annulla</v-btn>
+        <v-btn text color="primary" @click="menu = false">{{$t('cancel')}}</v-btn>
         <v-btn text color="primary" @click="setDate()">OK</v-btn>
       </v-date-picker>
     </v-menu>
@@ -53,7 +53,8 @@ export default {
     },
     disabled: false,
     invalidInterval: "",
-    launchType: ""
+    launchType: "",
+    appendMessage: false
   },
   methods: {
     setDate() {

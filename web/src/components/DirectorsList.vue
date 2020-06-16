@@ -27,6 +27,12 @@ import ApiServer from "../services/ApiServer";
 import Utils from "../services/Utils";
 export default {
   components: {},
+  props: {
+    directors: {
+      type: Array,
+      default: null
+    }
+  },
   data() {
     return {
       headers: [
@@ -42,31 +48,17 @@ export default {
         { text: "Red light", value: "redLightPercentage" },
         { text: "Grey light", value: "greyLightPercentage" },
         { value: "actions" }
-      ],
-      directors: []
+      ]
     };
   },
   methods: {
     edit(item) {
       this.$emit("edit", item);
     },
-    async fetchDirectors() {
-      this.directors = await ApiServer.get(
-        this.$store.getters["getRegion"].id + "/directors"
-      );
-
-      this.$store.commit("directors/setDirectors", this.directors);
-    }
-  },
-  created() {
-    setTimeout(() => {
-      this.fetchDirectors();
-    });
   },
   watch: {
     directors: {
       handler: function(oldVal, newVal) {
-        debugger;
       }
     }
   }

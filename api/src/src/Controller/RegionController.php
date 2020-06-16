@@ -25,17 +25,12 @@ class RegionController extends AbstractController
     /** @var RegionFormatter */
     private $regionFormatter;
 
-    /** @var RegionRepository */
-    private $regionRepository;
-
     public function __construct(
         DirectorRepository $directorRepository,
-        RegionFormatter $regionFormatter,
-        RegionRepository $regionRepository
+        RegionFormatter $regionFormatter
     ) {
         $this->directorRepository = $directorRepository;
         $this->regionFormatter = $regionFormatter;
-        $this->regionRepository = $regionRepository;
     }
 
     /**
@@ -64,33 +59,30 @@ class RegionController extends AbstractController
     public function getRegions(): Response
     {
         $user = $this->getUser();
-        $directors = $regions = [];
+        $directors = [];
+        $regions = [];
 
-        if ($user->isAdmin()) {
-            $regions = $this->regionRepository->findAll();
-        } else {
-            foreach ($this->directorRepository->findByUser($user) as $director) {
-                $directorId = $director->getId();
-                if (!array_Key_exists($directorId, $directors)) {
-                    $directors[$directorId] = $director;
-                }
-                foreach ($this->directorRepository->findBySupervisor($director) as $subordinate) {
-                    $subordinateId = $subordinate->getId();
-                    if (!array_key_exists($subordinateId, $directors)) {
-                        $directors[$subordinateId] = $subordinate;
-                    }
+        foreach ($this->directorRepository->findByUser($user) as $director) {
+            $directorId = $director->getId();
+            if (!array_key_exists($directorId, $directors)) {
+                $directors[$directorId] = $director;
+            }
+            foreach ($this->directorRepository->findBySupervisor($director) as $subordinate) {
+                $subordinateId = $subordinate->getId();
+                if (!array_key_exists($subordinateId, $directors)) {
+                    $directors[$subordinateId] = $subordinate;
                 }
             }
-
-            foreach ($directors as $director) {
-                $region = $director->getRegion();
-                $regionId = $region->getId();
-                if (!array_key_exists($regionId, $regions)) {
-                    $regions[$regionId] = $region;
-                }
-            }
-            $regions = array_values($regions);
         }
+
+        foreach ($directors as $director) {
+            $region = $director->getRegion();
+            $regionId = $region->getId();
+            if (!array_key_exists($regionId, $regions)) {
+                $regions[$regionId] = $region;
+            }
+        }
+        $regions = array_values($regions);
         usort($regions, function ($r1, $r2) {
             return $r1->getName() < $r2->getName() ? -1 : ($r1->getName() > $r2->getName() ? 1 : 0);
         });

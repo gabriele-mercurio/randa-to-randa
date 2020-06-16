@@ -1,10 +1,10 @@
 <template>
   <v-card id="editDirector">
     <v-card-title class="headline primary white--text" primary-title>
-      {{ getEditModeString() }} Direttore
+      {{ getEditModeString() }} {{ $t("director") }}
     </v-card-title>
     <v-card-text class="pa-5">
-      <form>
+      <v-form ref="form" v-model="isValid">
         <v-row>
           <v-col cols="12" class="py-0 my-0">
             <v-combobox
@@ -62,7 +62,6 @@
               :items="areaDirectors"
               label="Seleziona supervisore"
               v-model="director.supervisor"
-              required
               prepend-icon="mdi-account-cog-outline"
               item-text="fullName"
               item-value="id"
@@ -77,7 +76,6 @@
             <v-text-field
               v-model="director.areaPercentage"
               label="Compenso area"
-              required
               prepend-icon="mdi-margin"
               type="number"
             ></v-text-field>
@@ -93,6 +91,7 @@
           <v-col cols="6" class="py-0 my-0" v-if="isAdmin()">
             <v-checkbox
               v-model="director.isAdmin"
+              :disabled="director.isFreeAccount"
               label="Amministratore"
             ></v-checkbox>
           </v-col>
@@ -117,9 +116,9 @@
               <p>Percentuale di lancio</p>
               <v-text-field
                 v-model="director.launchPercentage"
-                required
                 prepend-icon="mdi-margin"
                 class="pt-0 mt-0"
+                :disabled="director.isFreeAccount"
                 type="number"
               ></v-text-field>
             </v-container>
@@ -129,10 +128,10 @@
               <p>Percentuale fissa</p>
               <v-text-field
                 v-model="director.fixedpercentage"
-                required
                 prepend-icon="mdi-margin"
                 class="pt-0 mt-0"
                 type="number"
+                :disabled="director.isFreeAccount"
               ></v-text-field>
             </v-container>
           </v-col>
@@ -143,7 +142,7 @@
             <v-text-field
               v-model="director.greenLightPercentage"
               label="Green light"
-              required
+              :disabled="director.isFreeAccount"
             >
               <template v-slot:prepend>
                 <LightCircle :color="'green'" />
@@ -153,8 +152,8 @@
           <v-col cols="3" class="py-0 my-0">
             <v-text-field
               v-model="director.yellowLightPercentage"
+              :disabled="director.isFreeAccount"
               label="Yellow light"
-              required
             >
               <template v-slot:prepend>
                 <LightCircle :color="'yellow'" />
@@ -165,7 +164,7 @@
             <v-text-field
               v-model="director.redLightPercentage"
               label="Red light"
-              required
+              :disabled="director.isFreeAccount"
             >
               <template v-slot:prepend>
                 <LightCircle :color="'red'" />
@@ -174,9 +173,9 @@
           </v-col>
           <v-col cols="3" class="py-0 my-0">
             <v-text-field
+              :disabled="director.isFreeAccount"
               v-model="director.greyLightPercentage"
               label="Grey light"
-              required
             >
               <template v-slot:prepend>
                 <LightCircle :color="'grey'" />
@@ -184,12 +183,12 @@
             </v-text-field>
           </v-col>
         </v-row>
-      </form>
+      </v-form>
     </v-card-text>
     <v-card-actions class="d-flex justify-end align-center">
       <div width="100%">
         <v-btn type="submit" normal text color="primary" @click="emitClose()">
-          Annulla
+          {{ $t("cancel") }}
         </v-btn>
         <v-btn
           type="submit"
@@ -197,9 +196,9 @@
           text
           color="primary"
           @click="saveDirector()"
-          :disabled="!isFormValid()"
+          :disabled="!isValid || !isFormValid()"
         >
-          Salva
+          {{ $t("save") }}
         </v-btn>
       </div>
     </v-card-actions>
@@ -210,7 +209,6 @@
         <v-icon>mdi-close</v-icon>
       </v-btn>
     </v-snackbar>
-    
   </v-card>
 </template>
 <script>
@@ -258,11 +256,13 @@ export default {
       snackbarMessage: "",
       successSnackbar: false,
       errorSnackbar: false,
+  isValid: false,
+
       timeout: 3000,
       rules: {
         email: val => {
           const pattern = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-          return pattern.test(val) || "Must be a valid e-mail.";
+          return pattern.test(val) || this.$t("invalid_email");
         }
       }
     };
@@ -324,7 +324,7 @@ export default {
       }
     },
     getEditModeString() {
-      return this.editChapter ? "Modifica" : "Crea";
+      return this.editChapter ? this.$t("edit") : this.$t("create");
     },
     fetchUsers() {
       let region = this.$state.getters["getRegion"];
@@ -338,33 +338,46 @@ export default {
     async saveDirector() {
       let data = {};
       data = { ...this.director };
+      if (data.role !== "ASSISTANT") {
+        data.supervisor = null;
+      } else {
+        if (this.editMode && data.supervisor) {
+          data.supervisor = data.supervisor.id;
+        }
+      }
 
       let region = this.$store.getters["getRegion"].id;
-      let response = this.editMode ? await ApiServer.put("director/" + this.director.id, data) : response = await ApiServer.post(region + "/director", data);
+      let response = this.editMode
+        ? await ApiServer.put("director/" + this.director.id, data)
+        : (response = await ApiServer.post(region + "/director", data));
 
       if (!response.error) {
         this.successSnackbar = true;
         if (this.editMode) {
-          this.snackbarMessage = "Director modificato correttamente";
+          this.snackbarMessage =
+            this.$t("director") + " " + this.$t("successfuly_edited");
         } else {
-          this.snackbarMessage = "Director creato correttamente";
+          this.snackbarMessage =
+            this.$t("director") + " " + this.$t("successfuly_created");
         }
         this.emitClose();
-        let directors = this.$store.getters["directors/getDirectors"]; 
-        directors.push(response);
-        this.$store.commit("directors/setDirectors", directors);
-        debugger;
+        this.$store.getters["directors/getDirectors"];
+        this.$store.commit("directors/addDirector", response);
 
-        this.$emit("saveDirector", response);
+        this.$emit("saveDirector", {
+          response: response,
+          editMode: this.editMode
+        });
       } else {
         this.errorSnackbar = true;
         if (response.errorCode == 422) {
-          this.snackbarMessage = "L'utente con questo ruolo è già esistente.";
+          this.snackbarMessage = this.$t("user_with_role_exists");
         } else {
           this.snackbarMessage = response.message;
         }
       }
     },
+
     isFormValid() {
       for (let k of Object.keys(this.director)) {
         if (mandatoryFields.includes(k) && !this.director[k]) {

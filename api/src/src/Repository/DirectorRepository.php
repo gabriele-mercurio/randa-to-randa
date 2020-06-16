@@ -13,7 +13,7 @@ use Swift_Mailer;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Twig\Environment;
-
+use Exception;
 /**
  * @method Director|null find($id, $lockMode = null, $lockVersion = null)
  * @method Director|null findOneBy(array $criteria, array $orderBy = null)
@@ -83,9 +83,14 @@ class DirectorRepository extends ServiceEntityRepository
 
         $directors = $this->findBy($params);
 
+
         if (!empty($directors)) {
+
+
             if (count($directors) > 1) {
+
                 $maxFoundedRole = $this::DIRECTOR_ROLE_ASSISTANT;
+                
                 foreach ($directors as $director) {
                     $role = $director->getRole();
                     if ($role == $this::DIRECTOR_ROLE_EXECUTIVE) {
@@ -99,13 +104,17 @@ class DirectorRepository extends ServiceEntityRepository
                 $directors = array_filter($directors, function ($d) use($maxFoundedRole) {
                     return $d->getRole() == $maxFoundedRole;
                 });
-            }
 
+            }
+            
             $response['director'] = Util::arrayGetValue($directors, 0, null);
+
         } else {
+
             if (!is_null($role)) {
                 $response['code'] = Response::HTTP_FORBIDDEN;
             } else {
+
                 unset($params['region']);
                 $params['role'] = $this::DIRECTOR_ROLE_NATIONAL;
                 $directors = $this->findBy($params);
@@ -140,6 +149,7 @@ class DirectorRepository extends ServiceEntityRepository
     }
 
     public function sendDirectorAssignmentEmail(Director $director) {
+
         $email = $this->mailer->createMessage();
 
         $data = [
@@ -147,13 +157,21 @@ class DirectorRepository extends ServiceEntityRepository
             'title' => $this->translator->trans('email.directorAssignment.title')
         ];
 
-        $email
-            ->setFrom($_ENV['MAIL_NO_REPLY_ADDRESS'], $_ENV['MAIL_SENDER_NAME'])
-            ->addTo($director->getUser()->getEmail(), $director->getUser()->getFullName())
-            ->setSubject($data['title'])
+            $from_email = $_ENV['MAIL_NO_REPLY_ADDRESS'];
+            $from_name = $_ENV['MAIL_SENDER_NAME'];
+
+            $to_email = $director->getUser()->getEmail();
+            $to_name = $director->getUser()->getFullName();
+            $title = $data['title'];
+
+            $email->setFrom($from_email, $from_name)
+            ->addTo($to_email, $to_name)
+            ->setSubject($title)
             ->setBody($this->twig->render("emails/director-assignment/html.twig", $data), "text/html")
             ->addPart($this->twig->render("emails/director-assignment/txt.twig", $data), "text/plain");
 
-        return $this->mailer->send($email);
+
+            $response = $this->mailer->send($email);
+        return $response;
     }
 }

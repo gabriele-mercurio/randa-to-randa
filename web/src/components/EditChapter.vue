@@ -25,6 +25,7 @@
           :disabled="isCoreGroupOrChapter(chapter)"
           :invalidInterval="invalidInterval()"
           launchType="CORE GROUP"
+          :appendMessage='true'
         />
         <MonthPicker
           :defLabel="getChapterLabel(chapter)"
@@ -33,6 +34,7 @@
           :disabled="isChapter(chapter)"
           :invalidInterval="invalidInterval()"
           launchType="CHAPTER"
+          :appendMessage='true'
         />
 
         <v-select

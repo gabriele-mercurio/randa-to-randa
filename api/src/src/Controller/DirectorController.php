@@ -247,7 +247,6 @@ class DirectorController extends AbstractController
 
             if ($user->isAdmin() && is_null($actAsId)) {
                 $performerRole = $this->directorRepository::DIRECTOR_ROLE_NATIONAL;
-
             } else {
 
                 $u = is_null($actAsId) ? $user : $actAs;
@@ -280,9 +279,9 @@ class DirectorController extends AbstractController
             $firstName = trim($request->get("firstName"));
             $lastName = trim($request->get("lastName"));
             $email = trim($request->get("email"));
-            $isAdmin = !!(int)$request->get("isAdmin");
+            $isAdmin = !!(int) $request->get("isAdmin");
             $role = strtoupper(trim($request->get("role")));
-            $isFreeAccount = !!(int)$request->get("isFreeAccount");
+            $isFreeAccount = !!(int) $request->get("isFreeAccount");
             $supervisor = $request->get("supervisor");
             $payType = strtoupper(trim($request->get("payType")));
             $launchPercentage = $request->get("launchPercentage");
@@ -769,52 +768,53 @@ class DirectorController extends AbstractController
         }
 
         if ($code == Response::HTTP_OK) {
+            
             if (array_key_exists('role', $fields)) {
-                $director->setRole(Util::arrayGetValue('role', $fields));
+                $director->setRole(Util::arrayGetValue($fields, 'role'));
             }
 
             if (array_key_exists('isFreeAccount', $fields)) {
-                $director->setFreeAccount(Util::arrayGetValue('isFreeAccount', $fields));
+                $director->setFreeAccount(Util::arrayGetValue($fields, 'isFreeAccount'));
             }
 
             if (array_key_exists('region', $fields)) {
-                $director->setRegion(Util::arrayGetValue('region', $fields));
+                $director->setRegion(Util::arrayGetValue($fields, 'region'));
             }
 
             if (array_key_exists('supervisor', $fields)) {
-                $director->setSupervisor(Util::arrayGetValue('supervisor', $fields));
+                $director->setSupervisor(Util::arrayGetValue($fields, 'supervisor'));
             }
 
             if (array_key_exists('payType', $fields)) {
-                $director->setPayType(Util::arrayGetValue('payType', $fields));
+                $director->setPayType(Util::arrayGetValue($fields, 'payType'));
             }
 
             if (array_key_exists('launchPercentage', $fields)) {
-                $director->setLaunchPercentage((int)Util::arrayGetValue('launchPercentage', $fields, 0) / 100);
+                $director->setLaunchPercentage((int) Util::arrayGetValue($fields, 'launchPercentage', 0) / 100);
             }
 
             if (array_key_exists('greenLigthPercentage', $fields)) {
-                $director->setGreenLightPercentage((int)Util::arrayGetValue('greenLigthPercentage', $fields, 0) / 100);
+                $director->setGreenLightPercentage((int) Util::arrayGetValue($fields, 'greenLigthPercentage', 0) / 100);
             }
 
             if (array_key_exists('yellowLigthPercentage', $fields)) {
-                $director->setYellowLightPercentage((int)Util::arrayGetValue('yellowLigthPercentage', $fields, 0) / 100);
+                $director->setYellowLightPercentage((int) Util::arrayGetValue($fields, 'yellowLigthPercentage', 0) / 100);
             }
 
             if (array_key_exists('redLigthPercentage', $fields)) {
-                $director->setRedLightPercentage((int)Util::arrayGetValue('redLigthPercentage', $fields, 0) / 100);
+                $director->setRedLightPercentage((int) Util::arrayGetValue($fields, 'redLigthPercentage', 0) / 100);
             }
 
             if (array_key_exists('greyLigthPercentage', $fields)) {
-                $director->setGreyLightPercentage((int)Util::arrayGetValue('greyLigthPercentage', $fields, 0) / 100);
+                $director->setGreyLightPercentage((int) Util::arrayGetValue($fields, 'greyLigthPercentage', 0) / 100);
             }
 
             if (array_key_exists('areaPercentage', $fields)) {
-                $director->setAreaPercentage((int)Util::arrayGetValue('areaPercentage', $fields, 0) / 100);
+                $director->setAreaPercentage((int) Util::arrayGetValue($fields, 'areaPercentage', 0) / 100);
             }
 
             if (array_key_exists('fixedPercentage', $fields)) {
-                $director->setFixedPercentage((int)Util::arrayGetValue('fixedPercentage', $fields, 0) / 100);
+                $director->setFixedPercentage((int) Util::arrayGetValue($fields, 'fixedPercentage', 0) / 100);
             }
 
             $this->entityManager->flush();
@@ -901,7 +901,7 @@ class DirectorController extends AbstractController
     {
         $actAsId = $request->get("actAs");
         $code = Response::HTTP_OK;
-        $onlyArea = !!(int)$request->get("onlyArea");
+        $onlyArea = !!(int) $request->get("onlyArea");
         $role = $request->get("role");
         $user = $this->getUser();
 
@@ -1102,16 +1102,16 @@ class DirectorController extends AbstractController
                     switch ($oldDirector['level']) {
                         case 0:
                             $role = $directorRepository::DIRECTOR_ROLE_ASSISTANT;
-                        break;
+                            break;
                         case 1:
                             $role = $directorRepository::DIRECTOR_ROLE_EXECUTIVE;
-                        break;
+                            break;
                         case 2:
                             $role = $directorRepository::DIRECTOR_ROLE_AREA;
-                        break;
+                            break;
                         case 3:
                             $role = $directorRepository::DIRECTOR_ROLE_NATIONAL;
-                        break;
+                            break;
                     }
 
                     $director = new Director();

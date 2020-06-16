@@ -1,6 +1,7 @@
 import axios from "axios";
 
 let store;
+let t;
 
 class ApiServer {
   static commonRequestConfig = {
@@ -116,7 +117,7 @@ class ApiServer {
       case 401:
         store.commit("setToken", null);
         store.commit("setRegion", null);
-        errorResponse.message = "Errore di autenticazione";
+        errorResponse.message = t('authentication_error');
         window.location = "login";
         break;
       case 422:
@@ -178,7 +179,6 @@ class ApiServer {
 if (process.browser) {
   window.onNuxtReady(({ $store, $t }) => {
     console.log($t);
-    debugger;
     store = $store;
   });
 }

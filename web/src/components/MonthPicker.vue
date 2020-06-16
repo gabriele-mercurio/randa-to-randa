@@ -19,7 +19,7 @@
           :disabled="disabled"
           :error-messages="invalidInterval"
         >
-          <template v-slot:append>
+          <template v-if="appendMessage" v-slot:append>
             <small class="font-italic font-weight-light">{{
               getPastDateMessage()
             }}</small>
@@ -53,7 +53,8 @@ export default {
     },
     disabled: false,
     invalidInterval: "",
-    launchType: ""
+    launchType: "",
+    appendMessage: false
   },
   methods: {
     setDate() {

@@ -7,7 +7,12 @@
     :class="classSpec"
   >
     <template v-slot:item.currentState="{ item }">
-      <span :class="item.currentState">{{ item.currentState }}</span>
+      <div class="d-flex flex-column">
+        <span :class="item.currentState">{{ item.currentState }}</span>
+        <span class="font-italic font-weight-light">
+          {{ getPrevResumeIfSuspended(item) }}
+        </span>
+      </div>
     </template>
     <template v-slot:item.actions="{ item }" v-if="!short">
       <v-menu bottom left>
@@ -18,21 +23,50 @@
         </template>
         <v-list>
           <v-list-item @click="edit(item)">
+            <v-icon class="mr-1">mdi-pencil-outline</v-icon>
             <v-list-item-title>Modifica capitolo</v-list-item-title>
           </v-list-item>
-          <v-list-item @click="launch(item)" class="{'disabled': item.currentState === 'SUSPENDED' || item.currentState === 'CLOSED'}">
+          <v-list-item
+            v-if="
+              item.currentState == 'PROJECT' ||
+                item.currentState == 'CORE_GROUP'
+            "
+            @click="launch(item, item.currentState)"
+            :class="{
+              disabled:
+                item.currentState === 'SUSPENDED' ||
+                item.currentState === 'CLOSED'
+            }"
+          >
             <v-list-item-title>
               <v-icon>mdi-rocket-launch-outline</v-icon>
-              Lancia {{getStateToLaunch(item)}} </v-list-item-title>
+              Lancia {{ getStateToLaunch(item) }}
+            </v-list-item-title>
           </v-list-item>
-          <v-list-item @click="suspend(item)">
-            <v-list-item-title>Sospendi capitolo</v-list-item-title>
+          <v-list-item
+            @click="suspend(item)"
+            v-if="item.currentState == 'CHAPTER'"
+          >
+            <v-icon class="mr-1">mdi-stop-circle-outline</v-icon>
+            <v-list-item-title
+              >Sospendi {{ getStateToLaunch(item) }}</v-list-item-title
+            >
           </v-list-item>
-          <v-list-item @click="resume(item)" class="{'disabled': item.currentStatus !== 'SUSPENDED'}">
+          <v-list-item
+            v-if="item.currentState == 'SUSPENDED'"
+            @click="resume(item)"
+          >
+            <v-icon class="mr-1">mdi-play-circle-outline</v-icon>
             <v-list-item-title>Riprendi capitolo</v-list-item-title>
           </v-list-item>
-          <v-list-item @click="stimateResume(item)" class="{'disabled': item.currentStatus !== 'SUSPENDED'}">
-            <v-list-item-title>Stima ripresa capitolo</v-list-item-title>
+
+          <v-list-item
+            @click="close(item)"
+            :class="{ disabled: item.currentStatus == 'CLOSED' }"
+          >
+            <v-list-item-title
+              >Chiudi {{ getStateToLaunch(item) }}</v-list-item-title
+            >
           </v-list-item>
         </v-list>
       </v-menu>
@@ -86,14 +120,32 @@
           >{{ getPrevOrActualDate(item.chapterLaunch) }}</span
         >
       </div>
+
+      <Snackbar
+        :showSnackbar.sync="showSnackbar"
+        :state.sync="snackbarState"
+        :messageLabel.sync="snackbarMessageLabel"
+      />
+
+      <v-dialog v-model="suspendDialog" width="500">
+        <ChapterSuspend
+          v-on:close="closeSuspendDialog"
+          :chapter.sync="currentChapter"
+        />
+      </v-dialog>
     </template>
   </v-data-table>
 </template>
 <script>
 import ApiServer from "../services/ApiServer";
 import Utils from "../services/Utils";
+import Snackbar from "../components/Snackbar";
+import ChapterSuspend from "../components/ChapterSuspend";
 export default {
-  components: {},
+  components: {
+    Snackbar,
+    ChapterSuspend
+  },
   data() {
     return {
       headers: [
@@ -105,7 +157,14 @@ export default {
         { text: "Capitolo", value: "chapterLaunch" },
         { value: "actions" }
       ],
-      shortFields: ["name", "director.fullName", "members", "currentState"]
+      shortFields: ["name", "director.fullName", "members", "currentState"],
+      snackbarMessageLabel: "",
+      snackbarColor: null,
+      snackbarState: null,
+      showSnackbar: false,
+      suspendDialog: false,
+      prevResumeDate: null,
+      currentChapter: null
     };
   },
   props: {
@@ -123,8 +182,69 @@ export default {
     }
   },
   methods: {
+    closeSuspendDialog(isSuspended) {
+      this.suspendDialog = false;
+      if(isSuspended) {
+        this.currentChapter.currentState = "SUSPENDED";
+      }
+    },
+
     edit(item) {
       this.$emit("edit", item);
+    },
+
+    getPrevResumeIfSuspended(item) {
+      if (item.currentState === "SUSPENDED" && item.resume.prev) {
+        return "Resume previsto: " + item.resume.prev;
+      }
+      return "";
+    },
+
+    async suspend(item) {
+      this.suspendDialog = true;
+      this.currentChapter = item;
+
+      // let response = await ApiServer.put("chapter/" + item.id + "/suspend");
+      // this.showSnackbar = true;
+      // if (!response.error) {
+      //   this.snackbarState = "success";
+      //   this.snackbarMessageLabel = "chapter_suspended";
+      //   item.currentState = "SUSPENDED";
+      // } else {
+      //   this.snackbarState = "error";
+      //   this.snackbarMessageLabel = "chapter_suspended_error";
+      // }
+    },
+
+    async resume(item) {
+      let response = await ApiServer.put("chapter/" + item.id + "/resume");
+      this.showSnackbar = true;
+      if (!response.error) {
+        this.snackbarState = "success";
+        this.snackbarMessageLabel = "chapter_resumed";
+        item.currentState = "CHAPTER";
+      } else {
+        this.snackbarState = "error";
+        this.snackbarMessageLabel = "chapter_resumed_error";
+      }
+    },
+
+    async launch(item, type) {
+      let action = type === "CORE_GROUP" ? "launch" : "launch-coregroup";
+      let response = await ApiServer.put("chapter/" + item.id + "/" + action);
+      this.showSnackbar = true;
+      if (!response.error) {
+        this.snackbarState = "success";
+        this.snackbarMessageLabel =
+          type === "PROJECT" ? "core_group_launched" : "chapter_launched";
+        item.currentState = type === "PROJECT" ? "CORE_GROUP" : "CHAPTER";
+      } else {
+        this.snackbarState = "error";
+        this.snackbarMessageLabel =
+          type === "PROJECT"
+            ? "core_group_launch_error"
+            : "chapter_launch_error";
+      }
     },
 
     getPrevOrActualDate(item) {
@@ -142,9 +262,9 @@ export default {
     },
 
     getStateToLaunch(item) {
-      if(item.currentState === "PROJECT") {
+      if (item.currentState === "PROJECT") {
         return "core group";
-      } else if(item.currentState === "CORE_GROUP") {
+      } else if (item.currentState === "CORE_GROUP") {
         return "capitolo";
       }
     }
@@ -167,5 +287,9 @@ export default {
 <style>
 .hidden {
   display: none;
+}
+.disabled {
+  pointer-events: none;
+  opacity: 0.6;
 }
 </style>

@@ -90,10 +90,9 @@ export default {
       );
       this.$store.commit("directors/setDirectors", this.directors);
     },
-    saveDirector(director) {
-      this.snackbarSuccess = true;
-      this.snackbarMessage = "Director creato correttamente!";
-      this.directors.push(director);
+    saveDirector(response) {
+      this.successSnackbar = true;
+      this.snackbarMessage =response.edtiMode ? this.$t('director_edited') : this.$t('director_created');
     }
   },
   async created() {

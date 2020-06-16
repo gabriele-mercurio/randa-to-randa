@@ -59,7 +59,6 @@ export default {
   watch: {
     directors: {
       handler: function(oldVal, newVal) {
-        debugger;
       }
     }
   }

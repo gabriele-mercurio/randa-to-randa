@@ -795,6 +795,7 @@ class ChapterController extends AbstractController
                 if (!is_null($prevResumeDate)) {
                     $prevResumeDate = Util::UTCDateTime($prevResumeDate);
                 }
+
             } catch (Exception $ex) {
                 $code = Response::HTTP_BAD_REQUEST;
                 $fields['launchChapterDate'] = "invalid";
@@ -873,13 +874,13 @@ class ChapterController extends AbstractController
     /**
      * Get chapters
      *
-     * @Route(path="/chapters/{id}", name="chapter_detail", methods={"GET"})
+     * @Route(path="/chapter/{id}", name="chapter_detail", methods={"GET"})
      *
      * @SWG\Parameter(
      *      name="id",
      *      in="path",
      *      type="string",
-     *      description="The chapter id"
+     *      description="The chapter"
      * )
      * @SWG\Parameter(
      *      name="role",
@@ -892,6 +893,44 @@ class ChapterController extends AbstractController
      *      in="query",
      *      type="string",
      *      description="Optional parameter representing the emulated user id"
+     * )
+     * @SWG\Response(
+     *      response=200,
+     *      description="Returns a Chapter object",
+     *      @SWG\Schema(
+     *          type="object",
+     *          @SWG\Property(
+     *              property="chapterLaunch",
+     *              type="object",
+     *              @SWG\Property(property="actual", type="string", description="Actual date"),
+     *              @SWG\Property(property="prev", type="string", description="Expected date")
+     *          ),
+     *          @SWG\Property(property="closureDate", type="string", description="Closure date"),
+     *          @SWG\Property(
+     *              property="coreGroupLaunch",
+     *              type="object",
+     *              @SWG\Property(property="actual", type="string", description="Actual date"),
+     *              @SWG\Property(property="prev", type="string", description="Expected date")
+     *          ),
+     *          @SWG\Property(property="currentState", type="string", description="Available values: PROJECT, CORE_GROUP or CHAPTER"),
+     *          @SWG\Property(
+     *              property="director",
+     *              type="object",
+     *              @SWG\Property(property="fullName", type="string"),
+     *              @SWG\Property(property="id", type="integer")
+     *          ),
+     *          @SWG\Property(property="id", type="string"),
+     *          @SWG\Property(property="members", type="integer"),
+     *          @SWG\Property(property="name", type="string"),
+     *          @SWG\Property(
+     *              property="resume",
+     *              type="object",
+     *              @SWG\Property(property="actual", type="string", description="Actual date"),
+     *              @SWG\Property(property="prev", type="string", description="Expected date")
+     *          ),
+     *          @SWG\Property(property="suspDate", type="string", description="Suspension date"),
+     *          @SWG\Property(property="warning", type="string", description="Available values: NULL, 'CORE_GROUP' or 'CHAPTER'")
+     *      )
      * )
      * @SWG\Response(
      *      response=400,
@@ -910,17 +949,11 @@ class ChapterController extends AbstractController
      *
      * @return Response
      */
-    public function getChapter(Request $request): Response
+    public function getChapter(Chapter $chapter, Request $request): Response
     {
-
-        $chapterId = $request->get("id");
-        $chapter = $this->chapterRepository->find($chapterId);
-        $region = $chapter->getRegion();
-
         $actAsId = $request->get("actAs");
         $code = Response::HTTP_OK;
         $role = $request->get("role");
-
         $user = $this->getUser();
         $isAdmin = $user->isAdmin() && is_null($actAsId);
 
@@ -928,23 +961,28 @@ class ChapterController extends AbstractController
         $actAs = Util::arrayGetValue($checkUser, 'user');
         $code = Util::arrayGetValue($checkUser, 'code');
 
-
-        if ($code == Response::HTTP_OK && !is_null($role) && !in_array($role, [
-            $this->directorRepository::DIRECTOR_ROLE_AREA,
-            $this->directorRepository::DIRECTOR_ROLE_ASSISTANT,
-            $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE
-        ])) {
-            $code = Response::HTTP_BAD_REQUEST;
-        }
-
         if ($code == Response::HTTP_OK && !$isAdmin) {
             $u = is_null($actAsId) ? $user : $actAs;
             $checkDirectorRole = $this->directorRepository->checkDirectorRole($u, $region, $role);
+
             $code = Util::arrayGetValue($checkDirectorRole, 'code', $code);
+            $director = Util::arrayGetValue($checkDirectorRole, 'director', null);
+            $role = $director ? $director->getRole() : $role;
         }
 
         if ($code == Response::HTTP_OK) {
-            return new JsonResponse($this->chapterFormatter->formatBase($chapter), $code);
+            $role = $isAdmin ? $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE : $role;
+            if (!in_array($role, [
+                $this->directorRepository::DIRECTOR_ROLE_AREA,
+                $this->directorRepository::DIRECTOR_ROLE_ASSISTANT,
+                $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE
+            ])) {
+                $code = Response::HTTP_BAD_REQUEST;
+            }
+        }
+
+        if ($code == Response::HTTP_OK) {
+            return new JsonResponse($this->chapterFormatter->formatBase($chapter));
         } else {
             return new JsonResponse(null, $code);
         }
@@ -1036,22 +1074,12 @@ class ChapterController extends AbstractController
         $actAsId = $request->get("actAs");
         $code = Response::HTTP_OK;
         $role = $request->get("role");
-
         $user = $this->getUser();
         $isAdmin = $user->isAdmin() && is_null($actAsId);
 
         $checkUser = $this->userRepository->checkUser($user, $actAsId);
         $actAs = Util::arrayGetValue($checkUser, 'user');
         $code = Util::arrayGetValue($checkUser, 'code');
-
-
-        if ($code == Response::HTTP_OK && !is_null($role) && !in_array($role, [
-            $this->directorRepository::DIRECTOR_ROLE_AREA,
-            $this->directorRepository::DIRECTOR_ROLE_ASSISTANT,
-            $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE
-        ])) {
-            $code = Response::HTTP_BAD_REQUEST;
-        }
 
         if ($code == Response::HTTP_OK && !$isAdmin) {
             $u = is_null($actAsId) ? $user : $actAs;
@@ -1063,10 +1091,17 @@ class ChapterController extends AbstractController
         }
 
         if ($code == Response::HTTP_OK) {
-            if ($isAdmin) {
-                $role = is_null($role) ? $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE : $role;
+            $role = $isAdmin ? $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE : $role;
+            if (!in_array($role, [
+                $this->directorRepository::DIRECTOR_ROLE_AREA,
+                $this->directorRepository::DIRECTOR_ROLE_ASSISTANT,
+                $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE
+            ])) {
+                $code = Response::HTTP_BAD_REQUEST;
             }
+        }
 
+        if ($code == Response::HTTP_OK) {
             switch ($role) {
                 case $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE:
                     $chapters = $this->chapterRepository->findBy([

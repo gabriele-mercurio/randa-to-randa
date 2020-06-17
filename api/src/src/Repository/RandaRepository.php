@@ -6,8 +6,6 @@ use App\Entity\Randa;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\ORM\EntityManagerInterface;
-use App\Entity\User;
-use Symfony\Component\HttpFoundation\Response;
 
 /**
  * @method Randa|null find($id, $lockMode = null, $lockVersion = null)

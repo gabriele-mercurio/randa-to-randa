@@ -151,7 +151,7 @@ class RanaController extends AbstractController
      *
      * @return Response
      */
-    public function createRanda(Chapter $chapter, Request $request): Response
+    public function createRana(Chapter $chapter, Request $request): Response
     {
         $request = Util::normalizeRequest($request);
 

@@ -110,7 +110,7 @@ class NewMember
     }
 
     /** Get the value of m1 */
-    public function getM1(): int
+    public function getM1(): ?int
     {
         return $this->m1;
     }
@@ -123,7 +123,7 @@ class NewMember
     }
 
     /** Get the value of m2 */
-    public function getM2(): int
+    public function getM2(): ?int
     {
         return $this->m2;
     }
@@ -136,7 +136,7 @@ class NewMember
     }
 
     /** Get the value of m3 */
-    public function getM3(): int
+    public function getM3(): ?int
     {
         return $this->m3;
     }
@@ -149,7 +149,7 @@ class NewMember
     }
 
     /** Get the value of m4 */
-    public function getM4(): int
+    public function getM4(): ?int
     {
         return $this->m4;
     }
@@ -162,7 +162,7 @@ class NewMember
     }
 
     /** Get the value of m5 */
-    public function getM5(): int
+    public function getM5(): ?int
     {
         return $this->m5;
     }
@@ -175,7 +175,7 @@ class NewMember
     }
 
     /** Get the value of m6 */
-    public function getM6(): int
+    public function getM6(): ?int
     {
         return $this->m6;
     }
@@ -188,7 +188,7 @@ class NewMember
     }
 
     /** Get the value of m7 */
-    public function getM7(): int
+    public function getM7(): ?int
     {
         return $this->m7;
     }
@@ -201,7 +201,7 @@ class NewMember
     }
 
     /** Get the value of m8 */
-    public function getM8(): int
+    public function getM8(): ?int
     {
         return $this->m8;
     }
@@ -214,7 +214,7 @@ class NewMember
     }
 
     /** Get the value of m9 */
-    public function getM9(): int
+    public function getM9(): ?int
     {
         return $this->m9;
     }
@@ -227,7 +227,7 @@ class NewMember
     }
 
     /** Get the value of m10 */
-    public function getM10(): int
+    public function getM10(): ?int
     {
         return $this->m10;
     }
@@ -240,7 +240,7 @@ class NewMember
     }
 
     /** Get the value of m11 */
-    public function getM11(): int
+    public function getM11(): ?int
     {
         return $this->m11;
     }
@@ -253,7 +253,7 @@ class NewMember
     }
 
     /** Get the value of m12 */
-    public function getM12(): int
+    public function getM12(): ?int
     {
         return $this->m12;
     }

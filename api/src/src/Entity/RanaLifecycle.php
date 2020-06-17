@@ -58,7 +58,7 @@ class RanaLifecycle
     /** Set the value of rana */
     public function setRana(Rana $rana): self
     {
-        $this->randa = $rana;
+        $this->rana = $rana;
         return $this;
     }
 

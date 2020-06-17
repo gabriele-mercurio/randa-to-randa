@@ -7,6 +7,7 @@ use App\Entity\Director;
 use App\Entity\Region;
 use App\Formatter\ChapterFormatter;
 use App\Repository\ChapterRepository;
+use App\Repository\RegionRepository;
 use App\Repository\DirectorRepository;
 use App\Repository\UserRepository;
 use App\Util\Util;
@@ -28,6 +29,9 @@ class ChapterController extends AbstractController
     /** @var ChapterRepository */
     private $chapterRepository;
 
+    /** @var RegionRepository */
+    private $regionRepository;
+
     /** @var DirectorRepository */
     private $directorRepository;
 
@@ -40,12 +44,14 @@ class ChapterController extends AbstractController
     public function __construct(
         ChapterFormatter $chapterFormatter,
         ChapterRepository $chapterRepository,
+        RegionRepository $regionRepository,
         DirectorRepository $directorRepository,
         EntityManagerInterface $entityManager,
         UserRepository $userRepository
     ) {
         $this->chapterFormatter = $chapterFormatter;
         $this->chapterRepository = $chapterRepository;
+        $this->regionRepository = $regionRepository;
         $this->directorRepository = $directorRepository;
         $this->entityManager = $entityManager;
         $this->userRepository = $userRepository;
@@ -421,7 +427,7 @@ class ChapterController extends AbstractController
                     }
                 }
 
-                if (!is_null($actualLaunchChapterDate)){
+                if (!is_null($actualLaunchChapterDate)) {
                     if ($actualLaunchChapterDate >= $today) {
                         $prevLaunchChapterDate = $actualLaunchChapterDate;
                         $actualLaunchChapterDate = null;
@@ -789,7 +795,6 @@ class ChapterController extends AbstractController
                 if (!is_null($prevResumeDate)) {
                     $prevResumeDate = Util::UTCDateTime($prevResumeDate);
                 }
-                
             } catch (Exception $ex) {
                 $code = Response::HTTP_BAD_REQUEST;
                 $fields['launchChapterDate'] = "invalid";
@@ -862,6 +867,86 @@ class ChapterController extends AbstractController
         } else {
             $fields = $code == Response::HTTP_BAD_REQUEST ? $fields : null;
             return new JsonResponse($fields, $code);
+        }
+    }
+
+    /**
+     * Get chapters
+     *
+     * @Route(path="/chapters/{id}", name="chapter_detail", methods={"GET"})
+     *
+     * @SWG\Parameter(
+     *      name="id",
+     *      in="path",
+     *      type="string",
+     *      description="The chapter id"
+     * )
+     * @SWG\Parameter(
+     *      name="role",
+     *      in="query",
+     *      type="string",
+     *      description="Optional parameter to get data relative to the specified given role"
+     * )
+     * @SWG\Parameter(
+     *      name="actAs",
+     *      in="query",
+     *      type="string",
+     *      description="Optional parameter representing the emulated user id"
+     * )
+     * @SWG\Response(
+     *      response=400,
+     *      description="Returned if role is given but is not valid."
+     * )
+     * @SWG\Response(
+     *      response=403,
+     *      description="Returned if actAs is given but the current user is not an admin or if a valid role is given but the user has not that role for the specified region."
+     * )
+     * @SWG\Response(
+     *      response=404,
+     *      description="Returned if actAs is given but is not a valid user id."
+     * )
+     * @SWG\Tag(name="Chapters")
+     * @Security(name="Bearer")
+     *
+     * @return Response
+     */
+    public function getChapter(Request $request): Response
+    {
+
+        $chapterId = $request->get("id");
+        $chapter = $this->chapterRepository->find($chapterId);
+        $region = $chapter->getRegion();
+
+        $actAsId = $request->get("actAs");
+        $code = Response::HTTP_OK;
+        $role = $request->get("role");
+
+        $user = $this->getUser();
+        $isAdmin = $user->isAdmin() && is_null($actAsId);
+
+        $checkUser = $this->userRepository->checkUser($user, $actAsId);
+        $actAs = Util::arrayGetValue($checkUser, 'user');
+        $code = Util::arrayGetValue($checkUser, 'code');
+
+
+        if ($code == Response::HTTP_OK && !is_null($role) && !in_array($role, [
+            $this->directorRepository::DIRECTOR_ROLE_AREA,
+            $this->directorRepository::DIRECTOR_ROLE_ASSISTANT,
+            $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE
+        ])) {
+            $code = Response::HTTP_BAD_REQUEST;
+        }
+
+        if ($code == Response::HTTP_OK && !$isAdmin) {
+            $u = is_null($actAsId) ? $user : $actAs;
+            $checkDirectorRole = $this->directorRepository->checkDirectorRole($u, $region, $role);
+            $code = Util::arrayGetValue($checkDirectorRole, 'code', $code);
+        }
+
+        if ($code == Response::HTTP_OK) {
+            return new JsonResponse($this->chapterFormatter->formatBase($chapter), $code);
+        } else {
+            return new JsonResponse(null, $code);
         }
     }
 
@@ -1046,6 +1131,8 @@ class ChapterController extends AbstractController
         }
     }
 
+
+
     /**
      * Launch the Chapter
      *
@@ -1133,7 +1220,7 @@ class ChapterController extends AbstractController
         $role = $request->get("role");
         $user = $this->getUser();
         $isAdmin = $user->isAdmin() && is_null($actAs);
-        
+
         $checkUser = $this->userRepository->checkUser($user, $actAs);
         $user = Util::arrayGetValue($checkUser, 'user');
         $code = Util::arrayGetValue($checkUser, 'code');

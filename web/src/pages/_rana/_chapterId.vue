@@ -7,7 +7,7 @@
       Membri inizali: <span class="font-italic font-weight-light">3</span>
       Membri finali: <span class="font-italic font-weight-light">3</span>
     </h3>
-    <Rana />
+    <Rana :rana="rana"/>
   </v-container>
 </template>
 <script>

@@ -37,7 +37,7 @@
                     :disabled="pastTimeslot(i)"
                     type="number"
                     :class="{ bordered: !pastTimeslot(i) }"
-                    @keydown="proposeMonths($event, i)"
+                    @keyup="proposeMonths($event, i)"
                     v-model="data.appr.t[i]"
                   />
                 </v-col>
@@ -87,11 +87,24 @@
       <template slot="no-data">
         <tr style="display: none;"></tr>
       </template>
+      <template slot="footer">
+        <div class="d-flex justify-end mt-4">
+          <v-btn
+            type="submit"
+            normal
+            color="primary"
+            @click="sendProposal()"
+          >
+            {{ $t("send_proposal") }}
+          </v-btn>
+        </div>
+      </template>
     </v-data-table>
   </div>
 </template>
 <script>
 import Utils from "../services/Utils";
+import ApiServer from "../services/ApiServer";
 
 export default {
   data() {
@@ -110,26 +123,41 @@ export default {
     };
   },
   props: {
-    defData: []
+    defData: [],
+    rana: null
   },
   methods: {
     pastMonth(m) {
       return m <= new Date().getMonth() + 1;
     },
+    async sendProposal() {
+        console.log(this.data.appr.m);
+        debugger;
+      let data = {
+        valueType: "PROP",
+        timeslot: this.currentTimeslot
+      };
+      for (let i = 0; i < 12; i++) {
+        data["m" + (i+1)] = this.data.appr.m[i];
+      }
+      console.log(data);
+      debugger;
+      let result = await ApiServer.post(this.rana.id + "/rana-renewed", data);
+    },
     pastTimeslot(t) {
       return t <= this.currentTimeslot;
     },
     calculateTimeslot(e, m) {
-        let t = Math.ceil(m/3);
-        let startFrom = (t - 1)*3+1;
-        let value = 0;
-        for(let i = startFrom; i <= startFrom + 3; i++) {
-            value += this.data.appr.m[i] * 1;
-        }
-        this.$set(this.data.appr.t, t, value);
+      let t = Math.ceil(m / 3);
+      let startFrom = (t - 1) * 3 + 1;
+      let value = 0;
+      for (let i = startFrom; i <= startFrom + 3; i++) {
+        value += this.data.appr.m[i] * 1;
+      }
+      this.$set(this.data.appr.t, t, value);
     },
     proposeMonths(e, t) {
-      let value = e.key;
+      let value = e.target.value;
       let months = [0, 0, 0];
 
       if (value) {
@@ -146,9 +174,9 @@ export default {
           }
         }
 
-        let startFrom = (t - 1) * 3 + 1;
+        let startFrom = (t - 1) * 3;
         for (let i = 0; i < months.length; i++) {
-            this.$set(this.data.appr.m, startFrom + i, months[i]);
+          this.$set(this.data.appr.m, startFrom + i, months[i]);
         }
       }
     }

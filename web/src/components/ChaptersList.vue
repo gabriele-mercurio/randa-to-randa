@@ -22,6 +22,16 @@
           </v-btn>
         </template>
         <v-list>
+
+           <v-list-item
+            @click="goToRana(item)"
+          >
+          <v-icon class="mr-1">mdi-text</v-icon>
+            <v-list-item-title
+              >Rana...</v-list-item-title
+            >
+          </v-list-item>
+
           <v-list-item @click="edit(item)">
             <v-icon class="mr-1">mdi-pencil-outline</v-icon>
             <v-list-item-title>Modifica capitolo</v-list-item-title>
@@ -64,6 +74,7 @@
             @click="close(item)"
             :class="{ disabled: item.currentStatus == 'CLOSED' }"
           >
+          <v-icon class="mr-1">mdi-close</v-icon>
             <v-list-item-title
               >Chiudi {{ getStateToLaunch(item) }}</v-list-item-title
             >
@@ -182,6 +193,10 @@ export default {
     }
   },
   methods: {
+
+    goToRana(item) {
+      this.$router.push("rana/" + item.id);
+    },
     closeSuspendDialog(isSuspended) {
       this.suspendDialog = false;
       if(isSuspended) {

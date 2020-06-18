@@ -44,5 +44,6 @@ export default {
   core_group_launched: "Core group lanciato!",
   chapter_launch_error: "Errore nel lancio del capitolo",
   chapter_launched: "Capitolo lanciato!",
-  confirm: "Conferma"
+  confirm: "Conferma",
+  send_proposal: "Manda proposta"
 };

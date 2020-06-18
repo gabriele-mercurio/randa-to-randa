@@ -48,6 +48,7 @@ class RanaController extends AbstractController
 
     /** @var UserRepository */
     private $userRepository;
+    
 
     public function __construct(
         DirectorRepository $directorRepository,

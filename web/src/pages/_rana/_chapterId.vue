@@ -1,11 +1,12 @@
 <template>
   <v-container>
-    <h3>
-      {{ chapter.name }}
+    <h3 class="py-4">
+      Capitolo: <span class="font-italic font-weight-light">{{ chapter.name }}</span>
     </h3>
-    <h4>
-      {{ rana.randa.currentTimeslot }}
-    </h4>
+    <h3 class="pb-4">
+      Membri inizali: <span class="font-italic font-weight-light">3</span>
+      Membri finali: <span class="font-italic font-weight-light">3</span>
+    </h3>
     <Rana />
   </v-container>
 </template>
@@ -70,7 +71,7 @@ export default {
       if (!chapterId) {
         alert("Nessun capitolo specificato");
       }
-      this.chapter = await ApiServer.get("chapters/" + chapterId);
+      this.chapter = await ApiServer.get("chapter/" + chapterId);
       if (this.chapter.error) {
         alert("Errore nella get del capitolo");
       }

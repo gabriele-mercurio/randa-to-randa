@@ -97,7 +97,7 @@ class ApiServer {
       return null;
     }
     if (response.status.toString().startsWith("4")) {
-      window.location = "login";
+      window.location = "/login";
     }
     if (!response.data || !response.status.toString().startsWith("2")) {
       return null;

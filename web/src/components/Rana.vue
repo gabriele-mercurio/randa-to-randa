@@ -1,158 +1,94 @@
 <template>
-  <v-data-table disable-pagination hide-default-footer id="rana">
-    <template v-slot:header>
-      <thead>
-        <tr>
-          <th colspan="3" class="text-center">T1</th>
-          <th colspan="3" class="text-center">T2</th>
-          <th colspan="3" class="text-center">T3</th>
-          <th colspan="3" class="text-center">T4</th>
-        </tr>
-      </thead>
-    </template>
-    <template v-slot:body>
-      <tbody>
-        <tr>
-          <td colspan="3">
-              <div class="d-flex">
-                <v-text-field
-                @keydown="proposeMonths($event, 1)"
-                :disabled="pastTimeslot('T1')"
-                type="number"
-                />
-                <span>{{data.cons.t1}}</span>
+  <div id="rana">
+    <div class="mb-3">
+      <div class="d-flex flex-row align-center">
+        <div class="circle background-yellow"></div>
+        <div class="ml-1">Approvato</div>
+      </div>
+      <div class="d-flex flex-row align-center">
+        <div class="circle background-green"></div>
+        <div class="ml-1">Consuntivo</div>
+      </div>
 
-            </div>
-          </td>
-          <td colspan="3" class="text-center">
-            <v-text-field
-              @keydown="proposeMonths($event, 2)"
-              :disabled="pastTimeslot('T2')"
-              type="number"
-            />
-          </td>
-          <td colspan="3" class="text-center">
-            <v-text-field
-              @keydown="proposeMonths($event, 3)"
-              :disabled="pastTimeslot('T3')"
-              type="number"
-            />
-          </td>
-          <td colspan="3" class="text-center">
-            <v-text-field
-              @keydown="proposeMonths($event, 4)"
-              :disabled="pastTimeslot('T4')"
-              type="number"
-            />
-          </td>
-        </tr>
-        <tr>
-          <td class="text-center">
-              <span>M1</span>
-            <v-text-field
-              placeholder="M1"
-              :disabled="pastMonth('1')"
-              type="number"
-              v-model="data.appr.months[0]"
-            />
-          </td>
-          <td class="text-center">
-            <v-text-field
-              placeholder="M2"
-              :disabled="pastMonth('2')"
-              type="number"
-              v-model="data.appr.months[1]"
-            />
-          </td>
-          <td class="text-center">
-            <v-text-field
-              placeholder="M3"
-              :disabled="pastMonth('3')"
-              type="number"
-              v-model="data.appr.months[2]"
-            />
-          </td>
-          <td class="text-center">
-            <v-text-field
-              placeholder="M4"
-              :disabled="pastMonth('4')"
-              type="number"
-              v-model="data.appr.months[3]"
-            />
-          </td>
-          <td class="text-center">
-            <v-text-field
-              placeholder="M5"
-              :disabled="pastMonth('5')"
-              type="number"
-              v-model="data.appr.months[4]"
-            />
-          </td>
-          <td class="text-center">
-            <v-text-field
-              placeholder="M6"
-              :disabled="pastMonth('6')"
-              type="number"
-              v-model="data.appr.months[5]"
-            />
-          </td>
-          <td class="text-center">
-            <v-text-field
-              placeholder="M7"
-              :disabled="pastMonth('7')"
-              type="number"
-              v-model="data.appr.months[6]"
-            />
-          </td>
-          <td class="text-center">
-            <v-text-field
-              placeholder="M8"
-              :disabled="pastMonth('8')"
-              type="number"
-              v-model="data.appr.months[7]"
-            />
-          </td>
-          <td class="text-center">
-            <v-text-field
-              placeholder="M9"
-              :disabled="pastMonth('9')"
-              type="number"
-              v-model="data.appr.months[8]"
-            />
-          </td>
-          <td class="text-center">
-            <v-text-field
-              placeholder="M10"
-              :disabled="pastMonth('10')"
-              type="number"
-              v-model="data.appr.months[9]"
-            />
-          </td>
-          <td class="text-center">
-            <v-text-field
-              placeholder="M11"
-              :disabled="pastMonth('11')"
-              type="number"
-              v-model="data.appr.months[10]"
-            />
-          </td>
-          <td class="text-center">
-            <v-text-field
-              placeholder="M12"
-              :disabled="pastMonth('12')"
-              type="number"
-              v-model="data.appr.months['p']"
-            />
-          </td>
-        </tr>
-      </tbody>
-    </template>
-    <template slot="no-data">
-      <tr style="display: none;">
-        ciao
-      </tr>
-    </template>
-  </v-data-table>
+      <div class="d-flex flex-row align-center">
+        <div class="circle stroke-green"></div>
+        <div class="ml-1">Da compilare</div>
+      </div>
+    </div>
+    <v-data-table disable-pagination hide-default-footer>
+      <template v-slot:body>
+        <tbody>
+          <tr>
+            <td
+              colspan="3"
+              v-for="i in (0, 4)"
+              :key="i"
+              class="text-center pa-0 border-right-bold border-top-bold"
+            >
+              <div class="border-bottom background-grey pa-1">T{{ i }}</div>
+              <v-row class="pa-0 ma-0">
+                <v-col
+                  :cols="pastTimeslot(i) ? '6' : 12"
+                  class="pa-0 d-flex justify-center align-center"
+                  :class="{ 'border-right background-yellow': pastTimeslot(i) }"
+                >
+                  <v-text-field
+                    :placeholder="'T' + i"
+                    :disabled="pastTimeslot(i)"
+                    type="number"
+                    :class="{ bordered: !pastTimeslot(i) }"
+                    @keydown="proposeMonths($event, i)"
+                    v-model="data.appr.t[i]"
+                  />
+                </v-col>
+                <v-col
+                  v-if="pastTimeslot(i)"
+                  cols="6"
+                  class="pa-0 background-green font-italic font-weight-light disabled d-flex justify-center align-center"
+                  >{{ data.cons.t[i] }}</v-col
+                >
+              </v-row>
+            </td>
+          </tr>
+          <tr>
+            <td
+              v-for="i in (0, 12)"
+              :key="i"
+              class="text-center pa-0 border-top-none border-right-semibold border-bottom-bold"
+              :class="{ 'border-right-bold': i % 3 == 0 }"
+            >
+              <div class="border-bottom background-grey pa-1">M{{ i }}</div>
+              <v-row class="pa-0 ma-0">
+                <v-col
+                  :cols="pastMonth(i) ? '6' : 12"
+                  class="pa-0 d-flex justify-center align-center"
+                  :class="{ 'border-righ background-yellow': pastMonth(i) }"
+                >
+                  <v-text-field
+                    :placeholder="'M' + i"
+                    :disabled="pastMonth(i)"
+                    type="number"
+                    v-model="data.appr.m[i]"
+                    @keyup="calculateTimeslot($event, i)"
+                    :class="{ bordered: !pastMonth(i) }"
+                  />
+                </v-col>
+                <v-col
+                  v-if="pastMonth(i)"
+                  cols="6"
+                  class="pa-0 background-green font-italic font-weight-light disabled d-flex justify-center align-center"
+                  >{{ data.cons.m[i] }}</v-col
+                >
+              </v-row>
+            </td>
+          </tr>
+        </tbody>
+      </template>
+      <template slot="no-data">
+        <tr style="display: none;"></tr>
+      </template>
+    </v-data-table>
+  </div>
 </template>
 <script>
 import Utils from "../services/Utils";
@@ -162,18 +98,14 @@ export default {
     return {
       currentTimeslot: null,
       data: {
-          appr: {
-              t: [
-                  0,1,2,3
-              ],
-              months: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-          },
-          cons: {
-              t: [
-                  0,1,2,3
-              ],
-              months: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-          }
+        appr: {
+          t: [0, 1, 2, 3],
+          m: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        },
+        cons: {
+          t: [0, 1, 2, 3],
+          m: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        }
       }
     };
   },
@@ -186,6 +118,15 @@ export default {
     },
     pastTimeslot(t) {
       return t <= this.currentTimeslot;
+    },
+    calculateTimeslot(e, m) {
+        let t = Math.ceil(m/3);
+        let startFrom = (t - 1)*3+1;
+        let value = 0;
+        for(let i = startFrom; i <= startFrom + 3; i++) {
+            value += this.data.appr.m[i] * 1;
+        }
+        this.$set(this.data.appr.t, t, value);
     },
     proposeMonths(e, t) {
       let value = e.key;
@@ -205,11 +146,9 @@ export default {
           }
         }
 
-        let startFrom = (t - 1) * 3;
+        let startFrom = (t - 1) * 3 + 1;
         for (let i = 0; i < months.length; i++) {
-          console.log(i);
-          console.log(startFrom + i);
-          this.data.months[startFrom + i] = { ...months[i] };
+            this.$set(this.data.appr.m, startFrom + i, months[i]);
         }
       }
     }
@@ -223,6 +162,8 @@ export default {
 };
 </script>
 <style lang="scss">
+@import "../assets/variables.scss";
+
 #rana {
   td,
   th {
@@ -233,11 +174,96 @@ export default {
   tbody tr:last-of-type {
     border-bottom: 1px solid rgba(0, 0, 0, 0.12);
   }
-  th:first-of-type, td:first-of-type {
-    border-left: 1px solid rgba(0, 0, 0, 0.12);
+  th:first-of-type,
+  td:first-of-type {
+    border-left: 2px solid rgba(0, 0, 0, 0.4) !important;
   }
   tr:last-of-type {
     border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  }
+  .border-bottom {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  }
+  .border-top-none {
+    border-top-style: none;
+  }
+  .border-right {
+    border-right: 1px solid rgba(0, 0, 0, 0.2);
+  }
+  .border-right-bold {
+    border-right: 2px solid rgba(0, 0, 0, 0.4) !important;
+    &:last-of-type {
+      border-right: none;
+    }
+  }
+  .border-top-bold {
+    border-top: 2px solid rgba(0, 0, 0, 0.4) !important;
+  }
+  .border-bottom-bold {
+    border-bottom: 2px solid rgba(0, 0, 0, 0.4) !important;
+  }
+  .border-right-semibold {
+    border-right: 1px solid rgba(0, 0, 0, 0.3);
+  }
+  .v-input {
+    padding: 0;
+    margin: 0;
+  }
+  .v-input__control {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .v-text-field__details {
+    display: none;
+  }
+  .v-input__slot {
+    margin: 0;
+    &:before {
+      display: none;
+    }
+  }
+
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  /* Firefox */
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+  input {
+    text-align: center;
+  }
+  .background-green {
+    background: lighten($lightgreen, 30%);
+  }
+  .background-yellow {
+    background: lighten($lightyellow, 25%);
+  }
+  .background-red {
+    background: lighten($lightred, 35%);
+  }
+  .background-grey {
+    background: lighten($lightgrey, 70%);
+  }
+  .stroke-green {
+    border: 2px solid $lightgreen !important;
+  }
+  tr:hover {
+    background: transparent;
+  }
+  .bordered {
+    border: 2px solid $lightgreen;
+    box-sizing: border-box !important;
+    margin: -2px;
+  }
+  .circle {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 1px solid $lightgrey;
   }
 }
 </style>

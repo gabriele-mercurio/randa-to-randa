@@ -131,7 +131,6 @@ export default {
       return m <= new Date().getMonth() + 1;
     },
     async sendProposal() {
-        console.log(this.data.appr.m);
         debugger;
       let data = {
         valueType: "PROP",

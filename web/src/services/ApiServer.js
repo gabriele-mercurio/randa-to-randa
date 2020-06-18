@@ -118,7 +118,7 @@ class ApiServer {
         store.commit("setToken", null);
         store.commit("setRegion", null);
         errorResponse.message = t('authentication_error');
-        window.location = "login";
+        window.location = "/login";
         break;
       case 422:
         errorResponse.message = "Errore nell'assoziazione dei dati.";
@@ -178,7 +178,7 @@ class ApiServer {
 
 if (process.browser) {
   window.onNuxtReady(({ $store, $t }) => {
-    console.log($t);
+    t = $t;
     store = $store;
   });
 }

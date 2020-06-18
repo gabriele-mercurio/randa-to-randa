@@ -28,6 +28,9 @@ class Retention
     /** @ORM\Column(name="value_type", type="string", length=4) */
     private $valueType;
 
+    /** @ORM\Column(type="string", length=2) */
+    private $timeslot;
+
     /** @ORM\Column(type="integer", nullable=true) */
     private $m1;
 
@@ -259,6 +262,19 @@ class Retention
     public function setM12(int $m12): self
     {
         $this->m12 = $m12;
+        return $this;
+    }
+
+    /** Get the value of timeslot*/
+    public function getTimeslot(): string
+    {
+        return $this->timeslot;
+    }
+
+    /** Set the value of timeslot */
+    public function setTimeslot(string $timeslot): self
+    {
+        $this->timeslot = $timeslot;
         return $this;
     }
 }

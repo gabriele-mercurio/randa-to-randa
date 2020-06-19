@@ -76,15 +76,19 @@ class RanaFormatter
      */
     public function formatData(Rana $rana): array
     {
-        $lifeCycle = Util::arrayGetValue($rana->getRanaLifecycles()->toArray(), 0);
-        $currentTimeslot = $lifeCycle->getCurrentTimeslot();
+        // $lifeCycle = Util::arrayGetValue($rana->getRanaLifecycles()->toArray(), 0);
+        //$currentTimeslot = $lifeCycle->getCurrentTimeslot();
+        $currentTimeslot = $rana->getRanda()->getCurrentTimeslot();
         $newMembers = array_filter($rana->getNewMembers()->toArray(), function ($newMember) use($currentTimeslot) {
             return $newMember->getTimeslot() == $currentTimeslot;
         });
+
         $renewedMembers = array_filter($rana->getRenewedMembers()->toArray(), function ($renewedMember) use($currentTimeslot) {
             return $renewedMember->getTimeslot() == $currentTimeslot;
         });
+
         $retentions = $rana->getRetentions()->toArray();
+
         $newMembersValues = [
             $this->newMemberRepository::NEW_MEMBER_VALUE_TYPE_APPROVED => [],
             $this->newMemberRepository::NEW_MEMBER_VALUE_TYPE_CONSUMPTIVE => [],
@@ -112,6 +116,8 @@ class RanaFormatter
                 return $newMember->getValueType() == $this->newMemberRepository::NEW_MEMBER_VALUE_TYPE_PROPOSED;
             }), 0, null)
         ];
+        file_put_contents("pippo", "3");
+
         $renewedMembers = [
             $this->renewedMemberRepository::RENEWED_MEMBER_VALUE_TYPE_APPROVED => Util::arrayGetValue(array_filter($renewedMembers, function ($renewedMember) {
                 return $renewedMember->getValueType() == $this->renewedMemberRepository::RENEWED_MEMBER_VALUE_TYPE_APPROVED;
@@ -134,6 +140,8 @@ class RanaFormatter
                 return $retention->getValueType() == $this->retentionRepository::RETENTION_VALUE_TYPE_PROPOSED;
             }), 0, null)
         ];
+        file_put_contents("pippo", "4");
+
         for ($i = 1; $i <= 12; $i++) {
             $method = "getM$i";
             foreach ([
@@ -146,12 +154,15 @@ class RanaFormatter
                 $retentionsValues[$type]["m$i"] = is_null($retentions[$type]) ? 0 : $retentions[$type]->$method() ?? 0;
             }
         }
+        file_put_contents("pippo", "5");
 
         $details = array_merge($this->format($rana), [
             'newMembers'     => $newMembersValues,
             'renewedMembers' => $renewedMembersValues,
             'retentions'     => $retentionsValues
         ]);
+        file_put_contents("pippo", "6");
+
 
         return $details;
     }

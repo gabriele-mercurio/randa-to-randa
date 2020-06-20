@@ -8,6 +8,7 @@ use App\Formatter\RandaFormatter;
 use App\Repository\DirectorRepository;
 use App\Repository\RandaRepository;
 use App\Repository\UserRepository;
+use App\Util\Constants;
 use App\Util\Util;
 use Nelmio\ApiDocBundle\Annotation\Security;
 use Swagger\Annotations as SWG;
@@ -19,6 +20,9 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class RandaController extends AbstractController
 {
+    /** @var Constants */
+    private $constants;
+
     /** @var DirectorRepository */
     private $directorRepository;
 
@@ -32,11 +36,13 @@ class RandaController extends AbstractController
     private $userRepository;
 
     public function __construct(
+        Constants $constants,
         DirectorRepository $directorRepository,
         RandaFormatter $randaFormatter,
         RandaRepository $randaRepository,
         UserRepository $userRepository
     ) {
+        $this->constants = $constants;
         $this->directorRepository = $directorRepository;
         $this->randaFormatter = $randaFormatter;
         $this->randaRepository = $randaRepository;
@@ -121,8 +127,8 @@ class RandaController extends AbstractController
         }
 
         if ($code == Response::HTTP_OK) {
-            $role = $isAdmin ? $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE : $role;
-            if ($role != $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE) {
+            $role = $isAdmin ? $this->constants::ROLE_EXECUTIVE : $role;
+            if ($role != $this->constants::ROLE_EXECUTIVE) {
                 $code = Response::HTTP_FORBIDDEN;
             }
         }
@@ -141,7 +147,7 @@ class RandaController extends AbstractController
 
         if ($code == Response::HTTP_OK) {
             $randa = new Randa();
-            $randa->setCurrentTimeslot($this->randaRepository::RANDA_CURRENT_TIMESLOT_T0);
+            $randa->setCurrentTimeslot($this->constants::TIMESLOT_T0);
             $randa->setRegion($region);
             $randa->setYear($currentYear);
             $this->randaRepository->save($randa);

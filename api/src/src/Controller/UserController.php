@@ -7,6 +7,7 @@ use App\Entity\User;
 use App\Formatter\UserFormatter;
 use App\Repository\DirectorRepository;
 use App\Repository\UserRepository;
+use App\Util\Constants;
 use App\Util\Util;
 use App\Util\Validator;
 use Nelmio\ApiDocBundle\Annotation\Security;
@@ -19,6 +20,9 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class UserController extends AbstractController
 {
+    /** @var Constants */
+    private $constants;
+
     /** @var DirectorRepository */
     private $directorRepository;
 
@@ -29,10 +33,12 @@ class UserController extends AbstractController
     private $userFormatter;
 
     public function __construct(
+        Constants $constants,
         DirectorRepository $directorRepository,
         UserRepository $userRepository,
         UserFormatter $userFormatter
     ) {
+        $this->constants = $constants;
         $this->directorRepository = $directorRepository;
         $this->userRepository = $userRepository;
         $this->userFormatter = $userFormatter;
@@ -167,7 +173,7 @@ class UserController extends AbstractController
             $u = is_null($actAsId) ? $performer : $actAs;
             $director = $this->directorRepository->findOneBy([
                 'user' => $u,
-                'role' => $this->directorRepository::DIRECTOR_ROLE_NATIONAL
+                'role' => $this->constants::ROLE_NATIONAL
             ]);
 
             if (is_null($director)) {

@@ -15,16 +15,6 @@ use Doctrine\ORM\EntityManagerInterface;
  */
 class RanaLifecycleRepository extends ServiceEntityRepository
 {
-    public const RANA_LIFECYCLE_CURRENT_TIMESLOT_T0 = 'T0';
-    public const RANA_LIFECYCLE_CURRENT_TIMESLOT_T1 = 'T1';
-    public const RANA_LIFECYCLE_CURRENT_TIMESLOT_T2 = 'T2';
-    public const RANA_LIFECYCLE_CURRENT_TIMESLOT_T3 = 'T3';
-    public const RANA_LIFECYCLE_CURRENT_TIMESLOT_T4 = 'T4';
-    public const RANA_LIFECYCLE_STATUS_APPROVED = 'APPROVED';
-    public const RANA_LIFECYCLE_STATUS_PROPOSED = 'PROPOSED';
-    public const RANA_LIFECYCLE_STATUS_REFUSED = 'REFUSED';
-    public const RANA_LIFECYCLE_STATUS_TODO = 'TODO';
-
     /** @var EntityManagerInterface */
     protected $entityManager;
 

@@ -15,12 +15,6 @@ use Doctrine\ORM\EntityManagerInterface;
  */
 class RevenueCostRepository extends ServiceEntityRepository
 {
-    public const REVENUE_COST_TYPE_BASEDIR = 'BaseDir';
-    public const REVENUE_COST_TYPE_NEW = 'Nuovo';
-    public const REVENUE_COST_TYPE_RENEWAL = 'Rinnovo';
-    public const REVENUE_COST_TYPE_ROYALTY = 'Royalty';
-    public const REVENUE_COST_TYPE_RS = 'RS';
-
     /** @var EntityManagerInterface */
     protected $entityManager;
 

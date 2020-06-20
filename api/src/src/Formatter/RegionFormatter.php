@@ -36,21 +36,6 @@ class RegionFormatter
         return $this->format($region);
     }
 
-
-
-    /**
-     * @param Region $region
-     *
-     * @return array
-     */
-    public function formatWithRole(Region $region, String $role): array
-    {
-        return  array_merge($this->format($region), [
-            'role' => $role
-        ]);
-    }
-
-
     /**
      * @param Region $region
      *

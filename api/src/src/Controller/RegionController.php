@@ -65,7 +65,7 @@ class RegionController extends AbstractController
     {
         $user = $this->getUser();
         $directors = $regions = [];
-        $regions_roles = [];
+        $regionsRoles = [];
 
         if ($user->isAdmin()) {
             $regions = $this->regionRepository->findAll();
@@ -88,7 +88,7 @@ class RegionController extends AbstractController
                 $regionId = $region->getId();
                 if (!array_key_exists($regionId, $regions)) {
                     $regions[$regionId] = $region;
-                    $regions_roles[$regionId] = $director->getRole();
+                    $regionsRoles[$regionId] = $director->getRole();
                 }
             }
             $regions = array_values($regions);
@@ -97,9 +97,10 @@ class RegionController extends AbstractController
             return $r1->getName() < $r2->getName() ? -1 : ($r1->getName() > $r2->getName() ? 1 : 0);
         });
 
-        return new JsonResponse(array_map(function ($region) use($regions_roles, $user) {
-            $role = $user->isAdmin() ? "ADMIN" : $regions_roles[$region->getId()];
-            return $this->regionFormatter->formatWithRole($region, $role);
+        return new JsonResponse(array_map(function ($region) use($regionsRoles, $user) {
+            return array_merge($this->regionFormatter->formatBase($region), [
+                'role' => $user->isAdmin() ? "ADMIN" : $regionsRoles[$region->getId()]
+            ]);
         }, $regions));
     }
 

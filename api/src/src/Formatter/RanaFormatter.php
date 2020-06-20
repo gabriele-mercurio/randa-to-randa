@@ -3,9 +3,7 @@
 namespace App\Formatter;
 
 use App\Entity\Rana;
-use App\Repository\NewMemberRepository;
-use App\Repository\RenewedMemberRepository;
-use App\Repository\RetentionRepository;
+use App\Util\Constants;
 use App\Util\Util;
 
 class RanaFormatter
@@ -13,31 +11,21 @@ class RanaFormatter
     /** @var ChapterFormatter */
     private $chapterFormatter;
 
-    /** @var NewMemberRepository */
-    private $newMemberRepository;
+    /** @var Constants */
+    private $constants;
 
     /** @var RandaFormatter */
     private $randaFormatter;
 
-    /** @var RenewedMemberRepository */
-    private $renewedMemberRepository;
-
-    /** @var RetentionRepository */
-    private $retentionRepository;
-
     /** RanaFormatter constructor */
     public function __construct(
         ChapterFormatter $chapterFormatter,
-        NewMemberRepository $newMemberRepository,
-        RandaFormatter $randaFormatter,
-        RenewedMemberRepository $renewedMemberRepository,
-        RetentionRepository $retentionRepository
+        Constants $constants,
+        RandaFormatter $randaFormatter
     ) {
         $this->chapterFormatter = $chapterFormatter;
-        $this->newMemberRepository = $newMemberRepository;
+        $this->constants = $constants;
         $this->randaFormatter = $randaFormatter;
-        $this->renewedMemberRepository = $renewedMemberRepository;
-        $this->retentionRepository = $retentionRepository;
     }
 
     /**
@@ -87,57 +75,59 @@ class RanaFormatter
             return $renewedMember->getTimeslot() == $currentTimeslot;
         });
 
-        $retentions = $rana->getRetentions()->toArray();
+        $retentions = array_filter($rana->getRetentions()->toArray(), function ($retention) use($currentTimeslot) {
+            return $retention->getTimeslot() == $currentTimeslot;
+        });
 
         $newMembersValues = [
-            $this->newMemberRepository::NEW_MEMBER_VALUE_TYPE_APPROVED => [],
-            $this->newMemberRepository::NEW_MEMBER_VALUE_TYPE_CONSUMPTIVE => [],
-            $this->newMemberRepository::NEW_MEMBER_VALUE_TYPE_PROPOSED => []
+            $this->constants::VALUE_TYPE_APPROVED => [],
+            $this->constants::VALUE_TYPE_CONSUMPTIVE => [],
+            $this->constants::VALUE_TYPE_PROPOSED => []
         ];
         $renewedMembersValues = [
-            $this->renewedMemberRepository::RENEWED_MEMBER_VALUE_TYPE_APPROVED => [],
-            $this->renewedMemberRepository::RENEWED_MEMBER_VALUE_TYPE_CONSUMPTIVE => [],
-            $this->renewedMemberRepository::RENEWED_MEMBER_VALUE_TYPE_PROPOSED => []
+            $this->constants::VALUE_TYPE_APPROVED => [],
+            $this->constants::VALUE_TYPE_CONSUMPTIVE => [],
+            $this->constants::VALUE_TYPE_PROPOSED => []
         ];
         $retentionsValues = [
-            $this->retentionRepository::RETENTION_VALUE_TYPE_APPROVED => [],
-            $this->retentionRepository::RETENTION_VALUE_TYPE_CONSUMPTIVE => [],
-            $this->retentionRepository::RETENTION_VALUE_TYPE_PROPOSED => []
+            $this->constants::VALUE_TYPE_APPROVED => [],
+            $this->constants::VALUE_TYPE_CONSUMPTIVE => [],
+            $this->constants::VALUE_TYPE_PROPOSED => []
         ];
 
         $newMembers = [
-            $this->newMemberRepository::NEW_MEMBER_VALUE_TYPE_APPROVED => Util::arrayGetValue(array_filter($newMembers, function ($newMember) {
-                return $newMember->getValueType() == $this->newMemberRepository::NEW_MEMBER_VALUE_TYPE_APPROVED;
+            $this->constants::VALUE_TYPE_APPROVED => Util::arrayGetValue(array_filter($newMembers, function ($newMember) {
+                return $newMember->getValueType() == $this->constants::VALUE_TYPE_APPROVED;
             }), 0, null),
-            $this->newMemberRepository::NEW_MEMBER_VALUE_TYPE_CONSUMPTIVE => Util::arrayGetValue(array_filter($newMembers, function ($newMember) {
-                return $newMember->getValueType() == $this->newMemberRepository::NEW_MEMBER_VALUE_TYPE_CONSUMPTIVE;
+            $this->constants::VALUE_TYPE_CONSUMPTIVE => Util::arrayGetValue(array_filter($newMembers, function ($newMember) {
+                return $newMember->getValueType() == $this->constants::VALUE_TYPE_CONSUMPTIVE;
             }), 0, null),
-            $this->newMemberRepository::NEW_MEMBER_VALUE_TYPE_PROPOSED => Util::arrayGetValue(array_filter($newMembers, function ($newMember) {
-                return $newMember->getValueType() == $this->newMemberRepository::NEW_MEMBER_VALUE_TYPE_PROPOSED;
+            $this->constants::VALUE_TYPE_PROPOSED => Util::arrayGetValue(array_filter($newMembers, function ($newMember) {
+                return $newMember->getValueType() == $this->constants::VALUE_TYPE_PROPOSED;
             }), 0, null)
         ];
         file_put_contents("pippo", "3");
 
         $renewedMembers = [
-            $this->renewedMemberRepository::RENEWED_MEMBER_VALUE_TYPE_APPROVED => Util::arrayGetValue(array_filter($renewedMembers, function ($renewedMember) {
-                return $renewedMember->getValueType() == $this->renewedMemberRepository::RENEWED_MEMBER_VALUE_TYPE_APPROVED;
+            $this->constants::VALUE_TYPE_APPROVED => Util::arrayGetValue(array_filter($renewedMembers, function ($renewedMember) {
+                return $renewedMember->getValueType() == $this->constants::VALUE_TYPE_APPROVED;
             }), 0, null),
-            $this->renewedMemberRepository::RENEWED_MEMBER_VALUE_TYPE_CONSUMPTIVE => Util::arrayGetValue(array_filter($renewedMembers, function ($renewedMember) {
-                return $renewedMember->getValueType() == $this->renewedMemberRepository::RENEWED_MEMBER_VALUE_TYPE_CONSUMPTIVE;
+            $this->constants::VALUE_TYPE_CONSUMPTIVE => Util::arrayGetValue(array_filter($renewedMembers, function ($renewedMember) {
+                return $renewedMember->getValueType() == $this->constants::VALUE_TYPE_CONSUMPTIVE;
             }), 0, null),
-            $this->renewedMemberRepository::RENEWED_MEMBER_VALUE_TYPE_PROPOSED => Util::arrayGetValue(array_filter($renewedMembers, function ($renewedMember) {
-                return $renewedMember->getValueType() == $this->renewedMemberRepository::RENEWED_MEMBER_VALUE_TYPE_PROPOSED;
+            $this->constants::VALUE_TYPE_PROPOSED => Util::arrayGetValue(array_filter($renewedMembers, function ($renewedMember) {
+                return $renewedMember->getValueType() == $this->constants::VALUE_TYPE_PROPOSED;
             }), 0, null)
         ];
         $retentions = [
-            $this->retentionRepository::RETENTION_VALUE_TYPE_APPROVED => Util::arrayGetValue(array_filter($retentions, function ($retention) {
-                return $retention->getValueType() == $this->retentionRepository::RETENTION_VALUE_TYPE_APPROVED;
+            $this->constants::VALUE_TYPE_APPROVED => Util::arrayGetValue(array_filter($retentions, function ($retention) {
+                return $retention->getValueType() == $this->constants::VALUE_TYPE_APPROVED;
             }), 0, null),
-            $this->retentionRepository::RETENTION_VALUE_TYPE_CONSUMPTIVE => Util::arrayGetValue(array_filter($retentions, function ($retention) {
-                return $retention->getValueType() == $this->retentionRepository::RETENTION_VALUE_TYPE_CONSUMPTIVE;
+            $this->constants::VALUE_TYPE_CONSUMPTIVE => Util::arrayGetValue(array_filter($retentions, function ($retention) {
+                return $retention->getValueType() == $this->constants::VALUE_TYPE_CONSUMPTIVE;
             }), 0, null),
-            $this->retentionRepository::RETENTION_VALUE_TYPE_PROPOSED => Util::arrayGetValue(array_filter($retentions, function ($retention) {
-                return $retention->getValueType() == $this->retentionRepository::RETENTION_VALUE_TYPE_PROPOSED;
+            $this->constants::VALUE_TYPE_PROPOSED => Util::arrayGetValue(array_filter($retentions, function ($retention) {
+                return $retention->getValueType() == $this->constants::VALUE_TYPE_PROPOSED;
             }), 0, null)
         ];
         file_put_contents("pippo", "4");
@@ -145,9 +135,9 @@ class RanaFormatter
         for ($i = 1; $i <= 12; $i++) {
             $method = "getM$i";
             foreach ([
-                $this->newMemberRepository::NEW_MEMBER_VALUE_TYPE_APPROVED,
-                $this->newMemberRepository::NEW_MEMBER_VALUE_TYPE_CONSUMPTIVE,
-                $this->newMemberRepository::NEW_MEMBER_VALUE_TYPE_PROPOSED
+                $this->constants::VALUE_TYPE_APPROVED,
+                $this->constants::VALUE_TYPE_CONSUMPTIVE,
+                $this->constants::VALUE_TYPE_PROPOSED
             ] as $type) {
                 $newMembersValues[$type]["m$i"] = is_null($newMembers[$type]) ? 0 : $newMembers[$type]->$method() ?? 0;
                 $renewedMembersValues[$type]["m$i"] = is_null($renewedMembers[$type]) ? 0 : $renewedMembers[$type]->$method() ?? 0;

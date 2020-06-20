@@ -15,12 +15,6 @@ use Doctrine\ORM\EntityManagerInterface;
  */
 class TrafficLightRepository extends ServiceEntityRepository
 {
-    public const TRAFFIC_LIGHT_TIMESLOT_T0 = 'T0';
-    public const TRAFFIC_LIGHT_TIMESLOT_T1 = 'T1';
-    public const TRAFFIC_LIGHT_TIMESLOT_T2 = 'T2';
-    public const TRAFFIC_LIGHT_TIMESLOT_T3 = 'T3';
-    public const TRAFFIC_LIGHT_TIMESLOT_T4 = 'T4';
-
     /** @var EntityManagerInterface */
     protected $entityManager;
 

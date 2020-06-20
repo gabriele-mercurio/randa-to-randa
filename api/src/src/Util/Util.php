@@ -4,7 +4,6 @@ namespace App\Util;
 
 use DateTime;
 use DateTimeZone;
-use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\HttpFoundation\Request;
 use Webmozart\PathUtil\Path;
 

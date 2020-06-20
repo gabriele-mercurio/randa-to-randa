@@ -22,7 +22,15 @@ class Utils {
   }
 
   static getCurrentTimeslot() {
+    return "T" + this.getNumericTimeslot();;
+  }
+
+  static getNumericTimeslot() {
     let month = new Date().getMonth() + 1;
+    return Math.ceil(month / 3);
+  }
+
+  static getTimeslotFromMonth(month) {
     return Math.ceil(month/3);
   }
 }

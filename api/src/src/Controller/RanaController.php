@@ -755,7 +755,9 @@ class RanaController extends AbstractController
                 $this->renewedMemberRepository->save($renewedMembers);
             }
             $ranaLifeCycle = Util::arrayGetValue($rana->getRanaLifecycles()->toArray(), 0);
-            $ranaLifeCycle->setCurrentTimeslot($timeslot);
+
+
+            //$ranaLifeCycle->setCurrentTimeslot($timeslot);
 
             $this->entityManager->flush();
 

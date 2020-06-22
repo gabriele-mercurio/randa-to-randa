@@ -117,16 +117,13 @@ class ApiServer {
       case 401:
         store.commit("setToken", null);
         store.commit("setRegion", null);
-        errorResponse.message = t('authentication_error');
-        window.location = "/login";
+        window.location = window.location.origin + "/login";
         break;
       case 422:
         errorResponse.message = "Errore nell'assoziazione dei dati.";
         break;
       case 403:
         errorResponse.message = "Non autorizzato";
-      default:
-        //window.location = "login";
         break;
     }
     return errorResponse;

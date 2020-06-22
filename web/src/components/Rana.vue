@@ -138,11 +138,12 @@ export default {
     async sendProposal() {
       let data = {
         valueType: "PROP",
-        timeslot: "T" + this.currentTimeslot
+        timeslot: "T" + Utils.getNumericTimeslot() + 1
       };
 
-      for (let i = 0; i < 12; i++) {
-        data["m" + (i + 1)] = this.data.PREV[i];
+      let firstMonth = Utils.getFirstMonthFromTimeslot(this.currentTimeslot);
+      for (let i = firstMonth; i <= 12; i++) {
+        data["m" + i] = this.data.PREV["m" + i];
       }
       let result = await ApiServer.post(this.rana.id + "/rana-renewed", data);
     },
@@ -155,8 +156,8 @@ export default {
       let t = Math.ceil(m / 3);
       let startFrom = (t - 1) * 3 + 1;
       let value = 0;
-      for (let i = startFrom; i <= startFrom + 3; i++) {
-        value += (this.data.PREV[i] || 0) * 1;
+      for (let i = startFrom; i < startFrom + 3; i++) {
+        value += (this.data.PREV["m" + i] || 0) * 1;
       }
       this.$set(this.timeslotAggregations.PREV, t, value);
     },
@@ -180,7 +181,7 @@ export default {
 
         let startFrom = (t - 1) * 3 + 1;
         for (let i = 0; i < months.length; i++) {
-          this.$set(this.data.PREV, startFrom + i, months[i]);
+          this.$set(this.data.PREV, "m" + (startFrom + i), months[i]);
         }
       }
     }
@@ -200,10 +201,9 @@ export default {
       //calculate timeslots
       let sum_prev = 0;
       let sum_cons = 0;
-      debugger;
       for (let i = 0; i < 12; i++) {
-        sum_prev += this.data.PREV["m" + i] || 0;
-        sum_cons += this.data.CONS["m" + i] || 0;
+        sum_prev += (this.data.PREV["m" + i] || 0 ) * 1;
+        sum_cons += (this.data.CONS["m" + i] || 0 ) * 1;
         if (i % 3 == 0) {
           this.timeslotAggregations.PREV.push(sum_prev);
           this.timeslotAggregations.CONS.push(sum_cons);

@@ -28,6 +28,21 @@ class RanaFormatter
         $this->randaFormatter = $randaFormatter;
     }
 
+    private static function divideByValueTypes(array $objects): array
+    {
+        return [
+            Constants::VALUE_TYPE_APPROVED => Util::arrayGetValue(array_filter($objects, function ($object) {
+                return $object->getValueType() == Constants::VALUE_TYPE_APPROVED;
+            }), 0, null),
+            Constants::VALUE_TYPE_CONSUMPTIVE => Util::arrayGetValue(array_filter($objects, function ($object) {
+                return $object->getValueType() == Constants::VALUE_TYPE_CONSUMPTIVE;
+            }), 0, null),
+            Constants::VALUE_TYPE_PROPOSED => Util::arrayGetValue(array_filter($objects, function ($object) {
+                return $object->getValueType() == Constants::VALUE_TYPE_PROPOSED;
+            }), 0, null)
+        ];
+    }
+
     /**
      * @param Rana $rana
      *
@@ -64,73 +79,22 @@ class RanaFormatter
      */
     public function formatData(Rana $rana): array
     {
-        // $lifeCycle = Util::arrayGetValue($rana->getRanaLifecycles()->toArray(), 0);
-        //$currentTimeslot = $lifeCycle->getCurrentTimeslot();
-        $currentTimeslot = $rana->getRanda()->getCurrentTimeslot();
-        $newMembers = array_filter($rana->getNewMembers()->toArray(), function ($newMember) use($currentTimeslot) {
-            return $newMember->getTimeslot() == $currentTimeslot;
-        });
+        $lifeCycle = Util::arrayGetValue($rana->getRanaLifecycles()->toArray(), 0);
+        $currentTimeslot = $lifeCycle->getCurrentTimeslot();
 
-        $renewedMembers = array_filter($rana->getRenewedMembers()->toArray(), function ($renewedMember) use($currentTimeslot) {
-            return $renewedMember->getTimeslot() == $currentTimeslot;
-        });
+        $newMembers = static::getCurrentTimeslotData($rana->getNewMembers()->toArray(), $currentTimeslot);
+        $renewedMembers = static::getCurrentTimeslotData($rana->getRenewedMembers()->toArray(), $currentTimeslot);
+        $retentions = static::getCurrentTimeslotData($rana->getRetentions()->toArray(), $currentTimeslot);
 
-        $retentions = array_filter($rana->getRetentions()->toArray(), function ($retention) use($currentTimeslot) {
-            return $retention->getTimeslot() == $currentTimeslot;
-        });
-
-        $newMembersValues = [
-            $this->constants::VALUE_TYPE_APPROVED => [],
-            $this->constants::VALUE_TYPE_CONSUMPTIVE => [],
-            $this->constants::VALUE_TYPE_PROPOSED => []
-        ];
-        $renewedMembersValues = [
-            $this->constants::VALUE_TYPE_APPROVED => [],
-            $this->constants::VALUE_TYPE_CONSUMPTIVE => [],
-            $this->constants::VALUE_TYPE_PROPOSED => []
-        ];
-        $retentionsValues = [
+        $newMembersValues = $renewedMembersValues = $retentionsValues = [
             $this->constants::VALUE_TYPE_APPROVED => [],
             $this->constants::VALUE_TYPE_CONSUMPTIVE => [],
             $this->constants::VALUE_TYPE_PROPOSED => []
         ];
 
-        $newMembers = [
-            $this->constants::VALUE_TYPE_APPROVED => Util::arrayGetValue(array_filter($newMembers, function ($newMember) {
-                return $newMember->getValueType() == $this->constants::VALUE_TYPE_APPROVED;
-            }), 0, null),
-            $this->constants::VALUE_TYPE_CONSUMPTIVE => Util::arrayGetValue(array_filter($newMembers, function ($newMember) {
-                return $newMember->getValueType() == $this->constants::VALUE_TYPE_CONSUMPTIVE;
-            }), 0, null),
-            $this->constants::VALUE_TYPE_PROPOSED => Util::arrayGetValue(array_filter($newMembers, function ($newMember) {
-                return $newMember->getValueType() == $this->constants::VALUE_TYPE_PROPOSED;
-            }), 0, null)
-        ];
-        file_put_contents("pippo", "3");
-
-        $renewedMembers = [
-            $this->constants::VALUE_TYPE_APPROVED => Util::arrayGetValue(array_filter($renewedMembers, function ($renewedMember) {
-                return $renewedMember->getValueType() == $this->constants::VALUE_TYPE_APPROVED;
-            }), 0, null),
-            $this->constants::VALUE_TYPE_CONSUMPTIVE => Util::arrayGetValue(array_filter($renewedMembers, function ($renewedMember) {
-                return $renewedMember->getValueType() == $this->constants::VALUE_TYPE_CONSUMPTIVE;
-            }), 0, null),
-            $this->constants::VALUE_TYPE_PROPOSED => Util::arrayGetValue(array_filter($renewedMembers, function ($renewedMember) {
-                return $renewedMember->getValueType() == $this->constants::VALUE_TYPE_PROPOSED;
-            }), 0, null)
-        ];
-        $retentions = [
-            $this->constants::VALUE_TYPE_APPROVED => Util::arrayGetValue(array_filter($retentions, function ($retention) {
-                return $retention->getValueType() == $this->constants::VALUE_TYPE_APPROVED;
-            }), 0, null),
-            $this->constants::VALUE_TYPE_CONSUMPTIVE => Util::arrayGetValue(array_filter($retentions, function ($retention) {
-                return $retention->getValueType() == $this->constants::VALUE_TYPE_CONSUMPTIVE;
-            }), 0, null),
-            $this->constants::VALUE_TYPE_PROPOSED => Util::arrayGetValue(array_filter($retentions, function ($retention) {
-                return $retention->getValueType() == $this->constants::VALUE_TYPE_PROPOSED;
-            }), 0, null)
-        ];
-        file_put_contents("pippo", "4");
+        $newMembers = static::divideByValueTypes($newMembers);
+        $renewedMembers = static::divideByValueTypes($renewedMembers);
+        $retentions = static::divideByValueTypes($retentions);
 
         for ($i = 1; $i <= 12; $i++) {
             $method = "getM$i";
@@ -144,15 +108,12 @@ class RanaFormatter
                 $retentionsValues[$type]["m$i"] = is_null($retentions[$type]) ? 0 : $retentions[$type]->$method() ?? 0;
             }
         }
-        file_put_contents("pippo", "5");
 
         $details = array_merge($this->format($rana), [
             'newMembers'     => $newMembersValues,
             'renewedMembers' => $renewedMembersValues,
             'retentions'     => $retentionsValues
         ]);
-        file_put_contents("pippo", "6");
-
 
         return $details;
     }
@@ -170,5 +131,12 @@ class RanaFormatter
         ]);
 
         return $details;
+    }
+
+    private static function getCurrentTimeslotData(array $objects, string $currentTimeslot): array
+    {
+        return array_filter($objects, function ($object) use($currentTimeslot) {
+            return $object->getTimeslot() == $currentTimeslot;
+        });
     }
 }

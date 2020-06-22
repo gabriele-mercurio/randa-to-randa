@@ -590,7 +590,7 @@ class RanaController extends AbstractController
             if (!in_array($timeslot, $availableTimeslots)) {
                 $errorFields['timeslot'] = "invalid";
             } else {
-                $slotNumber = (int)substr($timeslot, -1);
+                $slotNumber = (int) substr($timeslot, -1);
                 $nextSlotNumber = $slotNumber + 1;
                 $nextTimeslot = "T$nextSlotNumber";
                 $nextRenewedMembers = $this->renewedMemberRepository->findBy([
@@ -629,7 +629,7 @@ class RanaController extends AbstractController
                             if ($timeslot == $this->constants::TIMESLOT_T0) {
                                 $errorFields['valueType'] = "invalid";
                             }
-                        break;
+                            break;
                         case $this->constants::VALUE_TYPE_APPROVED:
                             if ($role != $this->constants::ROLE_EXECUTIVE) {
                                 $code = Response::HTTP_FORBIDDEN;
@@ -646,7 +646,7 @@ class RanaController extends AbstractController
                             if ($timeslot == $this->constants::TIMESLOT_T4) {
                                 $errorFields['valueType'] = "invalid";
                             }
-                        break;
+                            break;
                         case $this->constants::VALUE_TYPE_PROPOSED:
                             $lastRenewed = $this->renewedMemberRepository->findBy([
                                 'rana' => $rana,
@@ -662,7 +662,7 @@ class RanaController extends AbstractController
                             if ($timeslot == $this->constants::TIMESLOT_T4) {
                                 $errorFields['valueType'] = "invalid";
                             }
-                        break;
+                            break;
                     }
                 }
             }
@@ -762,7 +762,7 @@ class RanaController extends AbstractController
             }
 
             $ranaLifeCycle = Util::arrayGetValue($rana->getRanaLifecycles()->toArray(), 0);
-            //$ranaLifeCycle->setCurrentTimeslot($timeslot);
+            $ranaLifeCycle->setCurrentTimeslot($timeslot);
 
             $this->entityManager->flush();
 

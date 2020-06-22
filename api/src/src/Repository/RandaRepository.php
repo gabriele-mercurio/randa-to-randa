@@ -15,12 +15,6 @@ use Doctrine\ORM\EntityManagerInterface;
  */
 class RandaRepository extends ServiceEntityRepository
 {
-    public const RANDA_CURRENT_TIMESLOT_T0 = 'T0';
-    public const RANDA_CURRENT_TIMESLOT_T1 = 'T1';
-    public const RANDA_CURRENT_TIMESLOT_T2 = 'T2';
-    public const RANDA_CURRENT_TIMESLOT_T3 = 'T3';
-    public const RANDA_CURRENT_TIMESLOT_T4 = 'T4';
-
     /** @var EntityManagerInterface */
     protected $entityManager;
 

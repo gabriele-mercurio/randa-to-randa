@@ -3,7 +3,7 @@
 namespace App\DataFixtures;
 
 use App\Entity\Director;
-use App\Repository\DirectorRepository;
+use App\Util\Constants;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
@@ -12,13 +12,13 @@ class DirectorFixtures extends Fixture implements DependentFixtureInterface
 {
     const CREATED_QUANTITY = 60;
 
-    /** @var DirectorRepository */
-    private $directorRepository;
+    /** @var Constants */
+    private $constants;
 
     public function __construct(
-        DirectorRepository $directorRepository
+        Constants $constants
     ) {
-        $this->directorRepository = $directorRepository;
+        $this->constants = $constants;
     }
 
     public function getDependencies()
@@ -41,13 +41,13 @@ class DirectorFixtures extends Fixture implements DependentFixtureInterface
             $rand = mt_rand(1, 6);
             switch (true) {
                 case $rand == 1:
-                    $role = $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE;
+                    $role = $this->constants::ROLE_EXECUTIVE;
                 break;
                 case $rand > 1 && $rand < 4:
-                    $role = $this->directorRepository::DIRECTOR_ROLE_AREA;
+                    $role = $this->constants::ROLE_AREA;
                 break;
                 case $rand >= 4:
-                    $role = $this->directorRepository::DIRECTOR_ROLE_ASSISTANT;
+                    $role = $this->constants::ROLE_ASSISTANT;
                 break;
             }
 
@@ -58,7 +58,7 @@ class DirectorFixtures extends Fixture implements DependentFixtureInterface
             $director->setAreaPercentage(25);
             $director->setGreyLightPercentage(10);
             $director->setLaunchPercentage(25);
-            $director->setPayType(mt_rand(1, 2) == 1 ? $this->directorRepository::DIRECTOR_PAY_TYPE_ANNUAL : $this->directorRepository::DIRECTOR_PAY_TYPE_MONTHLY);
+            $director->setPayType(mt_rand(1, 2) == 1 ? $this->constants::PAY_TYPE_ANNUAL : $this->constants::PAY_TYPE_MONTHLY);
             $director->setRedLightPercentage(15);
             $director->setRegion($region);
             $director->setRole($role);
@@ -68,9 +68,9 @@ class DirectorFixtures extends Fixture implements DependentFixtureInterface
             $manager->persist($director);
             $this->addReference("Director_$i", $director);
 
-            if ($role == $this->directorRepository::DIRECTOR_ROLE_AREA) {
+            if ($role == $this->constants::ROLE_AREA) {
                 $areaDirectors[] = $director;
-            } elseif ($role == $this->directorRepository::DIRECTOR_ROLE_ASSISTANT) {
+            } elseif ($role == $this->constants::ROLE_ASSISTANT) {
                 $assistantDirectors[] = $director;
             }
         }

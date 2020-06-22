@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\Director;
 use App\Entity\Region;
 use App\Entity\User;
+use App\Util\Constants;
 use App\Util\Util;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -13,7 +14,7 @@ use Swift_Mailer;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Twig\Environment;
-use Exception;
+
 /**
  * @method Director|null find($id, $lockMode = null, $lockVersion = null)
  * @method Director|null findOneBy(array $criteria, array $orderBy = null)
@@ -22,12 +23,8 @@ use Exception;
  */
 class DirectorRepository extends ServiceEntityRepository
 {
-    public const DIRECTOR_PAY_TYPE_ANNUAL = 'ANNUAL';
-    public const DIRECTOR_PAY_TYPE_MONTHLY = 'MONTHLY';
-    public const DIRECTOR_ROLE_AREA = 'AREA';
-    public const DIRECTOR_ROLE_ASSISTANT = 'ASSISTANT';
-    public const DIRECTOR_ROLE_EXECUTIVE = 'EXECUTIVE';
-    public const DIRECTOR_ROLE_NATIONAL = 'NATIONAL';
+    /** @var Constants */
+    protected $constants;
 
     /** @var EntityManagerInterface */
     protected $entityManager;
@@ -42,6 +39,7 @@ class DirectorRepository extends ServiceEntityRepository
     private $translator;
 
     public function __construct(
+        Constants $constants,
         EntityManagerInterface $entityManager,
         Environment $twig,
         ManagerRegistry $registry,
@@ -49,6 +47,7 @@ class DirectorRepository extends ServiceEntityRepository
         TranslatorInterface $translator
     ) {
         parent::__construct($registry, Director::class);
+        $this->constants = $constants;
         $this->entityManager = $entityManager;
         $this->mailer = $mailer;
         $this->translator = $translator;
@@ -89,16 +88,16 @@ class DirectorRepository extends ServiceEntityRepository
 
             if (count($directors) > 1) {
 
-                $maxFoundedRole = $this::DIRECTOR_ROLE_ASSISTANT;
-                
+                $maxFoundedRole = $this->constants::ROLE_ASSISTANT;
+
                 foreach ($directors as $director) {
                     $role = $director->getRole();
-                    if ($role == $this::DIRECTOR_ROLE_EXECUTIVE) {
-                        $maxFoundedRole = $this::DIRECTOR_ROLE_EXECUTIVE;
+                    if ($role == $this->constants::ROLE_EXECUTIVE) {
+                        $maxFoundedRole = $this->constants::ROLE_EXECUTIVE;
                         break;
                     }
-                    if ($role == $this::DIRECTOR_ROLE_AREA) {
-                        $maxFoundedRole = $this::DIRECTOR_ROLE_AREA;
+                    if ($role == $this->constants::ROLE_AREA) {
+                        $maxFoundedRole = $this->constants::ROLE_AREA;
                     }
                 }
                 $directors = array_filter($directors, function ($d) use($maxFoundedRole) {
@@ -106,7 +105,7 @@ class DirectorRepository extends ServiceEntityRepository
                 });
 
             }
-            
+
             $response['director'] = Util::arrayGetValue($directors, 0, null);
 
         } else {
@@ -116,7 +115,7 @@ class DirectorRepository extends ServiceEntityRepository
             } else {
 
                 unset($params['region']);
-                $params['role'] = $this::DIRECTOR_ROLE_NATIONAL;
+                $params['role'] = $this->constants::ROLE_NATIONAL;
                 $directors = $this->findBy($params);
 
                 if (!empty($directors)) {

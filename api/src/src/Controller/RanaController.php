@@ -13,6 +13,7 @@ use App\Repository\RanaRepository;
 use App\Repository\RandaRepository;
 use App\Repository\RenewedMemberRepository;
 use App\Repository\UserRepository;
+use App\Util\Constants;
 use App\Util\Util;
 use Doctrine\ORM\EntityManagerInterface;
 use Nelmio\ApiDocBundle\Annotation\Security;
@@ -25,6 +26,9 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class RanaController extends AbstractController
 {
+    /** @var Constants */
+    private $constants;
+
     /** @var DirectorRepository */
     private $directorRepository;
 
@@ -50,6 +54,7 @@ class RanaController extends AbstractController
     private $userRepository;
 
     public function __construct(
+        Constants $constants,
         DirectorRepository $directorRepository,
         EntityManagerInterface $entityManager,
         RanaFormatter $ranaFormatter,
@@ -59,6 +64,7 @@ class RanaController extends AbstractController
         RenewedMemberRepository $renewedMemberRepository,
         UserRepository $userRepository
     ) {
+        $this->constants = $constants;
         $this->directorRepository = $directorRepository;
         $this->entityManager = $entityManager;
         $this->ranaFormatter = $ranaFormatter;
@@ -188,11 +194,11 @@ class RanaController extends AbstractController
         }
 
         if ($code == Response::HTTP_OK) {
-            $role = $isAdmin ? $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE : $role;
+            $role = $isAdmin ? $this->constants::ROLE_EXECUTIVE : $role;
             if (!in_array($role, [
-                $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE,
-                $this->directorRepository::DIRECTOR_ROLE_AREA,
-                $this->directorRepository::DIRECTOR_ROLE_ASSISTANT
+                $this->constants::ROLE_EXECUTIVE,
+                $this->constants::ROLE_AREA,
+                $this->constants::ROLE_ASSISTANT
             ])) {
                 $code = Response::HTTP_FORBIDDEN;
             }
@@ -228,8 +234,8 @@ class RanaController extends AbstractController
             $this->ranaRepository->save($rana);
 
             $ranaLifeCycle = new RanaLifecycle();
-            $ranaLifeCycle->setCurrentState($this->ranaLifeCycleRepository::RANA_LIFECYCLE_STATUS_TODO);
-            $ranaLifeCycle->setCurrentTimeslot($this->ranaLifeCycleRepository::RANA_LIFECYCLE_CURRENT_TIMESLOT_T0);
+            $ranaLifeCycle->setCurrentState($this->constants::RANA_LIFECYCLE_STATUS_TODO);
+            $ranaLifeCycle->setCurrentTimeslot($this->constants::TIMESLOT_T0);
             $ranaLifeCycle->setRana($rana);
             $this->ranaLifeCycleRepository->save($ranaLifeCycle);
 
@@ -543,22 +549,22 @@ class RanaController extends AbstractController
         }
 
         if ($code == Response::HTTP_OK) {
-            $role = $isAdmin ? $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE : $role;
+            $role = $isAdmin ? $this->constants::ROLE_EXECUTIVE : $role;
             if (!in_array($role, [
-                $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE,
-                $this->directorRepository::DIRECTOR_ROLE_AREA,
-                $this->directorRepository::DIRECTOR_ROLE_ASSISTANT
+                $this->constants::ROLE_EXECUTIVE,
+                $this->constants::ROLE_AREA,
+                $this->constants::ROLE_ASSISTANT
             ])) {
                 $code = Response::HTTP_FORBIDDEN;
             }
         }
 
         if ($code == Response::HTTP_OK && !$isAdmin) {
-            if ($role == $this->directorRepository::DIRECTOR_ROLE_ASSISTANT && $chapter->getDirector() != $director) {
+            if ($role == $this->constants::ROLE_ASSISTANT && $chapter->getDirector() != $director) {
                 $code = Response::HTTP_FORBIDDEN;
             }
 
-            if ($role == $this->directorRepository::DIRECTOR_ROLE_AREA && $chapter->getDirector()->getSupervisor() != $director) {
+            if ($role == $this->constants::ROLE_AREA && $chapter->getDirector()->getSupervisor() != $director) {
                 $code = Response::HTTP_FORBIDDEN;
             }
         }
@@ -569,16 +575,16 @@ class RanaController extends AbstractController
             $errorFields = [];
 
             $availableTimeslots = [
-                $this->renewedMemberRepository::RENEWED_MEMBER_TIMESLOT_T0,
-                $this->renewedMemberRepository::RENEWED_MEMBER_TIMESLOT_T1,
-                $this->renewedMemberRepository::RENEWED_MEMBER_TIMESLOT_T2,
-                $this->renewedMemberRepository::RENEWED_MEMBER_TIMESLOT_T3,
-                $this->renewedMemberRepository::RENEWED_MEMBER_TIMESLOT_T4
+                $this->constants::TIMESLOT_T0,
+                $this->constants::TIMESLOT_T1,
+                $this->constants::TIMESLOT_T2,
+                $this->constants::TIMESLOT_T3,
+                $this->constants::TIMESLOT_T4
             ];
             $availableValueTypes = [
-                $this->renewedMemberRepository::RENEWED_MEMBER_VALUE_TYPE_APPROVED,
-                $this->renewedMemberRepository::RENEWED_MEMBER_VALUE_TYPE_CONSUMPTIVE,
-                $this->renewedMemberRepository::RENEWED_MEMBER_VALUE_TYPE_PROPOSED
+                $this->constants::VALUE_TYPE_APPROVED,
+                $this->constants::VALUE_TYPE_CONSUMPTIVE,
+                $this->constants::VALUE_TYPE_PROPOSED
             ];
 
             if (!in_array($timeslot, $availableTimeslots)) {
@@ -591,8 +597,8 @@ class RanaController extends AbstractController
                     'rana' => $rana,
                     'timeslot' => $nextTimeslot,
                     'valueType' => [
-                        $this->renewedMemberRepository::RENEWED_MEMBER_VALUE_TYPE_APPROVED,
-                        $this->renewedMemberRepository::RENEWED_MEMBER_VALUE_TYPE_CONSUMPTIVE
+                        $this->constants::VALUE_TYPE_APPROVED,
+                        $this->constants::VALUE_TYPE_CONSUMPTIVE
                     ]
                 ]);
 
@@ -619,41 +625,41 @@ class RanaController extends AbstractController
                     $errorFields['valueType'] = "invalid";
                 } else {
                     switch ($valueType) {
-                        case $this->renewedMemberRepository::RENEWED_MEMBER_VALUE_TYPE_CONSUMPTIVE:
-                            if ($timeslot == $this->renewedMemberRepository::RENEWED_MEMBER_TIMESLOT_T0) {
+                        case $this->constants::VALUE_TYPE_CONSUMPTIVE:
+                            if ($timeslot == $this->constants::TIMESLOT_T0) {
                                 $errorFields['valueType'] = "invalid";
                             }
                         break;
-                        case $this->renewedMemberRepository::RENEWED_MEMBER_VALUE_TYPE_APPROVED:
-                            if ($role != $this->directorRepository::DIRECTOR_ROLE_EXECUTIVE) {
+                        case $this->constants::VALUE_TYPE_APPROVED:
+                            if ($role != $this->constants::ROLE_EXECUTIVE) {
                                 $code = Response::HTTP_FORBIDDEN;
                             } else {
                                 $lastRenewed = $this->renewedMemberRepository->findOneBy([
                                     'rana' => $rana,
                                     'timeslot' => $timeslot,
-                                    'valueType' => $this->renewedMemberRepository::RENEWED_MEMBER_VALUE_TYPE_CONSUMPTIVE
+                                    'valueType' => $this->constants::VALUE_TYPE_CONSUMPTIVE
                                 ]);
                                 if (!is_null($lastRenewed)) {
                                     $errorFields['valueType'] = "invalid";
                                 }
                             }
-                            if ($timeslot == $this->renewedMemberRepository::RENEWED_MEMBER_TIMESLOT_T4) {
+                            if ($timeslot == $this->constants::TIMESLOT_T4) {
                                 $errorFields['valueType'] = "invalid";
                             }
                         break;
-                        case $this->renewedMemberRepository::RENEWED_MEMBER_VALUE_TYPE_PROPOSED:
+                        case $this->constants::VALUE_TYPE_PROPOSED:
                             $lastRenewed = $this->renewedMemberRepository->findBy([
                                 'rana' => $rana,
                                 'timeslot' => $timeslot,
                                 'valueType' => [
-                                    $this->renewedMemberRepository::RENEWED_MEMBER_VALUE_TYPE_CONSUMPTIVE,
-                                    $this->renewedMemberRepository::RENEWED_MEMBER_VALUE_TYPE_APPROVED
+                                    $this->constants::VALUE_TYPE_CONSUMPTIVE,
+                                    $this->constants::VALUE_TYPE_APPROVED
                                 ]
                             ]);
                             if (!empty($lastRenewed)) {
                                 $errorFields['valueType'] = "invalid";
                             }
-                            if ($timeslot == $this->renewedMemberRepository::RENEWED_MEMBER_TIMESLOT_T4) {
+                            if ($timeslot == $this->constants::TIMESLOT_T4) {
                                 $errorFields['valueType'] = "invalid";
                             }
                         break;
@@ -681,69 +687,69 @@ class RanaController extends AbstractController
             $renewedMembers->setTimeslot($timeslot);
             $renewedMembers->setValueType($valueType);
 
-            if ($valueType == $this->renewedMemberRepository::RENEWED_MEMBER_VALUE_TYPE_CONSUMPTIVE) {
+            if ($valueType == $this->constants::VALUE_TYPE_CONSUMPTIVE) {
                 switch ($timeslot) {
-                    case $this->renewedMemberRepository::RENEWED_MEMBER_TIMESLOT_T4:
+                    case $this->constants::TIMESLOT_T4:
                         $previous = $this->renewedMemberRepository->findOneBy([
                             'rana' => $rana,
                             'valueType' => $valueType,
-                            'timeslot' => $this->renewedMemberRepository::RENEWED_MEMBER_TIMESLOT_T3
+                            'timeslot' => $this->constants::TIMESLOT_T3
                         ]);
                         $renewedMembers->setM12($request->get("m12") ?? ($previous ? $previous->getM12() : 0));
                         $renewedMembers->setM11($request->get("m11") ?? ($previous ? $previous->getM11() : 0));
                         $renewedMembers->setM10($request->get("m10") ?? ($previous ? $previous->getM10() : 0));
-                    case $this->renewedMemberRepository::RENEWED_MEMBER_TIMESLOT_T3:
+                    case $this->constants::TIMESLOT_T3:
                         $previous = $this->renewedMemberRepository->findOneBy([
                             'rana' => $rana,
                             'valueType' => $valueType,
-                            'timeslot' => $this->renewedMemberRepository::RENEWED_MEMBER_TIMESLOT_T2
+                            'timeslot' => $this->constants::TIMESLOT_T2
                         ]);
                         $renewedMembers->setM9($request->get("m9") ?? ($previous ? $previous->getM9() : 0));
                         $renewedMembers->setM8($request->get("m8") ?? ($previous ? $previous->getM8() : 0));
                         $renewedMembers->setM7($request->get("m7") ?? ($previous ? $previous->getM7() : 0));
-                    case $this->renewedMemberRepository::RENEWED_MEMBER_TIMESLOT_T2:
+                    case $this->constants::TIMESLOT_T2:
                         $previous = $this->renewedMemberRepository->findOneBy([
                             'rana' => $rana,
                             'valueType' => $valueType,
-                            'timeslot' => $this->renewedMemberRepository::RENEWED_MEMBER_TIMESLOT_T1
+                            'timeslot' => $this->constants::TIMESLOT_T1
                         ]);
                         $renewedMembers->setM6($request->get("m6") ?? ($previous ? $previous->getM6() : 0));
                         $renewedMembers->setM5($request->get("m5") ?? ($previous ? $previous->getM5() : 0));
                         $renewedMembers->setM4($request->get("m4") ?? ($previous ? $previous->getM4() : 0));
-                    case $this->renewedMemberRepository::RENEWED_MEMBER_TIMESLOT_T1:
+                    case $this->constants::TIMESLOT_T1:
                         $renewedMembers->setM3($request->get("m3") ?? 0);
                         $renewedMembers->setM2($request->get("m2") ?? 0);
                         $renewedMembers->setM1($request->get("m1") ?? 0);
                 }
             } else {
                 switch ($timeslot) {
-                    case $this->renewedMemberRepository::RENEWED_MEMBER_TIMESLOT_T0:
+                    case $this->constants::TIMESLOT_T0:
                         $renewedMembers->setM1($request->get("m1") ?? 0);
                         $renewedMembers->setM2($request->get("m2") ?? 0);
                         $renewedMembers->setM3($request->get("m3") ?? 0);
-                    case $this->renewedMemberRepository::RENEWED_MEMBER_TIMESLOT_T1:
+                    case $this->constants::TIMESLOT_T1:
                         $previous = $this->renewedMemberRepository->findOneBy([
                             'rana' => $rana,
                             'valueType' => $valueType,
-                            'timeslot' => $this->renewedMemberRepository::RENEWED_MEMBER_TIMESLOT_T0
+                            'timeslot' => $this->constants::TIMESLOT_T0
                         ]);
                         $renewedMembers->setM4($request->get("m4") ?? ($previous ? $previous->getM4() : 0));
                         $renewedMembers->setM5($request->get("m5") ?? ($previous ? $previous->getM5() : 0));
                         $renewedMembers->setM6($request->get("m6") ?? ($previous ? $previous->getM6() : 0));
-                    case $this->renewedMemberRepository::RENEWED_MEMBER_TIMESLOT_T2:
+                    case $this->constants::TIMESLOT_T2:
                         $previous = $this->renewedMemberRepository->findOneBy([
                             'rana' => $rana,
                             'valueType' => $valueType,
-                            'timeslot' => $this->renewedMemberRepository::RENEWED_MEMBER_TIMESLOT_T1
+                            'timeslot' => $this->constants::TIMESLOT_T1
                         ]);
                         $renewedMembers->setM7($request->get("m7") ?? ($previous ? $previous->getM7() : 0));
                         $renewedMembers->setM8($request->get("m8") ?? ($previous ? $previous->getM8() : 0));
                         $renewedMembers->setM9($request->get("m9") ?? ($previous ? $previous->getM9() : 0));
-                    case $this->renewedMemberRepository::RENEWED_MEMBER_TIMESLOT_T3:
+                    case $this->constants::TIMESLOT_T3:
                         $previous = $this->renewedMemberRepository->findOneBy([
                             'rana' => $rana,
                             'valueType' => $valueType,
-                            'timeslot' => $this->renewedMemberRepository::RENEWED_MEMBER_TIMESLOT_T2
+                            'timeslot' => $this->constants::TIMESLOT_T2
                         ]);
                         $renewedMembers->setM10($request->get("m10") ?? ($previous ? $previous->getM10() : 0));
                         $renewedMembers->setM11($request->get("m11") ?? ($previous ? $previous->getM11() : 0));
@@ -754,9 +760,8 @@ class RanaController extends AbstractController
             if ($isNew) {
                 $this->renewedMemberRepository->save($renewedMembers);
             }
+
             $ranaLifeCycle = Util::arrayGetValue($rana->getRanaLifecycles()->toArray(), 0);
-
-
             //$ranaLifeCycle->setCurrentTimeslot($timeslot);
 
             $this->entityManager->flush();

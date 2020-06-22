@@ -33,6 +33,13 @@ class Utils {
   static getTimeslotFromMonth(month) {
     return Math.ceil(month/3);
   }
+
+  static getFirstMonthFromTimeslot(timeslot) {
+    if(timeslot.toString().charAt(0) === 'T') {
+      timeslot = timeslot.substr(-1) * 1;
+    }
+    return (timeslot - 1) * 3 + 1;
+  }
 }
 
 export default Utils;

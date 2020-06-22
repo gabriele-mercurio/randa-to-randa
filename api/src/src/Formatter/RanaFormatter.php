@@ -106,7 +106,6 @@ class RanaFormatter
                 return $newMember->getValueType() == $this->constants::VALUE_TYPE_PROPOSED;
             }), 0, null)
         ];
-        file_put_contents("pippo", "3");
 
         $renewedMembers = [
             $this->constants::VALUE_TYPE_APPROVED => Util::arrayGetValue(array_filter($renewedMembers, function ($renewedMember) {
@@ -130,7 +129,6 @@ class RanaFormatter
                 return $retention->getValueType() == $this->constants::VALUE_TYPE_PROPOSED;
             }), 0, null)
         ];
-        file_put_contents("pippo", "4");
 
         for ($i = 1; $i <= 12; $i++) {
             $method = "getM$i";
@@ -144,15 +142,11 @@ class RanaFormatter
                 $retentionsValues[$type]["m$i"] = is_null($retentions[$type]) ? 0 : $retentions[$type]->$method() ?? 0;
             }
         }
-        file_put_contents("pippo", "5");
-
         $details = array_merge($this->format($rana), [
             'newMembers'     => $newMembersValues,
             'renewedMembers' => $renewedMembersValues,
             'retentions'     => $retentionsValues
         ]);
-        file_put_contents("pippo", "6");
-
 
         return $details;
     }

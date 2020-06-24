@@ -45,5 +45,9 @@ export default {
   chapter_launch_error: "Errore nel lancio del capitolo",
   chapter_launched: "Capitolo lanciato!",
   confirm: "Conferma",
-  send_proposal: "Manda proposta"
+  send_proposal: "Manda proposta",
+  reset: "Resetta",
+  approve_proposal: "Approva proposta",
+  approve_rana: "Approva rana",
+  rana_proposal: "Proposta rana"
 };

@@ -1,7 +1,13 @@
 <template>
   <div id="rana">
-    <h3>{{ currentTimeslot }}</h3>
-    <h3>{{ editable }}</h3>
+    <h3 v-if="!editable">
+      Periodo:
+      <span class="font-italic font-weight-light">{{ currentTimeslot }}</span>
+    </h3>
+    <h3 v-else>
+      Rana per:
+      <span class="font-italic font-weight-light">{{ nextTimeslot }}</span>
+    </h3>
     <div class="mb-3" v-if="editable">
       <div class="d-flex flex-row align-center">
         <div class="circle background-yellow"></div>
@@ -30,24 +36,24 @@
               <div class="border-bottom background-grey pa-1">T{{ i }}</div>
               <v-row class="pa-0 ma-0">
                 <v-col
-                  :cols="pastTimeslot(i) ? '6' : 12"
+                  :cols="isPastTimeslot(i) ? '6' : 12"
                   class="pa-0 d-flex justify-center align-center"
                   :class="{
-                    'border-right': pastTimeslot(i),
-                    'background-yellow': pastTimeslot(i) || !editable
+                    'border-right': isPastTimeslot(i),
+                    'background-yellow': isPastTimeslot(i) || !editable
                   }"
                 >
                   <v-text-field
                     :placeholder="'T' + i"
-                    :disabled="pastTimeslot(i) || !editable"
+                    :disabled="isPastTimeslot(i) || !editable"
                     type="number"
-                    :class="{ bordered: !pastTimeslot(i) && editable }"
+                    :class="{ bordered: !isPastTimeslot(i) && editable }"
                     @keyup="proposeMonths($event, i)"
                     v-model="timeslotAggregations.PREV[i]"
                   />
                 </v-col>
                 <v-col
-                  v-if="pastTimeslot(i)"
+                  v-if="isPastTimeslot(i)"
                   cols="6"
                   class="pa-0 background-green font-italic font-weight-light disabled d-flex justify-center align-center"
                   >{{ timeslotAggregations.CONS[i] }}</v-col
@@ -65,28 +71,28 @@
               <div class="border-bottom background-grey pa-1">M{{ i }}</div>
               <v-row class="pa-0 ma-0">
                 <v-col
-                  :cols="pastMonth(i) ? '6' : 12"
+                  :cols="isPastMonth(i) ? '6' : 12"
                   class="pa-0 d-flex justify-center align-center"
                   :class="{
-                    'border-righ': pastMonth(i),
-                    'background-yellow': pastMonth(i) || !editable
+                    'border-righ': isPastMonth(i),
+                    'background-yellow': isPastMonth(i) || !editable
                   }"
                 >
                   <v-text-field
                     :placeholder="'M' + i"
-                    :disabled="pastMonth(i) || !editable"
+                    :disabled="isPastMonth(i) || !editable"
                     type="number"
                     v-model="data.PREV['m' + i]"
                     @keyup="calculateTimeslot($event, i)"
-                    :class="{ bordered: !pastMonth(i) && editable }"
+                    :class="{ bordered: !isPastMonth(i) && editable }"
                   />
                 </v-col>
                 <v-col
-                  v-if="pastMonth(i)"
+                  v-if="isPastMonth(i)"
                   cols="6"
                   class="pa-0 background-green font-italic font-weight-light disabled d-flex justify-center align-center"
-                  >{{ data.CONS["m" + i] }} </v-col
-                >
+                  >{{ data.CONS["m" + i] }}
+                </v-col>
               </v-row>
             </td>
           </tr>
@@ -96,9 +102,24 @@
         <tr style="display: none;"></tr>
       </template>
       <template slot="footer" v-if="editable">
-        <div class="d-flex justify-end mt-4">
-          <v-btn type="submit" normal color="primary" @click="sendProposal()">
-            {{ $t("send_proposal") }}
+        <div class="d-flex justify-end my-4">
+          <v-btn
+            type="submit"
+            normal
+            color="primary"
+            @click="resetProposal()"
+            class="mr-2"
+          >
+            {{ $t("reset") }}
+          </v-btn>
+          <v-btn
+            type="submit"
+            normal
+            color="primary"
+            @click="sendProposalOrApprovation()"
+          >
+            <span v-if="role === 'ASSISTANT'">{{ $t("send_proposal") }}</span>
+            <span v-else>{{ $t("approve_proposal") }}</span>
           </v-btn>
         </div>
       </template>
@@ -119,7 +140,8 @@ export default {
       data: {
         PREV: [],
         CONS: []
-      }
+      },
+      ranaBackup: null
     };
   },
   props: {
@@ -129,29 +151,71 @@ export default {
     editable: false,
     ranaType: null
   },
+  computed: {
+    nextTimeslot() {
+      return "T" + (Utils.getNumericTimeslot() + 1);
+    },
+    role() {
+      if(this.$store.getters["getRegion"]) {
+        return this.$store.getters["getRegion"].role;
+      }
+    }
+  },
   methods: {
-    pastMonth(m) {
+    //evaluate trimestal values by sum the monthly values
+    evaluateTimeslots() {
+      let sum_prev = 0;
+      let sum_cons = 0;
+      this.timeslotAggregations.PREV = [];
+      this.timeslotAggregations.CONS = [];
+      for (let i = 0; i < 12; i++) {
+        sum_prev += (this.data.PREV["m" + i] || 0) * 1;
+        sum_cons += (this.data.CONS["m" + i] || 0) * 1;
+        if (i % 3 == 0) {
+          this.timeslotAggregations.PREV.push(sum_prev);
+          this.timeslotAggregations.CONS.push(sum_cons);
+          sum_prev = 0;
+          sum_cons = 0;
+        }
+      }
+    },
+
+    //check if a month is passed
+    isPastMonth(m) {
       if (!this.currentTimeslot) return false;
       let t = Utils.getTimeslotFromMonth(m);
       return "T" + t <= this.currentTimeslot;
     },
-    async sendProposal() {
+
+    //restore backed up data
+    resetProposal() {
+      this.data = JSON.parse(JSON.stringify(this.ranaBackup));
+      this.evaluateTimeslots();
+    },
+
+    //send rana proposal to the server
+    async sendProposalOrApprovation() {
       let data = {
-        valueType: "PROP",
-        timeslot: "T" + Utils.getNumericTimeslot() + 1
+        valueType: this.role === "ASSISTANT" ? "PROP" : "APPR",
+        timeslot: this.nextTimeslot
       };
 
-      let firstMonth = Utils.getFirstMonthFromTimeslot(this.currentTimeslot);
-      for (let i = firstMonth; i <= 12; i++) {
+      // send only future data
+      let firstTimeslotMonth = Utils.getFirstTimeslotMonth(this.nextTimeslot);
+      debugger;
+      for (let i = firstTimeslotMonth; i <= 12; i++) {
         data["m" + i] = this.data.PREV["m" + i];
       }
       let result = await ApiServer.post(this.rana.id + "/rana-renewed", data);
     },
-    pastTimeslot(t) {
+
+    //check if timeslot is past
+    isPastTimeslot(t) {
       if (!this.currentTimeslot) return false;
       return "T" + t <= this.currentTimeslot;
     },
 
+    //calculate trimestral value each time a month changes
     calculateTimeslot(e, m) {
       let t = Math.ceil(m / 3);
       let startFrom = (t - 1) * 3 + 1;
@@ -161,6 +225,8 @@ export default {
       }
       this.$set(this.timeslotAggregations.PREV, t, value);
     },
+
+    //evaluate a proposal fro monthly data each time a trimestral value changes
     proposeMonths(e, t) {
       let value = e.target.value;
       let months = [0, 0, 0];
@@ -184,33 +250,26 @@ export default {
           this.$set(this.data.PREV, "m" + (startFrom + i), months[i]);
         }
       }
+    },
+
+    //if i'm assistant i see proposed values, if i'm executive, area, national or admin i see approved values
+    setPrevisionsByRole() {
+      if (this.role === "ASSISTANT") {
+        this.data.PREV = this.data.PROP;
+      } else {
+        this.data.PREV = this.data.APPR;
+      }
     }
   },
   created() {
     setTimeout(() => {
       this.data = this.rana[this.ranaType];
 
-      //approved or proposed
-      let role = this.$store.getters["getRegion"].role;
-      if (role === "ASSISTANT") {
-        this.data.PREV = this.data.PROP;
-      } else {
-        this.data.PREV = this.data.APPR;
-      }
+      //backup data to allow reset
+      this.ranaBackup = JSON.parse(JSON.stringify(this.data));
 
-      //calculate timeslots
-      let sum_prev = 0;
-      let sum_cons = 0;
-      for (let i = 0; i < 12; i++) {
-        sum_prev += (this.data.PREV["m" + i] || 0 ) * 1;
-        sum_cons += (this.data.CONS["m" + i] || 0 ) * 1;
-        if (i % 3 == 0) {
-          this.timeslotAggregations.PREV.push(sum_prev);
-          this.timeslotAggregations.CONS.push(sum_cons);
-          sum_prev = 0;
-          sum_cons = 0;
-        }
-      }
+      this.setPrevisionsByRole();
+      this.evaluateTimeslots();
     });
   }
 };
@@ -318,6 +377,9 @@ export default {
     height: 20px;
     border-radius: 50%;
     border: 1px solid $lightgrey;
+  }
+  .v-data-table-header-mobile {
+    display: none;
   }
 }
 </style>

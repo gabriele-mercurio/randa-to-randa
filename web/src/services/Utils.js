@@ -34,7 +34,7 @@ class Utils {
     return Math.ceil(month/3);
   }
 
-  static getFirstMonthFromTimeslot(timeslot) {
+  static getFirstTimeslotMonth(timeslot) {
     if(timeslot.toString().charAt(0) === 'T') {
       timeslot = timeslot.substr(-1) * 1;
     }

@@ -79,7 +79,6 @@ class RanaFormatter
      */
     public function formatData(Rana $rana, string $role): array
     {
-
         $lifeCycles = $rana->getRanaLifecycles()->toArray();
         $allDetails = [];
         foreach ($lifeCycles as $lifeCycle) {
@@ -94,6 +93,33 @@ class RanaFormatter
             $renewedMembers = static::getCurrentTimeslotData($rana->getRenewedMembers()->toArray(), $currentTimeslot);
             $retentions = static::getCurrentTimeslotData($rana->getRetentions()->toArray(), $currentTimeslot);
 
+
+            $newMembersValues = $renewedMembersValues = $retentionsValues = [
+                $this->constants::VALUE_TYPE_PROPOSED => []
+            ];
+
+            $types = [
+                $this->constants::VALUE_TYPE_PROPOSED
+            ];
+
+            if ($role != $this->constants::ROLE_ASSISTANT) {
+                $types = array_merge($types, [
+                    $this->constants::VALUE_TYPE_APPROVED,
+                    $this->constants::VALUE_TYPE_CONSUMPTIVE
+                ]);
+                $newMembersValues = array_merge($newMembersValues, [
+                    $this->constants::VALUE_TYPE_APPROVED => [],
+                    $this->constants::VALUE_TYPE_CONSUMPTIVE => []
+                ]);
+                $renewedMembersValues = array_merge($renewedMembersValues, [
+                    $this->constants::VALUE_TYPE_APPROVED => [],
+                    $this->constants::VALUE_TYPE_CONSUMPTIVE => []
+                ]);
+                $retentionsValues = array_merge($retentionsValues, [
+                    $this->constants::VALUE_TYPE_APPROVED => [],
+                    $this->constants::VALUE_TYPE_CONSUMPTIVE => []
+                ]);
+            }
 
             $newMembersValues = $renewedMembersValues = $retentionsValues = [
                 $this->constants::VALUE_TYPE_PROPOSED => []

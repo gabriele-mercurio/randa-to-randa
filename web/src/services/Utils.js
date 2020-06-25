@@ -22,22 +22,25 @@ class Utils {
   }
 
   static getCurrentTimeslot() {
-    return "T" + this.getNumericTimeslot();;
+    return "T" + this.getNumericTimeslot();
   }
 
   static getNumericTimeslot() {
+    //todo
+    return 0;
     let month = new Date().getMonth() + 1;
     return Math.ceil(month / 3);
   }
 
   static getTimeslotFromMonth(month) {
-    return Math.ceil(month/3);
+    return Math.ceil(month / 3);
   }
 
   static getFirstTimeslotMonth(timeslot) {
-    if(timeslot.toString().charAt(0) === 'T') {
-      timeslot = timeslot.substr(-1) * 1;
+    if (timeslot.toString().charAt(0) === "T") {
+      timeslot = timeslot.substr(1, 1) * 1;
     }
+    if (!timeslot) timeslot = 1;
     return (timeslot - 1) * 3 + 1;
   }
 }

@@ -18,7 +18,7 @@
     <div v-for="(rana, timeslot) in ranas" :key="timeslot" class="mt-4">
       <template v-if="timeslot !== 'T4' && isPastTimeslot(timeslot)">
         <Rana
-          :rana="rana"
+          :rana.sync="rana"
           :ranaType="'renewedMembers'"
           :currentTimeslot="timeslot"
           :editable="false"
@@ -51,11 +51,14 @@ export default {
     let numericTimeslot = Utils.getNumericTimeslot();
     this.currentTimeslot = Utils.getCurrentTimeslot();
 
-    this.currentRana = JSON.parse(JSON.stringify(this.ranas[this.currentTimeslot]));
+    // this.currentRana = JSON.parse(
+    //   JSON.stringify(this.ranas[this.currentTimeslot])
+    // );
 
     setTimeout(() => {
       let chapterId = this.$route.params.chapterId || false;
       this.fetchChapter(chapterId);
+      this.fetchRanas(chapterId);
     });
   },
   methods: {
@@ -72,7 +75,8 @@ export default {
       return timeslot <= this.currentTimeslot;
     },
     async fetchRanas(chapterId) {
-      //this.rana = ApiServer.get("rana");
+      let ranas = await ApiServer.get(chapterId + "/rana");
+      this.currentRana = ranas[ranas.length - 1];
     }
   }
 };

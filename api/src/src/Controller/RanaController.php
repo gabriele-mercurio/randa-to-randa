@@ -606,7 +606,7 @@ class RanaController extends AbstractController
                     $errorFields['timeslot'] = "invalid";
                 }
 
-                if ($slotNumber) {
+                if ($slotNumber && $slotNumber > 1) {
                     $prevSlotNumber = $slotNumber - 1;
                     $prevTimeslot = "T$prevSlotNumber";
                     $prevRenewedMembers = $this->renewedMemberRepository->findBy([
@@ -761,15 +761,288 @@ class RanaController extends AbstractController
                 $this->renewedMemberRepository->save($renewedMembers);
             }
 
-            $ranaLifeCycle = Util::arrayGetValue($rana->getRanaLifecycles()->toArray(), 0);
+            $ranaLifeCycle = new RanaLifecycle();
+            
             $ranaLifeCycle->setCurrentTimeslot($timeslot);
 
             $this->entityManager->flush();
 
-            return new JsonResponse($this->ranaFormatter->formatData($rana));
+            return new JsonResponse($this->ranaFormatter->formatData($rana, $role));
         } else {
             $errorFields = $code == Response::HTTP_BAD_REQUEST ? $errorFields : null;
             return new JsonResponse($errorFields, $code);
+        }
+    }
+
+    /**
+     * Get the chapter's rana
+     *
+     * @Route(path="/{id}/rana", name="get_rana", methods={"GET"})
+     *
+     * @SWG\Parameter(
+     *      name="id",
+     *      in="path",
+     *      type="string",
+     *      description="The chapter"
+     * )
+     * @SWG\Parameter(
+     *      name="role",
+     *      in="query",
+     *      type="string",
+     *      description="Optional parameter to get data relative to the specified given role"
+     * )
+     * @SWG\Parameter(
+     *      name="actAs",
+     *      in="query",
+     *      type="string",
+     *      description="Optional parameter representing the emulated user id"
+     * )
+     * @SWG\Response(
+     *      response=200,
+     *      description="Returns a Rana object",
+     *      @SWG\Schema(
+     *          type="object",
+     *          @SWG\Property(property="id", type="string"),
+     *          @SWG\Property(
+     *              property="newMembers",
+     *              type="object",
+     *              @SWG\Property(
+     *                  property="APPR",
+     *                  type="object",
+     *                  @SWG\Property(property="m1", type="integer"),
+     *                  @SWG\Property(property="m2", type="integer"),
+     *                  @SWG\Property(property="m3", type="integer"),
+     *                  @SWG\Property(property="m4", type="integer"),
+     *                  @SWG\Property(property="m5", type="integer"),
+     *                  @SWG\Property(property="m6", type="integer"),
+     *                  @SWG\Property(property="m7", type="integer"),
+     *                  @SWG\Property(property="m8", type="integer"),
+     *                  @SWG\Property(property="m9", type="integer"),
+     *                  @SWG\Property(property="m10", type="integer"),
+     *                  @SWG\Property(property="m11", type="integer"),
+     *                  @SWG\Property(property="m12", type="integer")
+     *              ),
+     *              @SWG\Property(
+     *                  property="CONS",
+     *                  type="object",
+     *                  @SWG\Property(property="m1", type="integer"),
+     *                  @SWG\Property(property="m2", type="integer"),
+     *                  @SWG\Property(property="m3", type="integer"),
+     *                  @SWG\Property(property="m4", type="integer"),
+     *                  @SWG\Property(property="m5", type="integer"),
+     *                  @SWG\Property(property="m6", type="integer"),
+     *                  @SWG\Property(property="m7", type="integer"),
+     *                  @SWG\Property(property="m8", type="integer"),
+     *                  @SWG\Property(property="m9", type="integer"),
+     *                  @SWG\Property(property="m10", type="integer"),
+     *                  @SWG\Property(property="m11", type="integer"),
+     *                  @SWG\Property(property="m12", type="integer")
+     *              ),
+     *              @SWG\Property(
+     *                  property="PROP",
+     *                  type="object",
+     *                  @SWG\Property(property="m1", type="integer"),
+     *                  @SWG\Property(property="m2", type="integer"),
+     *                  @SWG\Property(property="m3", type="integer"),
+     *                  @SWG\Property(property="m4", type="integer"),
+     *                  @SWG\Property(property="m5", type="integer"),
+     *                  @SWG\Property(property="m6", type="integer"),
+     *                  @SWG\Property(property="m7", type="integer"),
+     *                  @SWG\Property(property="m8", type="integer"),
+     *                  @SWG\Property(property="m9", type="integer"),
+     *                  @SWG\Property(property="m10", type="integer"),
+     *                  @SWG\Property(property="m11", type="integer"),
+     *                  @SWG\Property(property="m12", type="integer")
+     *              )
+     *          ),
+     *          @SWG\Property(
+     *              property="renewedMembers",
+     *              type="object",
+     *              @SWG\Property(
+     *                  property="APPR",
+     *                  type="object",
+     *                  @SWG\Property(property="m1", type="integer"),
+     *                  @SWG\Property(property="m2", type="integer"),
+     *                  @SWG\Property(property="m3", type="integer"),
+     *                  @SWG\Property(property="m4", type="integer"),
+     *                  @SWG\Property(property="m5", type="integer"),
+     *                  @SWG\Property(property="m6", type="integer"),
+     *                  @SWG\Property(property="m7", type="integer"),
+     *                  @SWG\Property(property="m8", type="integer"),
+     *                  @SWG\Property(property="m9", type="integer"),
+     *                  @SWG\Property(property="m10", type="integer"),
+     *                  @SWG\Property(property="m11", type="integer"),
+     *                  @SWG\Property(property="m12", type="integer")
+     *              ),
+     *              @SWG\Property(
+     *                  property="CONS",
+     *                  type="object",
+     *                  @SWG\Property(property="m1", type="integer"),
+     *                  @SWG\Property(property="m2", type="integer"),
+     *                  @SWG\Property(property="m3", type="integer"),
+     *                  @SWG\Property(property="m4", type="integer"),
+     *                  @SWG\Property(property="m5", type="integer"),
+     *                  @SWG\Property(property="m6", type="integer"),
+     *                  @SWG\Property(property="m7", type="integer"),
+     *                  @SWG\Property(property="m8", type="integer"),
+     *                  @SWG\Property(property="m9", type="integer"),
+     *                  @SWG\Property(property="m10", type="integer"),
+     *                  @SWG\Property(property="m11", type="integer"),
+     *                  @SWG\Property(property="m12", type="integer")
+     *              ),
+     *              @SWG\Property(
+     *                  property="PROP",
+     *                  type="object",
+     *                  @SWG\Property(property="m1", type="integer"),
+     *                  @SWG\Property(property="m2", type="integer"),
+     *                  @SWG\Property(property="m3", type="integer"),
+     *                  @SWG\Property(property="m4", type="integer"),
+     *                  @SWG\Property(property="m5", type="integer"),
+     *                  @SWG\Property(property="m6", type="integer"),
+     *                  @SWG\Property(property="m7", type="integer"),
+     *                  @SWG\Property(property="m8", type="integer"),
+     *                  @SWG\Property(property="m9", type="integer"),
+     *                  @SWG\Property(property="m10", type="integer"),
+     *                  @SWG\Property(property="m11", type="integer"),
+     *                  @SWG\Property(property="m12", type="integer")
+     *              )
+     *          ),
+     *          @SWG\Property(
+     *              property="retention",
+     *              type="object",
+     *              @SWG\Property(
+     *                  property="APPR",
+     *                  type="object",
+     *                  @SWG\Property(property="m1", type="integer"),
+     *                  @SWG\Property(property="m2", type="integer"),
+     *                  @SWG\Property(property="m3", type="integer"),
+     *                  @SWG\Property(property="m4", type="integer"),
+     *                  @SWG\Property(property="m5", type="integer"),
+     *                  @SWG\Property(property="m6", type="integer"),
+     *                  @SWG\Property(property="m7", type="integer"),
+     *                  @SWG\Property(property="m8", type="integer"),
+     *                  @SWG\Property(property="m9", type="integer"),
+     *                  @SWG\Property(property="m10", type="integer"),
+     *                  @SWG\Property(property="m11", type="integer"),
+     *                  @SWG\Property(property="m12", type="integer")
+     *              ),
+     *              @SWG\Property(
+     *                  property="CONS",
+     *                  type="object",
+     *                  @SWG\Property(property="m1", type="integer"),
+     *                  @SWG\Property(property="m2", type="integer"),
+     *                  @SWG\Property(property="m3", type="integer"),
+     *                  @SWG\Property(property="m4", type="integer"),
+     *                  @SWG\Property(property="m5", type="integer"),
+     *                  @SWG\Property(property="m6", type="integer"),
+     *                  @SWG\Property(property="m7", type="integer"),
+     *                  @SWG\Property(property="m8", type="integer"),
+     *                  @SWG\Property(property="m9", type="integer"),
+     *                  @SWG\Property(property="m10", type="integer"),
+     *                  @SWG\Property(property="m11", type="integer"),
+     *                  @SWG\Property(property="m12", type="integer")
+     *              ),
+     *              @SWG\Property(
+     *                  property="PROP",
+     *                  type="object",
+     *                  @SWG\Property(property="m1", type="integer"),
+     *                  @SWG\Property(property="m2", type="integer"),
+     *                  @SWG\Property(property="m3", type="integer"),
+     *                  @SWG\Property(property="m4", type="integer"),
+     *                  @SWG\Property(property="m5", type="integer"),
+     *                  @SWG\Property(property="m6", type="integer"),
+     *                  @SWG\Property(property="m7", type="integer"),
+     *                  @SWG\Property(property="m8", type="integer"),
+     *                  @SWG\Property(property="m9", type="integer"),
+     *                  @SWG\Property(property="m10", type="integer"),
+     *                  @SWG\Property(property="m11", type="integer"),
+     *                  @SWG\Property(property="m12", type="integer")
+     *              )
+     *          )
+     *      )
+     * )
+     * @SWG\Response(
+     *      response=400,
+     *      description="Returned if role is given but is not valid."
+     * )
+     * @SWG\Response(
+     *      response=403,
+     *      description="Returned if actAs is given but the current user is not an admin or if a valid role is given but the user has not that role for the specified region."
+     * )
+     * @SWG\Response(
+     *      response=404,
+     *      description="Returned if actAs is given but is not a valid user id or if there are any rana associated to the specified chapter."
+     * )
+     * @SWG\Tag(name="Rana")
+     * @Security(name="Bearer")
+     *
+     * @return Response
+     */
+    public function getRana(Chapter $chapter, Request $request): Response
+    {
+        $actAs = $request->get("actAs");
+        $code = Response::HTTP_OK;
+        $role = $request->get("role");
+        $user = $this->getUser();
+        $isAdmin = $user->isAdmin() && is_null($actAs);
+
+        $checkUser = $this->userRepository->checkUser($user, $actAs);
+        $user = Util::arrayGetValue($checkUser, 'user');
+        $code = Util::arrayGetValue($checkUser, 'code');
+
+        $region = $chapter->getRegion();
+
+        if ($code == Response::HTTP_OK && !$isAdmin) {
+            $checkDirectorRole = $this->directorRepository->checkDirectorRole($user, $region, $role);
+
+            $code = Util::arrayGetValue($checkDirectorRole, 'code', $code);
+            $director = Util::arrayGetValue($checkDirectorRole, 'director', null);
+            $role = $director ? $director->getRole() : $role;
+        }
+
+        if ($code == Response::HTTP_OK) {
+            $role = $isAdmin ? $this->constants::ROLE_EXECUTIVE : $role;
+            if (!in_array($role, [
+                $this->constants::ROLE_EXECUTIVE,
+                $this->constants::ROLE_AREA,
+                $this->constants::ROLE_ASSISTANT
+            ])) {
+                $code = Response::HTTP_FORBIDDEN;
+            }
+        }
+
+        if ($code == Response::HTTP_OK && !$isAdmin) {
+            if ($role == $this->constants::ROLE_ASSISTANT && $chapter->getDirector() != $director) {
+                $code = Response::HTTP_FORBIDDEN;
+            }
+
+            if ($role == $this->constants::ROLE_AREA && $chapter->getDirector()->getSupervisor() != $director) {
+                $code = Response::HTTP_FORBIDDEN;
+            }
+        }
+
+        if ($code == Response::HTTP_OK) {
+            $randa = $this->randaRepository->findOneBy([
+                'region' => $region,
+                'year' => date('Y')
+            ]);
+            if (is_null($randa)) {
+                $code = Response::HTTP_NOT_FOUND;
+            } else {
+                $rana = $this->ranaRepository->findOneBy([
+                    'randa' => $randa,
+                    'chapter' => $chapter
+                ]);
+                if (is_null($rana)) {
+                    $code = Response::HTTP_NOT_FOUND;
+                }
+            }
+        }
+
+        if ($code == Response::HTTP_OK) {
+            return new JsonResponse($this->ranaFormatter->formatData($rana, $role));
+        } else {
+            return new JsonResponse(null, $code);
         }
     }
 }

@@ -45,7 +45,7 @@
                 >
                   <v-text-field
                     :placeholder="'T' + i"
-                    :disabled="isPastTimeslot(i) || !editable"
+                    :disabled="isPastTimeslot(i) || !editable || (!canApprove() && !canPropose())"
                     type="number"
                     :class="{ bordered: !isPastTimeslot(i) && editable }"
                     @keyup="proposeMonths($event, i)"
@@ -80,7 +80,7 @@
                 >
                   <v-text-field
                     :placeholder="'M' + i"
-                    :disabled="isPastMonth(i) || !editable"
+                    :disabled="isPastMonth(i) || !editable || (!canApprove() && !canPropose())"
                     type="number"
                     v-model="data.PREV['m' + i]"
                     @keyup="calculateTimeslot($event, i)"
@@ -116,6 +116,7 @@
             type="submit"
             normal
             color="primary"
+            :disabled="!canApprove() && !canPropose()"
             @click="sendProposalOrApprovation()"
           >
             <span v-if="role === 'ASSISTANT'">{{ $t("send_proposal") }}</span>
@@ -156,7 +157,7 @@ export default {
       return "T" + (Utils.getNumericTimeslot() + 1);
     },
     role() {
-      if(this.$store.getters["getRegion"]) {
+      if (this.$store.getters["getRegion"]) {
         return this.$store.getters["getRegion"].role;
       }
     }
@@ -166,18 +167,33 @@ export default {
     evaluateTimeslots() {
       let sum_prev = 0;
       let sum_cons = 0;
-      this.timeslotAggregations.PREV = [];
-      this.timeslotAggregations.CONS = [];
-      for (let i = 0; i < 12; i++) {
-        sum_prev += (this.data.PREV["m" + i] || 0) * 1;
-        sum_cons += (this.data.CONS["m" + i] || 0) * 1;
+      this.timeslotAggregations.PREV = [0,0,0,0];
+      this.timeslotAggregations.CONS = [0,0,0,0];
+
+      for (let i = 1; i <= 12; i++) {
+        if(this.data.PREV && this.data.PREV["m" + i]) {
+          sum_prev += (this.data.PREV["m" + i] || 0) * 1;
+        }
+        if(this.data.CONS && this.data.CONS["m" + i]) {
+          sum_cons += (this.data.CONS["m" + i] || 0) * 1;
+        }
         if (i % 3 == 0) {
-          this.timeslotAggregations.PREV.push(sum_prev);
-          this.timeslotAggregations.CONS.push(sum_cons);
+          this.timeslotAggregations.PREV[i/3] = sum_prev;
+          this.timeslotAggregations.CONS[i/3] = sum_cons;
           sum_prev = 0;
           sum_cons = 0;
         }
       }
+
+
+    },
+
+    canApprove() {
+      return this.role === "EXECUTIVE" && this.rana.state == "PROPOSED";
+    },
+
+    canPropose() {
+      return this.role === "ASSISANT" && this.rana.state == "TODO";
     },
 
     //check if a month is passed
@@ -197,12 +213,11 @@ export default {
     async sendProposalOrApprovation() {
       let data = {
         valueType: this.role === "ASSISTANT" ? "PROP" : "APPR",
-        timeslot: this.nextTimeslot
+        timeslot: this.currentTimeslot
       };
 
       // send only future data
       let firstTimeslotMonth = Utils.getFirstTimeslotMonth(this.nextTimeslot);
-      debugger;
       for (let i = firstTimeslotMonth; i <= 12; i++) {
         data["m" + i] = this.data.PREV["m" + i];
       }
@@ -258,19 +273,29 @@ export default {
         this.data.PREV = this.data.PROP;
       } else {
         this.data.PREV = this.data.APPR;
+        debugger;
+        let firstMonthToApprove = Utils.getFirstTimeslotMonth(this.currentTimeslot);
+        for(let i = firstMonthToApprove; i <= 12; i++) {
+          this.data.PREV["m" + i] = this.data.PROP["m" + i];
+        }
+        debugger;
       }
     }
   },
   created() {
     setTimeout(() => {
-      this.data = this.rana[this.ranaType];
-
       //backup data to allow reset
       this.ranaBackup = JSON.parse(JSON.stringify(this.data));
-
-      this.setPrevisionsByRole();
-      this.evaluateTimeslots();
     });
+  },
+  watch: {
+    rana: {
+      handler: function(newVal, oldVal) {
+        this.data = newVal[this.ranaType];
+        this.setPrevisionsByRole();
+        this.evaluateTimeslots();
+      }
+    }
   }
 };
 </script>
@@ -371,6 +396,9 @@ export default {
     border: 2px solid $lightgreen;
     box-sizing: border-box !important;
     margin: -2px;
+    &.v-input--is-disabled {
+      border-style: none!important;
+    }
   }
   .circle {
     width: 20px;

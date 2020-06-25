@@ -194,8 +194,8 @@ export default {
   },
   computed: {
     iAmAssistant() {
-      if (this.$store.getters["getRregion"]) {
-        return this.$store.getters["getRregion"].role;
+      if (this.$store.getters["getRegion"]) {
+        return this.$store.getters["getRegion"].role === "ASSISTANT"
       }
     }
   },

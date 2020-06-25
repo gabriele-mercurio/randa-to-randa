@@ -77,45 +77,75 @@ class RanaFormatter
      *
      * @return array
      */
-    public function formatData(Rana $rana): array
+    public function formatData(Rana $rana, string $role): array
     {
-        $lifeCycle = Util::arrayGetValue($rana->getRanaLifecycles()->toArray(), 0);
-        $currentTimeslot = $lifeCycle->getCurrentTimeslot();
 
-        $newMembers = static::getCurrentTimeslotData($rana->getNewMembers()->toArray(), $currentTimeslot);
-        $renewedMembers = static::getCurrentTimeslotData($rana->getRenewedMembers()->toArray(), $currentTimeslot);
-        $retentions = static::getCurrentTimeslotData($rana->getRetentions()->toArray(), $currentTimeslot);
+        $lifeCycles = $rana->getRanaLifecycles()->toArray();
+        $allDetails = [];
+        foreach ($lifeCycles as $lifeCycle) {
+            $currentState = $lifeCycle->getCurrentState();
+            $currentTimeslot = $lifeCycle->getCurrentTimeslot();
 
-        $newMembersValues = $renewedMembersValues = $retentionsValues = [
-            $this->constants::VALUE_TYPE_APPROVED => [],
-            $this->constants::VALUE_TYPE_CONSUMPTIVE => [],
-            $this->constants::VALUE_TYPE_PROPOSED => []
-        ];
+            $newMembers = static::getCurrentTimeslotData($rana->getNewMembers()->toArray(), $currentTimeslot);
+            $renewedMembers = static::getCurrentTimeslotData($rana->getRenewedMembers()->toArray(), $currentTimeslot);
+            $retentions = static::getCurrentTimeslotData($rana->getRetentions()->toArray(), $currentTimeslot);
 
-        $newMembers = static::divideByValueTypes($newMembers);
-        $renewedMembers = static::divideByValueTypes($renewedMembers);
-        $retentions = static::divideByValueTypes($retentions);
+            $newMembers = static::getCurrentTimeslotData($rana->getNewMembers()->toArray(), $currentTimeslot);
+            $renewedMembers = static::getCurrentTimeslotData($rana->getRenewedMembers()->toArray(), $currentTimeslot);
+            $retentions = static::getCurrentTimeslotData($rana->getRetentions()->toArray(), $currentTimeslot);
 
-        for ($i = 1; $i <= 12; $i++) {
-            $method = "getM$i";
-            foreach ([
-                $this->constants::VALUE_TYPE_APPROVED,
-                $this->constants::VALUE_TYPE_CONSUMPTIVE,
+
+            $newMembersValues = $renewedMembersValues = $retentionsValues = [
+                $this->constants::VALUE_TYPE_PROPOSED => []
+            ];
+
+            $types = [
                 $this->constants::VALUE_TYPE_PROPOSED
-            ] as $type) {
-                $newMembersValues[$type]["m$i"] = is_null($newMembers[$type]) ? 0 : $newMembers[$type]->$method() ?? 0;
-                $renewedMembersValues[$type]["m$i"] = is_null($renewedMembers[$type]) ? 0 : $renewedMembers[$type]->$method() ?? 0;
-                $retentionsValues[$type]["m$i"] = is_null($retentions[$type]) ? 0 : $retentions[$type]->$method() ?? 0;
+            ];
+
+            if ($role != $this->constants::ROLE_ASSISTANT) {
+                $types = array_merge($types, [
+                    $this->constants::VALUE_TYPE_APPROVED,
+                    $this->constants::VALUE_TYPE_CONSUMPTIVE
+                ]);
+                $newMembersValues = array_merge($newMembersValues, [
+                    $this->constants::VALUE_TYPE_APPROVED => [],
+                    $this->constants::VALUE_TYPE_CONSUMPTIVE => []
+                ]);
+                $renewedMembersValues = array_merge($renewedMembersValues, [
+                    $this->constants::VALUE_TYPE_APPROVED => [],
+                    $this->constants::VALUE_TYPE_CONSUMPTIVE => []
+                ]);
+                $retentionsValues = array_merge($retentionsValues, [
+                    $this->constants::VALUE_TYPE_APPROVED => [],
+                    $this->constants::VALUE_TYPE_CONSUMPTIVE => []
+                ]);
             }
+
+            $newMembers = static::divideByValueTypes($newMembers);
+            $renewedMembers = static::divideByValueTypes($renewedMembers);
+            $retentions = static::divideByValueTypes($retentions);
+
+            for ($i = 1; $i <= 12; $i++) {
+                $method = "getM$i";
+                foreach ($types as $type) {
+                    $newMembersValues[$type]["m$i"] = is_null($newMembers[$type]) ? 0 : $newMembers[$type]->$method() ?? 0;
+                    $renewedMembersValues[$type]["m$i"] = is_null($renewedMembers[$type]) ? 0 : $renewedMembers[$type]->$method() ?? 0;
+                    $retentionsValues[$type]["m$i"] = is_null($retentions[$type]) ? 0 : $retentions[$type]->$method() ?? 0;
+                }
+            }
+
+            $details = array_merge($this->format($rana), [
+                'newMembers'     => $newMembersValues,
+                'renewedMembers' => $renewedMembersValues,
+                'retentions'     => $retentionsValues,
+                'timeslot'       => $currentTimeslot,
+                'state'          => $currentState
+            ]);
+            $allDetails[] = $details;
         }
 
-        $details = array_merge($this->format($rana), [
-            'newMembers'     => $newMembersValues,
-            'renewedMembers' => $renewedMembersValues,
-            'retentions'     => $retentionsValues
-        ]);
-
-        return $details;
+        return $allDetails;
     }
 
     /**
@@ -135,7 +165,7 @@ class RanaFormatter
 
     private static function getCurrentTimeslotData(array $objects, string $currentTimeslot): array
     {
-        return array_filter($objects, function ($object) use($currentTimeslot) {
+        return array_filter($objects, function ($object) use ($currentTimeslot) {
             return $object->getTimeslot() == $currentTimeslot;
         });
     }

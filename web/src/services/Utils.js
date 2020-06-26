@@ -26,8 +26,6 @@ class Utils {
   }
 
   static getNumericTimeslot() {
-    //todo
-    return 0;
     let month = new Date().getMonth() + 1;
     return Math.ceil(month / 3);
   }
@@ -42,6 +40,10 @@ class Utils {
     }
     if (!timeslot) timeslot = 1;
     return (timeslot - 1) * 3 + 1;
+  }
+  
+  static getNextTimeslot(timeslot) {
+    return "T" + ((timeslot.substr(1, 1) * 1) + 1);
   }
 }
 

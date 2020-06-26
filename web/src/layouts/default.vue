@@ -10,26 +10,40 @@
               </v-list-item-icon>
               <v-list-item-title>{{ $t("home") }}</v-list-item-title>
             </v-list-item>
-
+            <!-- 
             <v-list-item to="/login">
               <v-list-item-icon>
                 <v-icon>mdi-user-arrow-right-outline</v-icon>
               </v-list-item-icon>
               <v-list-item-title>{{ $t("account") }}</v-list-item-title>
-            </v-list-item>
-
-            <v-list-item @click="doLogout()">
-              <v-list-item-icon>
-                <v-icon>mdi-exit</v-icon>
-              </v-list-item-icon>
-              <v-list-item-title>Logout</v-list-item-title>
-            </v-list-item>
+            </v-list-item> -->
 
             <v-list-item @click="changeRegion()">
               <v-list-item-icon>
                 <v-icon>mdi-account</v-icon>
               </v-list-item-icon>
               <v-list-item-title>{{ $t("change_region") }}</v-list-item-title>
+            </v-list-item>
+
+            <v-list-item @click="actAs()" v-if="canShowActAs()">
+              <v-list-item-icon>
+                <v-icon>mdi-account-switch-outline</v-icon>
+              </v-list-item-icon>
+              <v-list-item-title>{{ $t("act_as") }}</v-list-item-title>
+            </v-list-item>
+
+            <v-list-item @click="backToAdmin()" v-if="canShowBackToAdmin()">
+              <v-list-item-icon>
+                <v-icon>mdi-account-switch-outline</v-icon>
+              </v-list-item-icon>
+              <v-list-item-title>{{ $t("back_to_admin") }}</v-list-item-title>
+            </v-list-item>
+
+            <v-list-item @click="doLogout()">
+              <v-list-item-icon>
+                <v-icon>mdi-account-arrow-right</v-icon>
+              </v-list-item-icon>
+              <v-list-item-title>Logout</v-list-item-title>
             </v-list-item>
           </v-list-item-group>
         </v-list>
@@ -78,8 +92,33 @@
         >
       </v-toolbar>
     </nav>
+
     <nuxt />
-    <Snackbar v-if="snackbarData" :show.sync="showSnackbar" :data.sync="snackbarData"/>
+    <Snackbar
+      :showSnackbar.sync="showSnackbar"
+      :state.sync="snackbarState"
+      :messageLabel.sync="snackbarMessageLabel"
+    />
+
+    <v-dialog v-model="promptUserChange" width="500" :scrollable="false">
+      <v-card>
+        <v-card-title class="headline primary white--text" primary-title>
+          Seleziona director
+        </v-card-title>
+        <v-card-text class="pa-5">
+          <v-select
+            :items="regionDirectors"
+            label="Seleziona director"
+            v-model="actAsDirector"
+            item-text="fullName"
+            return-object
+            required
+            prepend-icon="mdi-account"
+            @change="setActAs()"
+          ></v-select>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
   </v-app>
 </template>
 
@@ -91,7 +130,13 @@ export default {
   data() {
     return {
       drawer: false,
-      snackbarData: null
+      showSnackbar: false,
+      snackbarMessageLabel: null,
+      snackbarState: null,
+      promptUserChange: false,
+      actAsDirector: null,
+      regionDirectors: [],
+      message: ""
     };
   },
   components: {
@@ -99,14 +144,44 @@ export default {
   },
   computed: {
     snackbar() {
-      return this.$store.getters["snackbar/getData"]
+      return this.$store.getters["snackbar/getData"];
     }
   },
   methods: {
+    canShowBackToAdmin() {
+      let actAs = this.$store.getters["getActAs"];
+      let isAdmin = this.$store.getters["getOriginalUser"].isAdmin;
+      return actAs && isAdmin;
+    },
     getUser() {
       return this.$store.getters["getUser"]
         ? this.$store.getters["getUser"].fullName
         : "";
+    },
+    backToAdmin() {
+      this.$store.commit("setActAs", null);
+      this.$store.commit("setUserRole", "ADMIN");
+      this.$router.go();
+    },
+    setActAs() {
+      this.$store.commit("setActAs", this.actAsDirector);
+      this.$store.commit("setUserRole", this.actAsDirector.role);
+      this.snackbarState = "success";
+      this.snackbarMessageLabel = "role_changed";
+      this.showSnackbar = true;
+      this.promptUserChange = false;
+      this.$router.go();
+    },
+    canShowActAs() {
+      return this.$store.getters["getUser"].isAdmin;
+    },
+    async fetchRegionDirectors() {
+      let region = this.$store.getters["getRegion"].id;
+      this.regionDirectors = await ApiServer.get(region + "/directors");
+    },
+    actAs() {
+      this.fetchRegionDirectors();
+      this.promptUserChange = true;
     },
     changeRegion() {
       this.$store.commit("setRegion", null);
@@ -129,6 +204,7 @@ export default {
         let response = await ApiServer.logout();
         this.$store.commit("setToken", null);
         this.$store.commit("setRegion", null);
+        this.$store.commit("setActAs", null);
         this.$router.push("/login");
       } catch (e) {}
     }
@@ -136,7 +212,6 @@ export default {
 
   created() {
     setTimeout(() => {
-
       this.$store.commit("snackbar/setData", null);
 
       if (this.getToken()) {
@@ -153,10 +228,9 @@ export default {
   watch: {
     snackbar: {
       handler: function(newVal, oldVal) {
-        if(newVal) {
+        if (newVal) {
           this.snackbarData = newVal;
           this.showSnackbar = true;
-          
         }
       }
     }

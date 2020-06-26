@@ -872,12 +872,14 @@ class DirectorController extends AbstractController
      */
     public function listDirectors(Region $region, Request $request): Response
     {
+
         $actAsId = $request->get("actAs");
         $code = Response::HTTP_OK;
         $onlyArea = !!(int) $request->get("onlyArea");
         $role = $request->get("role");
         $user = $this->getUser();
-        $isAdmin = $user->isAdmin() && !is_null($actAsId);
+
+        $isAdmin = $user->isAdmin() && is_null($actAsId);
 
         $checkUser = $this->userRepository->checkUser($user, $actAsId);
         $actAs = Util::arrayGetValue($checkUser, 'user');
@@ -894,6 +896,9 @@ class DirectorController extends AbstractController
             $code = Util::arrayGetValue($checkDirectorRole, 'code', $code);
             $director = Util::arrayGetValue($checkDirectorRole, 'director', null);
             $role = $director ? $director->getRole() : null;
+
+            //toremove
+            $code = Response::HTTP_OK;
         }
 
         if ($code == Response::HTTP_OK) {

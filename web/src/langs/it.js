@@ -49,5 +49,10 @@ export default {
   reset: "Resetta",
   approve_proposal: "Approva proposta",
   approve_rana: "Approva rana",
-  rana_proposal: "Proposta rana"
+  rana_proposal: "Proposta rana",
+  proposal_sent: "Proposta inviata",
+  proposal_error: "Errore nell'invio della proposta",
+  act_as: "Act as...  ",
+  role_changed: "Ruolo cambiato correttamente!",
+  back_to_admin: "Torna amministratore"
 };

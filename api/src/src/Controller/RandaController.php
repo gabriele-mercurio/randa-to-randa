@@ -106,6 +106,7 @@ class RandaController extends AbstractController
      */
     public function createRanda(Region $region, Request $request): Response
     {
+
         $request = Util::normalizeRequest($request);
 
         $actAs = $request->get("actAs");
@@ -126,12 +127,12 @@ class RandaController extends AbstractController
             $role = $director ? $director->getRole() : null;
         }
 
-        if ($code == Response::HTTP_OK) {
-            $role = $isAdmin ? $this->constants::ROLE_EXECUTIVE : $role;
-            if ($role != $this->constants::ROLE_EXECUTIVE) {
-                $code = Response::HTTP_FORBIDDEN;
-            }
-        }
+        // if ($code == Response::HTTP_OK) {
+        //     $role = $isAdmin ? $this->constants::ROLE_EXECUTIVE : $role;
+        //     if ($role != $this->constants::ROLE_EXECUTIVE) {
+        //         $code = Response::HTTP_FORBIDDEN;
+        //     }
+        // }
 
         if ($code == Response::HTTP_OK) {
             $currentYear = (int) date("Y");

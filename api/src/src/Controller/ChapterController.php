@@ -794,7 +794,6 @@ class ChapterController extends AbstractController
                 if (!is_null($prevResumeDate)) {
                     $prevResumeDate = Util::UTCDateTime($prevResumeDate);
                 }
-
             } catch (Exception $ex) {
                 $code = Response::HTTP_BAD_REQUEST;
                 $errorFields['launchChapterDate'] = "invalid";
@@ -1080,9 +1079,11 @@ class ChapterController extends AbstractController
         $checkUser = $this->userRepository->checkUser($user, $actAsId);
         $actAs = Util::arrayGetValue($checkUser, 'user');
         $code = Util::arrayGetValue($checkUser, 'code');
+        //file_put_contents("pippo", json_encode($checkUser));
 
         if ($code == Response::HTTP_OK && !$isAdmin) {
             $u = is_null($actAsId) ? $user : $actAs;
+
             $checkDirectorRole = $this->directorRepository->checkDirectorRole($u, $region, $role);
 
             $code = Util::arrayGetValue($checkDirectorRole, 'code', $code);
@@ -1092,6 +1093,7 @@ class ChapterController extends AbstractController
 
         if ($code == Response::HTTP_OK) {
             $role = $isAdmin ? $this->constants::ROLE_EXECUTIVE : $role;
+
             if (!in_array($role, [
                 $this->constants::ROLE_AREA,
                 $this->constants::ROLE_ASSISTANT,

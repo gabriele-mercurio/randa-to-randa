@@ -9,18 +9,20 @@
     </h3>
     <Rana
       :rana="currentRana"
+      :prevRana="prevRana"
       :ranaType="'renewedMembers'"
       :currentTimeslot="currentTimeslot"
       :editable="true"
     />
 
     <v-divider class="py-6"></v-divider>
-    <div v-for="(rana, timeslot) in ranas" :key="timeslot" class="mt-4">
-      <template v-if="timeslot !== 'T4' && isPastTimeslot(timeslot)">
+    <div v-for="(rana, index) in ranas" :key="index" class="mt-4">
+
+      <template v-if="index != 0 && rana && rana.timeslot !== 'T4' && isPastTimeslot(rana.timeslot) && ranas.length > 1">
         <Rana
           :rana.sync="rana"
           :ranaType="'renewedMembers'"
-          :currentTimeslot="timeslot"
+          :currentTimeslot="rana.timeslot"
           :editable="false"
         />
       </template>
@@ -42,7 +44,8 @@ export default {
       chapter: {},
       currentTimeslot: null,
       ranas: null,
-      currentRana: null
+      currentRana: null,
+      prevRana: null
     };
   },
   created() {
@@ -75,8 +78,15 @@ export default {
       return timeslot <= this.currentTimeslot;
     },
     async fetchRanas(chapterId) {
-      let ranas = await ApiServer.get(chapterId + "/rana");
-      this.currentRana = ranas[ranas.length - 1];
+      this.ranas = await ApiServer.get(chapterId + "/rana");
+      if(this.ranas.errorCode && this.ranas.errorCode == 404) {
+        this.ranas = await ApiServer.post(chapterId + "/rana");
+      }
+
+      this.currentRana = this.ranas[0];
+      if(this.ranas.length > 1) {
+        this.prevRana = this.ranas[1];
+      }
     }
   }
 };

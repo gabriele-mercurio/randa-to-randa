@@ -3,7 +3,8 @@ export const state = () => ({
   user: null,
   role: null,
   token: null,
-  region: null
+  region: null,
+  actAs: null
 });
 
 export const mutations = {
@@ -18,11 +19,21 @@ export const mutations = {
   },
   setRegion(state, region) {
     state.region = region;
+  },
+  setActAs(state, actAs) {
+    state.actAs = actAs
+  },
+  setUserRole(state, role) {
+    state.region.role = role;
   }
 };
 
 export const getters = {
   getUser(state) {
+    if(state.actAs) return state.actAs;
+    return state.user;
+  },
+  getOriginalUser(state) {
     return state.user;
   },
   getRole(state) {
@@ -33,5 +44,8 @@ export const getters = {
   },
   getRegion(state) {
     return state.region;
+  },
+  getActAs(state) {
+    return state.actAs
   }
 };

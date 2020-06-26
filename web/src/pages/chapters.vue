@@ -4,7 +4,12 @@
       :chapters.sync="chapters"
       :classSpec="'elevation-3'"
       v-on:edit="openEditModal"
+      v-if="!noChaptersFound"
     />
+
+    <div v-else>
+      Nessun capitolo trovato :(
+    </div>
 
     <v-dialog
       :persistent="false"
@@ -38,7 +43,8 @@ export default {
       editChapter: null,
       chapters: [],
       users: [],
-      regionId: null
+      regionId: null,
+      noChaptersFound: false
     };
   },
   props: {},
@@ -67,7 +73,12 @@ export default {
     },
 
     async fetchChapters() {
-      this.chapters = await ApiServer.get(this.regionId + "/chapters");
+      let response = await ApiServer.get(this.regionId + "/chapters");
+      if(response.errorCode === 404) {
+        this.noChaptersFound = true;
+      } else {
+        this.chapters = response
+      }
     }
   },
   created() {

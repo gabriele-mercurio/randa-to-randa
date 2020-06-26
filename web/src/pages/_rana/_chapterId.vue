@@ -2,27 +2,27 @@
   <v-container>
     <h3 class="py-4">
       Capitolo:
-      <span class="font-italic font-weight-light">{{ chapter.name }}</span>
-    </h3>
-    <h3 class="pb-4">
+      <span class="font-italic font-weight-light mr-2">{{ chapter.name }}</span>
       Membri inizali:
-      <span class="font-italic font-weight-light">3</span> Membri finali:
+      <span class="font-italic font-weight-light mr-2">3</span> Membri finali:
       <span class="font-italic font-weight-light">3</span>
     </h3>
     <Rana
       :rana="currentRana"
+      :prevRana="prevRana"
       :ranaType="'renewedMembers'"
       :currentTimeslot="currentTimeslot"
       :editable="true"
     />
 
     <v-divider class="py-6"></v-divider>
-    <div v-for="(rana, timeslot) in ranas" :key="timeslot">
-      <template v-if="timeslot !== 'T4' && isPastTimeslot(timeslot)">
+    <div v-for="(rana, index) in ranas" :key="index" class="mt-4">
+
+      <template v-if="index != 0 && rana && rana.timeslot !== 'T4' && isPastTimeslot(rana.timeslot) && ranas.length > 1">
         <Rana
-          :rana="rana"
+          :rana.sync="rana"
           :ranaType="'renewedMembers'"
-          :currentTimeslot="timeslot"
+          :currentTimeslot="rana.timeslot"
           :editable="false"
         />
       </template>
@@ -43,23 +43,25 @@ export default {
     return {
       chapter: {},
       currentTimeslot: null,
-      lastTimeslot: null,
       ranas: null,
-      currentRana: null
+      currentRana: null,
+      prevRana: null
     };
   },
   created() {
     this.ranas = RANAS;
+
     let numericTimeslot = Utils.getNumericTimeslot();
-
     this.currentTimeslot = Utils.getCurrentTimeslot();
-    this.lastTimeslot = "T" + (numericTimeslot - 1);
 
-    this.currentRana = this.ranas[this.lastTimeslot];
+    // this.currentRana = JSON.parse(
+    //   JSON.stringify(this.ranas[this.currentTimeslot])
+    // );
 
     setTimeout(() => {
       let chapterId = this.$route.params.chapterId || false;
       this.fetchChapter(chapterId);
+      this.fetchRanas(chapterId);
     });
   },
   methods: {
@@ -76,7 +78,15 @@ export default {
       return timeslot <= this.currentTimeslot;
     },
     async fetchRanas(chapterId) {
-      //this.rana = ApiServer.get("rana");
+      this.ranas = await ApiServer.get(chapterId + "/rana");
+      if(this.ranas.errorCode && this.ranas.errorCode == 404) {
+        this.ranas = await ApiServer.post(chapterId + "/rana");
+      }
+
+      this.currentRana = this.ranas[0];
+      if(this.ranas.length > 1) {
+        this.prevRana = this.ranas[1];
+      }
     }
   }
 };

@@ -45,5 +45,14 @@ export default {
   chapter_launch_error: "Errore nel lancio del capitolo",
   chapter_launched: "Capitolo lanciato!",
   confirm: "Conferma",
-  send_proposal: "Manda proposta"
+  send_proposal: "Manda proposta",
+  reset: "Resetta",
+  approve_proposal: "Approva proposta",
+  approve_rana: "Approva rana",
+  rana_proposal: "Proposta rana",
+  proposal_sent: "Proposta inviata",
+  proposal_error: "Errore nell'invio della proposta",
+  act_as: "Act as...  ",
+  role_changed: "Ruolo cambiato correttamente!",
+  back_to_admin: "Torna amministratore"
 };

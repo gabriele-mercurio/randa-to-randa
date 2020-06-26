@@ -22,7 +22,7 @@ class Utils {
   }
 
   static getCurrentTimeslot() {
-    return "T" + this.getNumericTimeslot();;
+    return "T" + this.getNumericTimeslot();
   }
 
   static getNumericTimeslot() {
@@ -31,14 +31,19 @@ class Utils {
   }
 
   static getTimeslotFromMonth(month) {
-    return Math.ceil(month/3);
+    return Math.ceil(month / 3);
   }
 
-  static getFirstMonthFromTimeslot(timeslot) {
-    if(timeslot.toString().charAt(0) === 'T') {
-      timeslot = timeslot.substr(-1) * 1;
+  static getFirstTimeslotMonth(timeslot) {
+    if (timeslot.toString().charAt(0) === "T") {
+      timeslot = timeslot.substr(1, 1) * 1;
     }
+    if (!timeslot) timeslot = 1;
     return (timeslot - 1) * 3 + 1;
+  }
+  
+  static getNextTimeslot(timeslot) {
+    return "T" + ((timeslot.substr(1, 1) * 1) + 1);
   }
 }
 

@@ -1,6 +1,8 @@
 <template>
   <div class="ma-4 fill-height">
-    <DirectorsList v-on:edit="openEditModal" :directors.sync="directors" />
+    <DirectorsList v-on:edit="openEditModal" :directors.sync="directors" v-if="!noDirectorsFound"/>
+
+    <div v-else>Nessun director trovato :( </div>
     <v-dialog
       :persistent="false"
       v-model="showEdit"
@@ -51,7 +53,8 @@ export default {
       areaDirectors: [],
       successSnackbar: false,
       snackbarMessage: "",
-      timeout: 3000
+      timeout: 3000,
+      noDirectorsFound: false
     };
   },
   props: {},
@@ -85,14 +88,22 @@ export default {
       }
     },
     async fetchDirectors() {
-      this.directors = await ApiServer.get(
+
+      let response = await ApiServer.get(
         this.$store.getters["getRegion"].id + "/directors"
       );
-      this.$store.commit("directors/setDirectors", this.directors);
+      if (response.errorCode === 404) {
+        this.noDirectorsFound = true;
+      } else {
+        this.directors = response;
+        this.$store.commit("directors/setDirectors", this.directors);
+      }
     },
     saveDirector(response) {
       this.successSnackbar = true;
-      this.snackbarMessage =response.edtiMode ? this.$t('director_edited') : this.$t('director_created');
+      this.snackbarMessage = response.edtiMode
+        ? this.$t("director_edited")
+        : this.$t("director_created");
     }
   },
   async created() {

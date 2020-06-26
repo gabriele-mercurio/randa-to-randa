@@ -22,14 +22,14 @@
           </v-btn>
         </template>
         <v-list>
-
-           <v-list-item
-            @click="goToRana(item)"
-          >
-          <v-icon class="mr-1">mdi-text</v-icon>
-            <v-list-item-title
-              >Rana...</v-list-item-title
-            >
+          <v-list-item @click="goToRana(item)">
+            <v-icon class="mr-1">mdi-text</v-icon>
+            <v-list-item-title v-if="iAmAssistant">{{
+              $t("rana_proposal")
+            }}</v-list-item-title>
+            <v-list-item-title v-else>{{
+              $t("approve_rana")
+            }}</v-list-item-title>
           </v-list-item>
 
           <v-list-item @click="edit(item)">
@@ -74,7 +74,7 @@
             @click="close(item)"
             :class="{ disabled: item.currentStatus == 'CLOSED' }"
           >
-          <v-icon class="mr-1">mdi-close</v-icon>
+            <v-icon class="mr-1">mdi-close</v-icon>
             <v-list-item-title
               >Chiudi {{ getStateToLaunch(item) }}</v-list-item-title
             >
@@ -192,14 +192,22 @@ export default {
       default: null
     }
   },
+  computed: {
+    iAmAssistant() {
+      if (this.$store.getters["getRegion"]) {
+        return this.$store.getters["getRegion"].role === "ASSISTANT"
+      }
+    }
+  },
   methods: {
-
+    //go to rana proposal or approve
     goToRana(item) {
       this.$router.push("rana/" + item.id);
     },
+
     closeSuspendDialog(isSuspended) {
       this.suspendDialog = false;
-      if(isSuspended) {
+      if (isSuspended) {
         this.currentChapter.currentState = "SUSPENDED";
       }
     },

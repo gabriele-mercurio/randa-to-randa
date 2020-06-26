@@ -53,9 +53,10 @@ class ApiServer {
 
   static async get(endpoint, config) {
     config = { ...config, ...ApiServer.commonRequestConfig };
+    let actAs = store.getters["getActAs"] ? ("?actAs=" + store.getters["getActAs"].userId) : "";
     try {
       let response = await axios.get(
-        process.env.base_url + "/" + endpoint,
+        process.env.base_url + "/" + endpoint + actAs,
         config
       );
       return ApiServer.parseResponse(response);
@@ -66,9 +67,10 @@ class ApiServer {
 
   static async post(endpoint, body, config) {
     config = { ...config, ...ApiServer.commonRequestConfig };
+    let actAs = store.getters["getActAs"] ? ("?actAs=" + store.getters["getActAs"].userId) : "";
     try {
       let response = await axios.post(
-        process.env.base_url + "/" + endpoint,
+        process.env.base_url + "/" + endpoint + actAs,
         body,
         config
       );
@@ -80,9 +82,10 @@ class ApiServer {
 
   static async put(endpoint, body, config) {
     config = { ...config, ...ApiServer.commonRequestConfig };
+    let actAs = store.getters["getActAs"] ? ("?actAs=" + store.getters["getActAs"].userId) : "";
     try {
       let response = await axios.put(
-        process.env.base_url + "/" + endpoint,
+        process.env.base_url + "/" + endpoint + actAs,
         body,
         config
       );

@@ -877,7 +877,7 @@ class DirectorController extends AbstractController
         $onlyArea = !!(int) $request->get("onlyArea");
         $role = $request->get("role");
         $user = $this->getUser();
-        $isAdmin = $user->isAdmin() && !is_null($actAsId);
+        $isAdmin = $user->isAdmin() && is_null($actAsId);
 
         $checkUser = $this->userRepository->checkUser($user, $actAsId);
         $actAs = Util::arrayGetValue($checkUser, 'user');

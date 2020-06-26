@@ -1079,11 +1079,9 @@ class ChapterController extends AbstractController
         $checkUser = $this->userRepository->checkUser($user, $actAsId);
         $actAs = Util::arrayGetValue($checkUser, 'user');
         $code = Util::arrayGetValue($checkUser, 'code');
-        //file_put_contents("pippo", json_encode($checkUser));
 
         if ($code == Response::HTTP_OK && !$isAdmin) {
             $u = is_null($actAsId) ? $user : $actAs;
-
             $checkDirectorRole = $this->directorRepository->checkDirectorRole($u, $region, $role);
 
             $code = Util::arrayGetValue($checkDirectorRole, 'code', $code);

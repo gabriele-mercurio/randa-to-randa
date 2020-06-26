@@ -43,7 +43,7 @@ class Rana
      *
      * @ORM\OneToMany(targetEntity="RanaLifecycle", mappedBy="rana")
      * @ORM\OrderBy({"currentTimeslot" = "DESC"})
-     * 
+     *
      */
     private $ranaLifecycles;
 
@@ -126,14 +126,10 @@ class Rana
         return $this->ranaLifecycles;
     }
 
-    public function addRanaLIfecycle($lifecycle) {
-        $this->ranaLifecycles[] = $lifecycle;
-    }
-
-
-    public function addLifecycle($lifecycle)
+    public function addRanaLIfecycle($lifecycle): self
     {
-        return $this->ranaLifecycles[] = $lifecycle;
+        $this->ranaLifecycles[] = $lifecycle;
+        return $this;
     }
 
     /**

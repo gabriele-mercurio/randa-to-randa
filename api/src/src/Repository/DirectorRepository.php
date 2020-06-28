@@ -23,9 +23,6 @@ use Twig\Environment;
  */
 class DirectorRepository extends ServiceEntityRepository
 {
-    /** @var Constants */
-    protected $constants;
-
     /** @var EntityManagerInterface */
     protected $entityManager;
 
@@ -39,7 +36,6 @@ class DirectorRepository extends ServiceEntityRepository
     private $translator;
 
     public function __construct(
-        Constants $constants,
         EntityManagerInterface $entityManager,
         Environment $twig,
         ManagerRegistry $registry,
@@ -47,7 +43,6 @@ class DirectorRepository extends ServiceEntityRepository
         TranslatorInterface $translator
     ) {
         parent::__construct($registry, Director::class);
-        $this->constants = $constants;
         $this->entityManager = $entityManager;
         $this->mailer = $mailer;
         $this->translator = $translator;
@@ -64,7 +59,7 @@ class DirectorRepository extends ServiceEntityRepository
      *                          or he/she doesn't have the specified role for that region,
      *                          director will be null and the error code will be set to 403 FORBIDDEN
      */
-    public function checkDirectorRole(User $user, Region $region, ?string $role = null): array
+    public function checkDirectorRole(User $user, ?Region $region = null, ?string $role = null): array
     {
         $response = [
             'code' => Response::HTTP_OK,
@@ -72,9 +67,12 @@ class DirectorRepository extends ServiceEntityRepository
         ];
 
         $params = [
-            'user' => $user,
-            'region' => $region
+            'user' => $user
         ];
+
+        if (!is_null($region)) {
+            $params['region'] = $region;
+        }
 
         if (!is_null($role)) {
             $params['role'] = $role;
@@ -82,40 +80,55 @@ class DirectorRepository extends ServiceEntityRepository
 
         $directors = $this->findBy($params);
 
-
         if (!empty($directors)) {
-
-
             if (count($directors) > 1) {
-
-                $maxFoundedRole = $this->constants::ROLE_ASSISTANT;
+                $maxFoundedRole = Constants::ROLE_ASSISTANT;
 
                 foreach ($directors as $director) {
                     $role = $director->getRole();
-                    if ($role == $this->constants::ROLE_EXECUTIVE) {
-                        $maxFoundedRole = $this->constants::ROLE_EXECUTIVE;
+                    $roleCheck = [];
+
+                    switch ($role) {
+                        case Constants::ROLE_ASSISTANT:
+                            continue;
+                        break;
+                        case Constants::ROLE_AREA:
+                            $roleCheck = [
+                                Constants::ROLE_ASSISTANT
+                            ];
+                        break;
+                        case Constants::ROLE_EXECUTIVE:
+                            $roleCheck = [
+                                Constants::ROLE_ASSISTANT,
+                                Constants::ROLE_AREA
+                            ];
+                        break;
+                        case Constants::ROLE_NATIONAL:
+                            $roleCheck = [
+                                Constants::ROLE_ASSISTANT,
+                                Constants::ROLE_AREA,
+                                Constants::ROLE_EXECUTIVE
+                            ];
                         break;
                     }
-                    if ($role == $this->constants::ROLE_AREA) {
-                        $maxFoundedRole = $this->constants::ROLE_AREA;
+
+                    if (in_array($maxFoundedRole, $roleCheck)) {
+                        $maxFoundedRole = $role;
                     }
                 }
+
                 $directors = array_filter($directors, function ($d) use($maxFoundedRole) {
                     return $d->getRole() == $maxFoundedRole;
                 });
-
             }
 
             $response['director'] = Util::arrayGetValue($directors, 0, null);
-
         } else {
-
             if (!is_null($role)) {
                 $response['code'] = Response::HTTP_FORBIDDEN;
             } else {
-
                 unset($params['region']);
-                $params['role'] = $this->constants::ROLE_NATIONAL;
+                $params['role'] = Constants::ROLE_NATIONAL;
                 $directors = $this->findBy($params);
 
                 if (!empty($directors)) {

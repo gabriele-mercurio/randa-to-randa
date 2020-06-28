@@ -994,6 +994,7 @@ class RanaController extends AbstractController
             $ranaLifeCycle->setRana($rana);
 
             $this->ranaLifeCycleRepository->save($ranaLifeCycle);
+            $this->entityManager->refresh($rana);
 
             return new JsonResponse($this->ranaFormatter->formatData($rana, $role));
         } else {

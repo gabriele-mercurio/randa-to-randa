@@ -982,12 +982,14 @@ class RanaController extends AbstractController
                     $nextSlotNumber = $slotNumber + 1;
                     $nextTimeslot = "T$nextSlotNumber";
                 }
+
+                $status = $this->constants::RANA_LIFECYCLE_STATUS_TODO;
             } else {
                 $nextTimeslot = $timeslot;
             }
 
             $ranaLifeCycle = new RanaLifecycle();
-            $ranaLifeCycle->setCurrentState($this->constants::RANA_LIFECYCLE_STATUS_TODO);
+            $ranaLifeCycle->setCurrentState($status);
             $ranaLifeCycle->setCurrentTimeslot($nextTimeslot);
             $ranaLifeCycle->setRana($rana);
 

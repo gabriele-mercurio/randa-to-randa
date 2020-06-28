@@ -6,6 +6,7 @@ use App\Entity\Chapter;
 use App\Entity\NewMember;
 use App\Entity\Rana;
 use App\Entity\RanaLifecycle;
+use App\Entity\Randa;
 use App\Entity\Retention;
 use App\Formatter\RanaFormatter;
 use App\Repository\DirectorRepository;
@@ -222,14 +223,11 @@ class RanaController extends AbstractController
             ]);
 
             if (is_null($randa)) {
-                $this->forward('App\Controller\RandaController::createRanda', [
-                    'region'  => $region
-                ])->getContent();
-
-                $randa = $this->randaRepository->findOneBy([
-                    'region' => $region,
-                    'year' => $currentYear
-                ]);
+                $randa = new Randa();
+                $randa->setCurrentTimeslot($this->constants::TIMESLOT_T0);
+                $randa->setRegion($region);
+                $randa->setYear($currentYear);
+                $this->randaRepository->save($randa);
             }
 
             $rana = $this->ranaRepository->findOneBy([

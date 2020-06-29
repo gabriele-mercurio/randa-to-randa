@@ -398,8 +398,8 @@ export default {
       for(let k of Object.keys(data.newMembers.PREV)) {
         let index = k.substr(1, k.length) * 1;
         if(index >= firstTimeslotMonth) {
-          data["n_" + k] = data.newMembers.PREV[k];
-          data["r_" + k] = data.retentions.PREV[k];
+          data["n_" + k] = data.newMembers.PREV[k] ? data.newMembers.PREV[k] : null;
+          data["r_" + k] = data.retentions.PREV[k] ? data.retentions.PREV[k] : null;
         }
       }
       // send only future data

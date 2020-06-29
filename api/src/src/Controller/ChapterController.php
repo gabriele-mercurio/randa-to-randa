@@ -29,9 +29,6 @@ class ChapterController extends AbstractController
     /** @var ChapterRepository */
     private $chapterRepository;
 
-    /** @var Constants */
-    private $constants;
-
     /** @var DirectorRepository */
     private $directorRepository;
 
@@ -44,14 +41,12 @@ class ChapterController extends AbstractController
     public function __construct(
         ChapterFormatter $chapterFormatter,
         ChapterRepository $chapterRepository,
-        Constants $constants,
         DirectorRepository $directorRepository,
         EntityManagerInterface $entityManager,
         UserRepository $userRepository
     ) {
         $this->chapterFormatter = $chapterFormatter;
         $this->chapterRepository = $chapterRepository;
-        $this->constants = $constants;
         $this->directorRepository = $directorRepository;
         $this->entityManager = $entityManager;
         $this->userRepository = $userRepository;
@@ -139,44 +134,21 @@ class ChapterController extends AbstractController
     {
         $request = Util::normalizeRequest($request);
 
-        $actAs = $request->get("actAs");
-        $code = Response::HTTP_OK;
-        $role = $request->get("role");
-        $user = $this->getUser();
-        $isAdmin = $user->isAdmin() && is_null($actAs);
+        $region = $chapter->getRegion();
 
+        $roleCheck = [
+            Constants::ROLE_EXECUTIVE,
+            Constants::ROLE_NATIONAL
+        ];
+        $performerData = Util::getPerformerData($this->getUser(), $region, $roleCheck, $this->userRepository, $this->directorRepository, $request->get("actAs"), $request->get("role"));
 
-        $checkUser = $this->userRepository->checkUser($user, $actAs);
-        $user = Util::arrayGetValue($checkUser, 'user');
-        $code = Util::arrayGetValue($checkUser, 'code');
-
-        if ($code == Response::HTTP_OK) {
-            if (!is_null($role) && $role != $this->constants::ROLE_EXECUTIVE) {
-                $code = Response::HTTP_BAD_REQUEST;
-            }
-        }
-
-        if ($code == Response::HTTP_OK && !$isAdmin) {
-            $region = $chapter->getRegion();
-            $checkDirectorRole = $this->directorRepository->checkDirectorRole($user, $region, $role);
-
-            $code = Util::arrayGetValue($checkDirectorRole, 'code', $code);
-            $director = Util::arrayGetValue($checkDirectorRole, 'director', null);
-            $role = $director ? $director->getRole() : null;
+        // Assign $actAs, $code, $director, $isAdmin and $role
+        foreach ($performerData as $var => $value) {
+            $$var = $value;
         }
 
         if ($code == Response::HTTP_OK) {
-            $role = $isAdmin ? $this->constants::ROLE_EXECUTIVE : $role;
-            if (!in_array($role, [
-                $this->constants::ROLE_NATIONAL,
-                $this->constants::ROLE_EXECUTIVE
-            ])) {
-                $code = Response::HTTP_FORBIDDEN;
-            }
-        }
-
-        if ($code == Response::HTTP_OK) {
-            if ($chapter->getCurrentState() == $this->constants::CHAPTER_STATE_CLOSED) {
+            if ($chapter->getCurrentState() == Constants::CHAPTER_STATE_CLOSED) {
                 $code = Response::HTTP_BAD_REQUEST;
             }
         }
@@ -185,7 +157,7 @@ class ChapterController extends AbstractController
             $today = Util::UTCDateTime();
 
             $chapter->setClosureDate($today);
-            $chapter->setCurrentState($this->constants::CHAPTER_STATE_CLOSED);
+            $chapter->setCurrentState(Constants::CHAPTER_STATE_CLOSED);
             $this->entityManager->flush();
 
             return new JsonResponse($this->chapterFormatter->formatBase($chapter));
@@ -315,28 +287,17 @@ class ChapterController extends AbstractController
     {
         $request = Util::normalizeRequest($request);
 
-        $actAsId = $request->get("actAs");
-        $code = Response::HTTP_OK;
-        $errorFields = [];
-        $user = $this->getUser();
-        $isAdmin = $user->isAdmin() && is_null($actAsId);
+        $roleCheck = [
+            Constants::ROLE_EXECUTIVE
+        ];
+        $performerData = Util::getPerformerData($this->getUser(), $region, $roleCheck, $this->userRepository, $this->directorRepository, $request->get("actAs"), $request->get("role"));
 
-        $checkUser = $this->userRepository->checkUser($user, $actAsId);
-        $actAs = Util::arrayGetValue($checkUser, 'user');
-        $code = Util::arrayGetValue($checkUser, 'code');
-
-        if ($code == Response::HTTP_OK && !$isAdmin) {
-            $u = is_null($actAsId) ? $user : $actAs;
-            $director = $this->directorRepository->findOneBy([
-                'user' => $u,
-                'region' => $region,
-                'role' => $this->constants::ROLE_EXECUTIVE
-            ]);
-
-            if (is_null($director)) {
-                $code = Response::HTTP_FORBIDDEN;
-            }
+        // Assign $actAs, $code, $director, $isAdmin and $role
+        foreach ($performerData as $var => $value) {
+            $$var = $value;
         }
+
+        $errorFields = [];
 
         if ($code == Response::HTTP_OK) {
             $name = trim($request->get("name", ""));
@@ -347,7 +308,7 @@ class ChapterController extends AbstractController
             $actualLaunchChapterDate = $request->get("actualLaunchChapterDate");
 
             $previuosState = null;
-            $state = $this->constants::CHAPTER_STATE_PROJECT;
+            $state = Constants::CHAPTER_STATE_PROJECT;
             $today = Util::UTCDateTime();
 
             if (empty($name)) {
@@ -386,9 +347,9 @@ class ChapterController extends AbstractController
                     if ($prevLaunchCoregroupDate < $today) {
                         $actualLaunchCoregroupDate = $prevLaunchCoregroupDate;
                         $prevLaunchCoregroupDate = null;
-                        $state = $this->constants::CHAPTER_STATE_CORE_GROUP;
+                        $state = Constants::CHAPTER_STATE_CORE_GROUP;
                     } else {
-                        $state = $this->constants::CHAPTER_STATE_PROJECT;
+                        $state = Constants::CHAPTER_STATE_PROJECT;
                     }
                 }
 
@@ -396,9 +357,9 @@ class ChapterController extends AbstractController
                     if ($actualLaunchCoregroupDate >= $today) {
                         $prevLaunchCoregroupDate = $actualLaunchCoregroupDate;
                         $actualLaunchCoregroupDate = null;
-                        $state = $this->constants::CHAPTER_STATE_PROJECT;
+                        $state = Constants::CHAPTER_STATE_PROJECT;
                     } else {
-                        $state = $this->constants::CHAPTER_STATE_CORE_GROUP;
+                        $state = Constants::CHAPTER_STATE_CORE_GROUP;
                     }
                 }
             }
@@ -423,7 +384,7 @@ class ChapterController extends AbstractController
                         $actualLaunchChapterDate = $prevLaunchChapterDate;
                         $prevLaunchChapterDate = null;
                         $previuosState = $state;
-                        $state = $this->constants::CHAPTER_STATE_CHAPTER;
+                        $state = Constants::CHAPTER_STATE_CHAPTER;
                     }
                 }
 
@@ -431,9 +392,8 @@ class ChapterController extends AbstractController
                     if ($actualLaunchChapterDate >= $today) {
                         $prevLaunchChapterDate = $actualLaunchChapterDate;
                         $actualLaunchChapterDate = null;
-                        $state = is_null($previuosState) ? $state : $previuosState;
                     } else {
-                        $state = $this->constants::CHAPTER_STATE_CHAPTER;
+                        $state = is_null($previuosState) ? $state : $previuosState;
                     }
                 }
             }
@@ -447,8 +407,8 @@ class ChapterController extends AbstractController
             }
 
             if (in_array($state, [
-                $this->constants::CHAPTER_STATE_PROJECT,
-                $this->constants::CHAPTER_STATE_CORE_GROUP
+                Constants::CHAPTER_STATE_PROJECT,
+                Constants::CHAPTER_STATE_CORE_GROUP
             ]) && is_null($prevLaunchChapterDate)) {
                 $errorFields['launchChapterDate'] = "required";
             }
@@ -462,13 +422,13 @@ class ChapterController extends AbstractController
             $d = $this->directorRepository->findOneBy([
                 'user' => $chapterDirector,
                 'region' => $region,
-                'role' => $this->constants::ROLE_ASSISTANT
+                'role' => Constants::ROLE_ASSISTANT
             ]);
 
             if (is_null($d)) {
                 $d = new Director();
                 $d->setRegion($region);
-                $d->setRole($this->constants::ROLE_ASSISTANT);
+                $d->setRole(Constants::ROLE_ASSISTANT);
                 $d->setUser($chapterDirector);
                 $this->directorRepository->save($d);
             }
@@ -536,46 +496,16 @@ class ChapterController extends AbstractController
      *      description="Optional actual coregroup launch date. If this date is given prevLaunchCoregroupDate is not given."
      * )
      * @SWG\Parameter(
-     *      name="actualLaunchCoregroupDate",
-     *      in="formData",
-     *      type="string",
-     *      description="Optional actual coregroup launch date. If this date is given prevLaunchCoregroupDate is not given."
-     * )
-     * @SWG\Parameter(
      *      name="prevLaunchChapterDate",
      *      in="formData",
      *      type="string",
      *      description="Optional previsioning chapter launch date."
      * )
      * @SWG\Parameter(
-     *      name="actualLaunchChapterDate",
-     *      in="formData",
-     *      type="string",
-     *      description="Optional actual chapter launch date. If this date is given prevLaunchChapterDate is not given."
-     * )
-     * @SWG\Parameter(
-     *      name="suspDate",
-     *      in="formData",
-     *      type="string",
-     *      description="Optional chapter suspention date."
-     * )
-     * @SWG\Parameter(
      *      name="prevResumeDate",
      *      in="formData",
      *      type="string",
      *      description="Optional previsioning chapter resume date."
-     * )
-     * @SWG\Parameter(
-     *      name="actualResumeChapterDate",
-     *      in="formData",
-     *      type="string",
-     *      description="Optional actual chapter resume date. If this date is given prevResumeChapterDate is not given."
-     * )
-     * @SWG\Parameter(
-     *      name="closureDate",
-     *      in="formData",
-     *      type="string",
-     *      description="Optional chapter closure date."
      * )
      * @SWG\Response(
      *      response=200,
@@ -634,10 +564,6 @@ class ChapterController extends AbstractController
      *      response=404,
      *      description="Returned if actAs is given but is not a valid user id."
      * )
-     * @SWG\Response(
-     *      response=409,
-     *      description="Returned when are given dates that change the chapter status. Use dedicated APIs instead."
-     * )
      * @SWG\Tag(name="Chapters")
      * @Security(name="Bearer")
      *
@@ -647,25 +573,18 @@ class ChapterController extends AbstractController
     {
         $request = Util::normalizeRequest($request);
 
-        $actAs = $request->get("actAs");
-        $code = Response::HTTP_OK;
-        $user = $this->getUser();
-
-        $checkUser = $this->userRepository->checkUser($user, $actAs);
-        $user = Util::arrayGetValue($checkUser, 'user');
-        $code = Util::arrayGetValue($checkUser, 'code');
-
         $region = $chapter->getRegion();
 
-        if ($code == Response::HTTP_OK) {
-            if ($user->isAdmin()) {
-                $role = $this->constants::ROLE_EXECUTIVE;
-            } else {
-                $checkDirectorRole = $this->directorRepository->checkDirectorRole($user, $region);
-                $code = Util::arrayGetValue($checkDirectorRole, 'code', $code);
-                $director = Util::arrayGetValue($checkDirectorRole, 'director', null);
-                $role = $director ? $director->getRole() : null;
-            }
+        $roleCheck = [
+            Constants::ROLE_EXECUTIVE,
+            Constants::ROLE_AREA,
+            Constants::ROLE_ASSISTANT
+        ];
+        $performerData = Util::getPerformerData($this->getUser(), $region, $roleCheck, $this->userRepository, $this->directorRepository, $request->get("actAs"), $request->get("role"));
+
+        // Assign $actAs, $code, $director, $isAdmin and $role
+        foreach ($performerData as $var => $value) {
+            $$var = $value;
         }
 
         if ($code == Response::HTTP_OK) {
@@ -673,9 +592,7 @@ class ChapterController extends AbstractController
             $chapterDirector = $request->get("director");
             $members = $request->get("members");
             $prevLaunchCoregroupDate = $request->get("prevLaunchCoregroupDate");
-            $actualLaunchCoregroupDate = $request->get("actualLaunchCoregroupDate");
             $prevLaunchChapterDate = $request->get("prevLaunchChapterDate");
-            $actualLaunchChapterDate = $request->get("actualLaunchChapterDate");
             $prevResumeDate = $request->get("prevResumeDate");
 
             $errorFields = $fields = [];
@@ -716,117 +633,71 @@ class ChapterController extends AbstractController
                 }
             }
 
-            // Check Coregroup dates
-            if ($chapter->getCurrentState() == $this->constants::CHAPTER_STATE_PROJECT) {
-                if (!empty($prevLaunchCoregroupDate)) {
-                    $prevLaunchCoregroupDate = trim($prevLaunchCoregroupDate);
+            // Check Coregroup and chapter dates
+            switch ($chapter->getCurrentState()) {
+                case Constants::CHAPTER_STATE_PROJECT:
                     if (!empty($prevLaunchCoregroupDate)) {
-                        try {
-                            $prevLaunchCoregroupDate = Util::UTCDateTime($prevLaunchCoregroupDate);
-                        } catch (Exception $ex) {
-                            $errorFields['prevLaunchCoregroupDate'] = "invalid";
-                        }
-
-                        if (!array_key_exists('prevLaunchCoregroupDate', $errorFields)) {
-                            if ($prevLaunchCoregroupDate <= $today) {
+                        $prevLaunchCoregroupDate = trim($prevLaunchCoregroupDate);
+                        if (!empty($prevLaunchCoregroupDate)) {
+                            try {
+                                $prevLaunchCoregroupDate = Util::UTCDateTime($prevLaunchCoregroupDate);
+                            } catch (Exception $ex) {
                                 $errorFields['prevLaunchCoregroupDate'] = "invalid";
-                            } else {
-                                $fields['prevLaunchCoregroupDate'] = $prevLaunchCoregroupDate;
+                            }
+
+                            if (!array_key_exists('prevLaunchCoregroupDate', $errorFields)) {
+                                if ($prevLaunchCoregroupDate <= $today) {
+                                    $errorFields['prevLaunchCoregroupDate'] = "invalid";
+                                } else {
+                                    $fields['prevLaunchCoregroupDate'] = $prevLaunchCoregroupDate;
+                                }
                             }
                         }
                     }
-                }
-
-                if (!empty($actualLaunchCoregroupDate)) {
-                    $errorFields['actualLaunchCoregroupDate'] = "conflict";
-                }
-
-                if (!empty($prevLaunchChapterDate)) {
-                    $prevLaunchChapterDate = trim($prevLaunchChapterDate);
+                case Constants::CHAPTER_STATE_CORE_GROUP:
                     if (!empty($prevLaunchChapterDate)) {
-                        try {
-                            $prevLaunchChapterDate = Util::UTCDateTime($prevLaunchChapterDate);
-                        } catch (Exception $ex) {
-                            $errorFields['prevLaunchChapterDate'] = "invalid";
+                        $prevLaunchChapterDate = trim($prevLaunchChapterDate);
+                        if (!empty($prevLaunchChapterDate)) {
+                            try {
+                                $prevLaunchChapterDate = Util::UTCDateTime($prevLaunchChapterDate);
+                            } catch (Exception $ex) {
+                                $errorFields['prevLaunchChapterDate'] = "invalid";
+                            }
+
+                            if (!array_key_exists('prevLaunchChapterDate', $errorFields)) {
+                                if ($prevLaunchChapterDate <= $today) {
+                                    $errorFields['prevLaunchChapterDate'] = "invalid";
+                                } else {
+                                    $fields['prevLaunchChapterDate'] = $prevLaunchChapterDate;
+                                }
+                            }
+                        }
+                    }
+            }
+
+            // Resume date
+            if (!empty($prevResumeDate)) {
+                $prevResumeDate = trim($prevResumeDate);
+                if (!empty($prevResumeDate)) {
+                    try {
+                        $prevResumeDate = Util::UTCDateTime($prevResumeDate);
+                    } catch (Exception $ex) {
+                        $errorFields['resumeDate'] = "invalid";
+                    }
+
+                    if (!array_key_exists('resumeDate', $errorFields)) {
+                        if ($prevResumeDate <= $today) {
+                            $errorFields['prevResumeDate'] = "invalid";
+                        } else {
+                            $fields['prevResumeDate'] = $prevResumeDate;
                         }
                     }
                 }
-
-                if (!empty($actualLaunchChapterDate)) {
-                    $errorFields['actualLaunchChapterDate'] = "conflict";
-                }
-            }
-
-            if ($chapter->getCurrentState() == $this->constants::CHAPTER_STATE_CORE_GROUP) {
-                try {
-                    if (!is_null($actualLaunchCoregroupDate)) {
-                        $actualLaunchCoregroupDate = Util::UTCDateTime($actualLaunchCoregroupDate);
-                    }
-                } catch (Exception $ex) {
-                    $errorFields['launchCoregroupDate'] = "invalid";
-                }
-            }
-
-            if (!is_null($prevLaunchCoregroupDate) && !is_null($actualLaunchCoregroupDate)) {
-                $errorFields['launchCoregroupDate'] = "invalid";
-            } else {
-                if (!is_null($prevLaunchCoregroupDate) && $prevLaunchCoregroupDate < $today) {
-                    $actualLaunchCoregroupDate = is_null($actualLaunchCoregroupDate) ? $prevLaunchCoregroupDate : $actualLaunchCoregroupDate;
-                    $prevLaunchCoregroupDate = null;
-                    $state = $this->constants::CHAPTER_STATE_CORE_GROUP;
-                }
-
-                if (!is_null($actualLaunchCoregroupDate) && $actualLaunchCoregroupDate >= $today) {
-                    $prevLaunchCoregroupDate = $actualLaunchCoregroupDate;
-                    $actualLaunchCoregroupDate = null;
-                    $state = $this->constants::CHAPTER_STATE_PROJECT;
-                }
-            }
-
-            // Chapter dates
-            try {
-                if (!is_null($prevLaunchChapterDate)) {
-                    $prevLaunchChapterDate = Util::UTCDateTime($prevLaunchChapterDate);
-                }
-                if (!is_null($actualLaunchChapterDate)) {
-                    $actualLaunchChapterDate = Util::UTCDateTime($actualLaunchChapterDate);
-                }
-                if (!is_null($prevResumeDate)) {
-                    $prevResumeDate = Util::UTCDateTime($prevResumeDate);
-                }
-            } catch (Exception $ex) {
-                $code = Response::HTTP_BAD_REQUEST;
-                $errorFields['launchChapterDate'] = "invalid";
-            }
-
-            if (!is_null($prevLaunchChapterDate) && !is_null($actualLaunchChapterDate)) {
-                $errorFields['launchChapterDate'] = "invalid";
-            } else {
-                if (!is_null($prevLaunchChapterDate) && $prevLaunchChapterDate < $today) {
-                    $actualLaunchChapterDate = is_null($actualLaunchChapterDate) ? $prevLaunchChapterDate : $actualLaunchChapterDate;
-                    $prevLaunchChapterDate = null;
-                    $previuosState = $state;
-                    $state = $this->constants::CHAPTER_STATE_CHAPTER;
-                }
-
-                if (!is_null($actualLaunchChapterDate) && $actualLaunchChapterDate >= $today) {
-                    $prevLaunchChapterDate = $actualLaunchChapterDate;
-                    $actualLaunchChapterDate = null;
-                    $state = is_null($previuosState) ? $state : $previuosState;
-                }
-            }
-
-            // Date constraints
-            $coregroupDate = $prevLaunchCoregroupDate ? $prevLaunchCoregroupDate : $actualLaunchCoregroupDate;
-            $chapterDate = $prevLaunchChapterDate ? $prevLaunchChapterDate : $actualLaunchChapterDate;
-            if (!is_null($coregroupDate) && !is_null($chapterDate) && $chapterDate < $coregroupDate) {
-                $errorFields['launchChapterDate'] = "invalid";
-                $errorFields['launchCoregroupDate'] = "invalid";
             }
 
             if (in_array($state, [
-                $this->constants::CHAPTER_STATE_PROJECT,
-                $this->constants::CHAPTER_STATE_CORE_GROUP
+                Constants::CHAPTER_STATE_PROJECT,
+                Constants::CHAPTER_STATE_CORE_GROUP
             ]) && is_null($prevLaunchChapterDate)) {
                 $errorFields['launchChapterDate'] = "empty";
             }
@@ -837,29 +708,59 @@ class ChapterController extends AbstractController
         }
 
         if ($code == Response::HTTP_OK) {
-            $d = $this->directorRepository->findOneBy([
-                'user' => $chapterDirector,
-                'region' => $region,
-                'role' => $this->constants::ROLE_ASSISTANT
-            ]);
+            $keys = array_keys($fields);
+            $protectedKeys = array_filter($keys, function ($key) {
+                return in_array($key, [
+                    'director',
+                    'name',
+                    'prevLaunchChapterDate',
+                    'prevLaunchCoregroupDate'
+                ]);
+            });
 
-            if (is_null($d)) {
-                $d = new Director();
-                $d->setRegion($region);
-                $d->setRole($this->constants::ROLE_ASSISTANT);
-                $d->setUser($chapterDirector);
-                $this->directorRepository->save($d);
+            if (!empty($protectedKeys) && $role != Constants::ROLE_EXECUTIVE) {
+                $code = Response::HTTP_FORBIDDEN;
+            }
+        }
+
+        if ($code == Response::HTTP_OK) {
+            foreach ($fields as $key => $value) {
+                switch ($key) {
+                    case 'name':
+                        $chapter->setName($value);
+                    break;
+                    case 'director':
+                        $d = $this->directorRepository->findOneBy([
+                            'user' => $value,
+                            'region' => $region,
+                            'role' => Constants::ROLE_ASSISTANT
+                        ]);
+
+                        if (is_null($d)) {
+                            $d = new Director();
+                            $d->setRegion($region);
+                            $d->setRole(Constants::ROLE_ASSISTANT);
+                            $d->setUser($value);
+                            $this->directorRepository->save($d);
+                        }
+
+                        $chapter->setDirector($d);
+                    break;
+                    case 'members':
+                        $chapter->setMembers($value);
+                    break;
+                    case 'prevLaunchCoregroupDate':
+                        $chapter->setPrevLaunchCoregroupDate($value);
+                    break;
+                    case 'prevLaunchChapterDate':
+                        $chapter->setPrevLaunchChapterDate($value);
+                    break;
+                    case 'prevResumeDate':
+                        $chapter->setPrevResumeDate($value);
+                    break;
+                }
             }
 
-            $chapter->setActualLaunchChapterDate($actualLaunchChapterDate);
-            $chapter->setActualLaunchCoregroupDate($actualLaunchCoregroupDate);
-            $chapter->setPrevResumeDate($prevResumeDate);
-            $chapter->setCurrentState($state);
-            $chapter->setDirector($d);
-            $chapter->setName($name);
-            $chapter->setPrevLaunchChapterDate($prevLaunchChapterDate);
-            $chapter->setPrevLaunchCoregroupDate($prevLaunchCoregroupDate);
-            $chapter->setRegion($region);
             $this->entityManager->flush();
 
             return new JsonResponse($this->chapterFormatter->formatFull($chapter), Response::HTTP_CREATED);
@@ -949,35 +850,18 @@ class ChapterController extends AbstractController
      */
     public function getChapter(Chapter $chapter, Request $request): Response
     {
-        $actAsId = $request->get("actAs");
-        $code = Response::HTTP_OK;
-        $role = $request->get("role");
-        $user = $this->getUser();
-        $isAdmin = $user->isAdmin() && is_null($actAsId);
-
-        $checkUser = $this->userRepository->checkUser($user, $actAsId);
-        $actAs = Util::arrayGetValue($checkUser, 'user');
-        $code = Util::arrayGetValue($checkUser, 'code');
-
         $region = $chapter->getRegion();
-        if ($code == Response::HTTP_OK && !$isAdmin) {
-            $u = is_null($actAsId) ? $user : $actAs;
-            $checkDirectorRole = $this->directorRepository->checkDirectorRole($u, $region, $role);
 
-            $code = Util::arrayGetValue($checkDirectorRole, 'code', $code);
-            $director = Util::arrayGetValue($checkDirectorRole, 'director', null);
-            $role = $director ? $director->getRole() : $role;
-        }
+        $roleCheck = [
+            Constants::ROLE_EXECUTIVE,
+            Constants::ROLE_AREA,
+            Constants::ROLE_ASSISTANT
+        ];
+        $performerData = Util::getPerformerData($this->getUser(), $region, $roleCheck, $this->userRepository, $this->directorRepository, $request->get("actAs"), $request->get("role"));
 
-        if ($code == Response::HTTP_OK) {
-            $role = $isAdmin ? $this->constants::ROLE_EXECUTIVE : $role;
-            if (!in_array($role, [
-                $this->constants::ROLE_AREA,
-                $this->constants::ROLE_ASSISTANT,
-                $this->constants::ROLE_EXECUTIVE
-            ])) {
-                $code = Response::HTTP_BAD_REQUEST;
-            }
+        // Assign $actAs, $code, $director, $isAdmin and $role
+        foreach ($performerData as $var => $value) {
+            $$var = $value;
         }
 
         if ($code == Response::HTTP_OK) {
@@ -1070,45 +954,26 @@ class ChapterController extends AbstractController
      */
     public function getChapters(Region $region, Request $request): Response
     {
-        $actAsId = $request->get("actAs");
-        $code = Response::HTTP_OK;
-        $role = $request->get("role");
-        $user = $this->getUser();
-        $isAdmin = $user->isAdmin() && is_null($actAsId);
+        $roleCheck = [
+            Constants::ROLE_EXECUTIVE,
+            Constants::ROLE_AREA,
+            Constants::ROLE_ASSISTANT
+        ];
+        $performerData = Util::getPerformerData($this->getUser(), $region, $roleCheck, $this->userRepository, $this->directorRepository, $request->get("actAs"), $request->get("role"));
 
-        $checkUser = $this->userRepository->checkUser($user, $actAsId);
-        $actAs = Util::arrayGetValue($checkUser, 'user');
-        $code = Util::arrayGetValue($checkUser, 'code');
-
-        if ($code == Response::HTTP_OK && !$isAdmin) {
-            $u = is_null($actAsId) ? $user : $actAs;
-            $checkDirectorRole = $this->directorRepository->checkDirectorRole($u, $region, $role);
-
-            $code = Util::arrayGetValue($checkDirectorRole, 'code', $code);
-            $director = Util::arrayGetValue($checkDirectorRole, 'director', null);
-            $role = $director ? $director->getRole() : null;
-        }
-
-        if ($code == Response::HTTP_OK) {
-            $role = $isAdmin ? $this->constants::ROLE_EXECUTIVE : $role;
-
-            if (!in_array($role, [
-                $this->constants::ROLE_AREA,
-                $this->constants::ROLE_ASSISTANT,
-                $this->constants::ROLE_EXECUTIVE
-            ])) {
-                $code = Response::HTTP_BAD_REQUEST;
-            }
+        // Assign $actAs, $code, $director, $isAdmin and $role
+        foreach ($performerData as $var => $value) {
+            $$var = $value;
         }
 
         if ($code == Response::HTTP_OK) {
             switch ($role) {
-                case $this->constants::ROLE_EXECUTIVE:
+                case Constants::ROLE_EXECUTIVE:
                     $chapters = $this->chapterRepository->findBy([
                         'region' => $region
                     ]);
                     break;
-                case $this->constants::ROLE_AREA:
+                case Constants::ROLE_AREA:
                     $directors = $chapters = [];
                     $directors[$director->getId()] = $director;
                     foreach ($this->directorRepository->findBy([
@@ -1134,7 +999,7 @@ class ChapterController extends AbstractController
                     }
                     $chapters = array_values($chapters);
                     break;
-                case $this->constants::ROLE_ASSISTANT:
+                case Constants::ROLE_ASSISTANT:
                     $chapters = $this->chapterRepository->findBy([
                         'director' => $director,
                         'region' => $region
@@ -1248,43 +1113,21 @@ class ChapterController extends AbstractController
     {
         $request = Util::normalizeRequest($request);
 
-        $actAs = $request->get("actAs");
-        $code = Response::HTTP_OK;
-        $role = $request->get("role");
-        $user = $this->getUser();
-        $isAdmin = $user->isAdmin() && is_null($actAs);
+        $region = $chapter->getRegion();
 
-        $checkUser = $this->userRepository->checkUser($user, $actAs);
-        $user = Util::arrayGetValue($checkUser, 'user');
-        $code = Util::arrayGetValue($checkUser, 'code');
+        $roleCheck = [
+            Constants::ROLE_EXECUTIVE,
+            Constants::ROLE_NATIONAL
+        ];
+        $performerData = Util::getPerformerData($this->getUser(), $region, $roleCheck, $this->userRepository, $this->directorRepository, $request->get("actAs"), $request->get("role"));
 
-        if ($code == Response::HTTP_OK) {
-            if (!$isAdmin || (!is_null($role) && $role != $this->constants::ROLE_EXECUTIVE)) {
-                $code = Response::HTTP_BAD_REQUEST;
-            }
-        }
-
-        if ($code == Response::HTTP_OK && !$isAdmin) {
-            $region = $chapter->getRegion();
-            $checkDirectorRole = $this->directorRepository->checkDirectorRole($user, $region, $role);
-
-            $code = Util::arrayGetValue($checkDirectorRole, 'code', $code);
-            $director = Util::arrayGetValue($checkDirectorRole, 'director', null);
-            $role = $director ? $director->getRole() : null;
+        // Assign $actAs, $code, $director, $isAdmin and $role
+        foreach ($performerData as $var => $value) {
+            $$var = $value;
         }
 
         if ($code == Response::HTTP_OK) {
-            $role = $isAdmin ? $this->constants::ROLE_EXECUTIVE : $role;
-            if (!in_array($role, [
-                $this->constants::ROLE_NATIONAL,
-                $this->constants::ROLE_EXECUTIVE
-            ])) {
-                $code = Response::HTTP_FORBIDDEN;
-            }
-        }
-
-        if ($code == Response::HTTP_OK) {
-            if ($chapter->getCurrentState() != $this->constants::CHAPTER_STATE_CORE_GROUP) {
+            if ($chapter->getCurrentState() != Constants::CHAPTER_STATE_CORE_GROUP) {
                 $code = Response::HTTP_BAD_REQUEST;
             }
         }
@@ -1293,7 +1136,7 @@ class ChapterController extends AbstractController
             $today = Util::UTCDateTime();
 
             $chapter->setActualLaunchChapterDate($today);
-            $chapter->setCurrentState($this->constants::CHAPTER_STATE_CHAPTER);
+            $chapter->setCurrentState(Constants::CHAPTER_STATE_CHAPTER);
             $this->entityManager->flush();
 
             return new JsonResponse($this->chapterFormatter->formatBase($chapter));
@@ -1384,43 +1227,21 @@ class ChapterController extends AbstractController
     {
         $request = Util::normalizeRequest($request);
 
-        $actAs = $request->get("actAs");
-        $code = Response::HTTP_OK;
-        $role = $request->get("role");
-        $user = $this->getUser();
-        $isAdmin = $user->isAdmin() && is_null($actAs);
+        $region = $chapter->getRegion();
 
-        $checkUser = $this->userRepository->checkUser($user, $actAs);
-        $user = Util::arrayGetValue($checkUser, 'user');
-        $code = Util::arrayGetValue($checkUser, 'code');
+        $roleCheck = [
+            Constants::ROLE_EXECUTIVE,
+            Constants::ROLE_NATIONAL
+        ];
+        $performerData = Util::getPerformerData($this->getUser(), $region, $roleCheck, $this->userRepository, $this->directorRepository, $request->get("actAs"), $request->get("role"));
 
-        if ($code == Response::HTTP_OK) {
-            if (!$isAdmin || (!is_null($role) && $role != $this->constants::ROLE_EXECUTIVE)) {
-                $code = Response::HTTP_BAD_REQUEST;
-            }
-        }
-
-        if ($code == Response::HTTP_OK && !$isAdmin) {
-            $region = $chapter->getRegion();
-            $checkDirectorRole = $this->directorRepository->checkDirectorRole($user, $region, $role);
-
-            $code = Util::arrayGetValue($checkDirectorRole, 'code', $code);
-            $director = Util::arrayGetValue($checkDirectorRole, 'director', null);
-            $role = $director ? $director->getRole() : null;
+        // Assign $actAs, $code, $director, $isAdmin and $role
+        foreach ($performerData as $var => $value) {
+            $$var = $value;
         }
 
         if ($code == Response::HTTP_OK) {
-            $role = $isAdmin ? $this->constants::ROLE_EXECUTIVE : $role;
-            if (!in_array($role, [
-                $this->constants::ROLE_NATIONAL,
-                $this->constants::ROLE_EXECUTIVE
-            ])) {
-                $code = Response::HTTP_FORBIDDEN;
-            }
-        }
-
-        if ($code == Response::HTTP_OK) {
-            if ($chapter->getCurrentState() != $this->constants::CHAPTER_STATE_PROJECT) {
+            if ($chapter->getCurrentState() != Constants::CHAPTER_STATE_PROJECT) {
                 $code = Response::HTTP_BAD_REQUEST;
             }
         }
@@ -1429,7 +1250,7 @@ class ChapterController extends AbstractController
             $today = Util::UTCDateTime();
 
             $chapter->setActualLaunchCoregroupDate($today);
-            $chapter->setCurrentState($this->constants::CHAPTER_STATE_CORE_GROUP);
+            $chapter->setCurrentState(Constants::CHAPTER_STATE_CORE_GROUP);
             $this->entityManager->flush();
 
             return new JsonResponse($this->chapterFormatter->formatBase($chapter));
@@ -1520,43 +1341,21 @@ class ChapterController extends AbstractController
     {
         $request = Util::normalizeRequest($request);
 
-        $actAs = $request->get("actAs");
-        $code = Response::HTTP_OK;
-        $role = $request->get("role");
-        $user = $this->getUser();
-        $isAdmin = $user->isAdmin() && is_null($actAs);
+        $region = $chapter->getRegion();
 
-        $checkUser = $this->userRepository->checkUser($user, $actAs);
-        $user = Util::arrayGetValue($checkUser, 'user');
-        $code = Util::arrayGetValue($checkUser, 'code');
+        $roleCheck = [
+            Constants::ROLE_EXECUTIVE,
+            Constants::ROLE_NATIONAL
+        ];
+        $performerData = Util::getPerformerData($this->getUser(), $region, $roleCheck, $this->userRepository, $this->directorRepository, $request->get("actAs"), $request->get("role"));
 
-        if ($code == Response::HTTP_OK) {
-            if (!is_null($role) && $role != $this->constants::ROLE_EXECUTIVE) {
-                $code = Response::HTTP_BAD_REQUEST;
-            }
-        }
-
-        if ($code == Response::HTTP_OK && !$isAdmin) {
-            $region = $chapter->getRegion();
-            $checkDirectorRole = $this->directorRepository->checkDirectorRole($user, $region, $role);
-
-            $code = Util::arrayGetValue($checkDirectorRole, 'code', $code);
-            $director = Util::arrayGetValue($checkDirectorRole, 'director', null);
-            $role = $director ? $director->getRole() : null;
+        // Assign $actAs, $code, $director, $isAdmin and $role
+        foreach ($performerData as $var => $value) {
+            $$var = $value;
         }
 
         if ($code == Response::HTTP_OK) {
-            $role = $isAdmin ? $this->constants::ROLE_EXECUTIVE : $role;
-            if (!in_array($role, [
-                $this->constants::ROLE_NATIONAL,
-                $this->constants::ROLE_EXECUTIVE
-            ])) {
-                $code = Response::HTTP_FORBIDDEN;
-            }
-        }
-
-        if ($code == Response::HTTP_OK) {
-            if ($chapter->getCurrentState() != $this->constants::CHAPTER_STATE_SUSPENDED) {
+            if ($chapter->getCurrentState() != Constants::CHAPTER_STATE_SUSPENDED) {
                 $code = Response::HTTP_BAD_REQUEST;
             }
         }
@@ -1565,7 +1364,7 @@ class ChapterController extends AbstractController
             $today = Util::UTCDateTime();
 
             $chapter->setActualResumeDate($today);
-            $chapter->setCurrentState($this->constants::CHAPTER_STATE_CHAPTER);
+            $chapter->setCurrentState(Constants::CHAPTER_STATE_CHAPTER);
             $this->entityManager->flush();
 
             return new JsonResponse($this->chapterFormatter->formatBase($chapter));
@@ -1656,43 +1455,21 @@ class ChapterController extends AbstractController
     {
         $request = Util::normalizeRequest($request);
 
-        $actAs = $request->get("actAs");
-        $code = Response::HTTP_OK;
-        $role = $request->get("role");
-        $user = $this->getUser();
-        $isAdmin = $user->isAdmin() && is_null($actAs);
+        $region = $chapter->getRegion();
 
-        $checkUser = $this->userRepository->checkUser($user, $actAs);
-        $user = Util::arrayGetValue($checkUser, 'user');
-        $code = Util::arrayGetValue($checkUser, 'code');
+        $roleCheck = [
+            Constants::ROLE_EXECUTIVE,
+            Constants::ROLE_NATIONAL
+        ];
+        $performerData = Util::getPerformerData($this->getUser(), $region, $roleCheck, $this->userRepository, $this->directorRepository, $request->get("actAs"), $request->get("role"));
 
-        if ($code == Response::HTTP_OK) {
-            if (!is_null($role) && $role != $this->constants::ROLE_EXECUTIVE) {
-                $code = Response::HTTP_BAD_REQUEST;
-            }
-        }
-
-        if ($code == Response::HTTP_OK && !$isAdmin) {
-            $region = $chapter->getRegion();
-            $checkDirectorRole = $this->directorRepository->checkDirectorRole($user, $region, $role);
-
-            $code = Util::arrayGetValue($checkDirectorRole, 'code', $code);
-            $director = Util::arrayGetValue($checkDirectorRole, 'director', null);
-            $role = $director ? $director->getRole() : null;
+        // Assign $actAs, $code, $director, $isAdmin and $role
+        foreach ($performerData as $var => $value) {
+            $$var = $value;
         }
 
         if ($code == Response::HTTP_OK) {
-            $role = $isAdmin ? $this->constants::ROLE_EXECUTIVE : $role;
-            if (!in_array($role, [
-                $this->constants::ROLE_NATIONAL,
-                $this->constants::ROLE_EXECUTIVE
-            ])) {
-                $code = Response::HTTP_FORBIDDEN;
-            }
-        }
-
-        if ($code == Response::HTTP_OK) {
-            if ($chapter->getCurrentState() != $this->constants::CHAPTER_STATE_CHAPTER) {
+            if ($chapter->getCurrentState() != Constants::CHAPTER_STATE_CHAPTER) {
                 $code = Response::HTTP_BAD_REQUEST;
             }
         }
@@ -1701,7 +1478,7 @@ class ChapterController extends AbstractController
             $today = Util::UTCDateTime();
 
             $chapter->setSuspDate($today);
-            $chapter->setCurrentState($this->constants::CHAPTER_STATE_SUSPENDED);
+            $chapter->setCurrentState(Constants::CHAPTER_STATE_SUSPENDED);
             $this->entityManager->flush();
 
             return new JsonResponse($this->chapterFormatter->formatBase($chapter));

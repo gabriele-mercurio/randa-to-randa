@@ -20,9 +20,6 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class RandaController extends AbstractController
 {
-    /** @var Constants */
-    private $constants;
-
     /** @var DirectorRepository */
     private $directorRepository;
 
@@ -36,13 +33,11 @@ class RandaController extends AbstractController
     private $userRepository;
 
     public function __construct(
-        Constants $constants,
         DirectorRepository $directorRepository,
         RandaFormatter $randaFormatter,
         RandaRepository $randaRepository,
         UserRepository $userRepository
     ) {
-        $this->constants = $constants;
         $this->directorRepository = $directorRepository;
         $this->randaFormatter = $randaFormatter;
         $this->randaRepository = $randaRepository;
@@ -108,29 +103,14 @@ class RandaController extends AbstractController
     {
         $request = Util::normalizeRequest($request);
 
-        $actAs = $request->get("actAs");
-        $code = Response::HTTP_OK;
-        $role = $request->get("role");
-        $user = $this->getUser();
-        $isAdmin = $user->isAdmin() && is_null($actAs);
+        $roleCheck = [
+            Constants::ROLE_EXECUTIVE
+        ];
+        $performerData = Util::getPerformerData($this->getUser(), $region, $roleCheck, $this->userRepository, $this->directorRepository, $request->get("actAs"), $request->get("role"));
 
-        $checkUser = $this->userRepository->checkUser($user, $actAs);
-        $user = Util::arrayGetValue($checkUser, 'user');
-        $code = Util::arrayGetValue($checkUser, 'code');
-
-        if ($code == Response::HTTP_OK && !$isAdmin) {
-            $checkDirectorRole = $this->directorRepository->checkDirectorRole($user, $region, $role);
-
-            $code = Util::arrayGetValue($checkDirectorRole, 'code', $code);
-            $director = Util::arrayGetValue($checkDirectorRole, 'director', null);
-            $role = $director ? $director->getRole() : null;
-        }
-
-        if ($code == Response::HTTP_OK) {
-            $role = $isAdmin ? $this->constants::ROLE_EXECUTIVE : $role;
-            if ($role != $this->constants::ROLE_EXECUTIVE) {
-                $code = Response::HTTP_FORBIDDEN;
-            }
+        // Assign $actAs, $code, $director, $isAdmin and $role
+        foreach ($performerData as $var => $value) {
+            $$var = $value;
         }
 
         if ($code == Response::HTTP_OK) {
@@ -147,7 +127,7 @@ class RandaController extends AbstractController
 
         if ($code == Response::HTTP_OK) {
             $randa = new Randa();
-            $randa->setCurrentTimeslot($this->constants::TIMESLOT_T0);
+            $randa->setCurrentTimeslot(Constants::TIMESLOT_T0);
             $randa->setRegion($region);
             $randa->setYear($currentYear);
             $this->randaRepository->save($randa);

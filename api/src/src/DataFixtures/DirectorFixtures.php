@@ -12,13 +12,8 @@ class DirectorFixtures extends Fixture implements DependentFixtureInterface
 {
     const CREATED_QUANTITY = 60;
 
-    /** @var Constants */
-    private $constants;
-
-    public function __construct(
-        Constants $constants
-    ) {
-        $this->constants = $constants;
+    public function __construct()
+    {
     }
 
     public function getDependencies()
@@ -41,14 +36,14 @@ class DirectorFixtures extends Fixture implements DependentFixtureInterface
             $rand = mt_rand(1, 6);
             switch (true) {
                 case $rand == 1:
-                    $role = $this->constants::ROLE_EXECUTIVE;
-                break;
+                    $role = Constants::ROLE_EXECUTIVE;
+                    break;
                 case $rand > 1 && $rand < 4:
-                    $role = $this->constants::ROLE_AREA;
-                break;
+                    $role = Constants::ROLE_AREA;
+                    break;
                 case $rand >= 4:
-                    $role = $this->constants::ROLE_ASSISTANT;
-                break;
+                    $role = Constants::ROLE_ASSISTANT;
+                    break;
             }
 
             $director = new Director();
@@ -58,7 +53,7 @@ class DirectorFixtures extends Fixture implements DependentFixtureInterface
             $director->setAreaPercentage(25);
             $director->setGreyLightPercentage(10);
             $director->setLaunchPercentage(25);
-            $director->setPayType(mt_rand(1, 2) == 1 ? $this->constants::PAY_TYPE_ANNUAL : $this->constants::PAY_TYPE_MONTHLY);
+            $director->setPayType(mt_rand(1, 2) == 1 ? Constants::PAY_TYPE_ANNUAL : Constants::PAY_TYPE_MONTHLY);
             $director->setRedLightPercentage(15);
             $director->setRegion($region);
             $director->setRole($role);
@@ -68,9 +63,9 @@ class DirectorFixtures extends Fixture implements DependentFixtureInterface
             $manager->persist($director);
             $this->addReference("Director_$i", $director);
 
-            if ($role == $this->constants::ROLE_AREA) {
+            if ($role == Constants::ROLE_AREA) {
                 $areaDirectors[] = $director;
-            } elseif ($role == $this->constants::ROLE_ASSISTANT) {
+            } elseif ($role == Constants::ROLE_ASSISTANT) {
                 $assistantDirectors[] = $director;
             }
         }
@@ -80,7 +75,8 @@ class DirectorFixtures extends Fixture implements DependentFixtureInterface
         $manager->flush();
     }
 
-    private static function assignAreaDirectors(&$areaDirectors, &$assistantDirectors) {
+    private static function assignAreaDirectors(&$areaDirectors, &$assistantDirectors)
+    {
         shuffle($areaDirectors);
         shuffle($assistantDirectors);
         $canContinue = true;

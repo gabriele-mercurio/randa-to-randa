@@ -20,113 +20,24 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class UserController extends AbstractController
 {
-    /** @var Constants */
-    private $constants;
-
     /** @var DirectorRepository */
     private $directorRepository;
-
-    /** @var UserRepository */
-    private $userRepository;
 
     /** @var UserFormatter */
     private $userFormatter;
 
+    /** @var UserRepository */
+    private $userRepository;
+
     public function __construct(
-        Constants $constants,
         DirectorRepository $directorRepository,
-        UserRepository $userRepository,
-        UserFormatter $userFormatter
+        UserFormatter $userFormatter,
+        UserRepository $userRepository
     ) {
-        $this->constants = $constants;
         $this->directorRepository = $directorRepository;
-        $this->userRepository = $userRepository;
         $this->userFormatter = $userFormatter;
+        $this->userRepository = $userRepository;
     }
-
-    /**
-     * Create a user
-     *
-     * @Route("/user", name="user_create", methods={"POST"})
-     *
-     * @SWG\Parameter(
-     *      name="email",
-     *      in="formData",
-     *      type="string",
-     *      description="The User's email",
-     *      required=true
-     * )
-     * @SWG\Parameter(
-     *      name="firstName",
-     *      in="formData",
-     *      type="string",
-     *      description="The User's first name",
-     *      required=true
-     * )
-     * @SWG\Parameter(
-     *      name="lastName",
-     *      in="formData",
-     *      type="string",
-     *      description="The User's last name",
-     *      required=true
-     * )
-     * @SWG\Parameter(
-     *      name="password",
-     *      in="formData",
-     *      type="string",
-     *      description="The User's password",
-     *      required=true
-     * )
-     * @SWG\Response(
-     *      response=201,
-     *      description="Returns the created user",
-     *      @SWG\Schema(
-     *          type="object",
-     *          @SWG\Property(property="email", type="string"),
-     *          @SWG\Property(property="fullName", type="string"),
-     *          @SWG\Property(property="id", type="string")
-     *      )
-     * )
-     * @SWG\Tag(name="Users")
-     * @Security(name="Bearer")
-     */
-    // public function createUser(Request $request): Response
-    // {
-    //     $email = trim($request->request->get("email"));
-    //     $firstName = trim($request->request->get("firstName"));
-    //     $lastName = trim($request->request->get("lastName"));
-    //     $password = $request->request->get("password");
-
-    //     $errors = [];
-
-    //     if (!Validator::validateEmail($email)) {
-    //         $errors['email'] = "L'email è in un formato non valido";
-    //     } elseif (null !== $this->userRepository->getUserByEmail($email)) {
-    //         $errors['email'] = 'Email già esistente';
-    //     }
-
-    //     if (!Validator::validatePassword($password)) {
-    //         $errors['password'] = "La password deve essere di almeno 6 caratteri e contenere almeno una lettera maiuscola, una minuscola ed un numero";
-    //     }
-
-    //     if (empty($errors)) {
-    //         $user = new User();
-    //         $user->setEmail($email);
-    //         $user->setFirstName($firstName);
-    //         $user->setLastName($lastName);
-    //         $user->securePassword($password);
-
-    //         $this->eventDispatcher->dispatch(new UserEvent($user), UserEvent::BEFORE_CREATE);
-    //         $this->userRepository->save($user);
-    //         $this->eventDispatcher->dispatch(new UserEvent($user), UserEvent::CREATED);
-
-    //         return new JsonResponse($this->userFormatter->formatBasic($user));
-    //     } else {
-    //         return new JsonResponse([
-    //             "errors" => $errors
-    //         ], Response::HTTP_BAD_REQUEST);
-    //     }
-    // }
 
     /**
      * Delete a User
@@ -160,25 +71,14 @@ class UserController extends AbstractController
     {
         $request = Util::normalizeRequest($request);
 
-        $actAsId = $request->get("actAs");
-        $code = Response::HTTP_OK;
-        $performer = $this->getUser();
-        $isAdmin = $performer->isAdmin() && is_null($actAsId);
+        $roleCheck = [
+            Constants::ROLE_NATIONAL
+        ];
+        $performerData = Util::getPerformerData($this->getUser(), null, $roleCheck, $this->userRepository, $this->directorRepository, $request->get("actAs"), Constants::ROLE_NATIONAL);
 
-        $checkUser = $this->userRepository->checkUser($performer, $actAsId);
-        $actAs = Util::arrayGetValue($checkUser, 'user');
-        $code = Util::arrayGetValue($checkUser, 'code');
-
-        if ($code == Response::HTTP_OK && !$isAdmin) {
-            $u = is_null($actAsId) ? $performer : $actAs;
-            $director = $this->directorRepository->findOneBy([
-                'user' => $u,
-                'role' => $this->constants::ROLE_NATIONAL
-            ]);
-
-            if (is_null($director)) {
-                $code = Response::HTTP_FORBIDDEN;
-            }
+        // Assign $actAs, $code, $director, $isAdmin and $role
+        foreach ($performerData as $var => $value) {
+            $$var = $value;
         }
 
         if ($code == Response::HTTP_OK) {

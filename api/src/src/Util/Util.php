@@ -2,9 +2,14 @@
 
 namespace App\Util;
 
+use App\Entity\Region;
+use App\Entity\User;
+use App\Repository\DirectorRepository;
+use App\Repository\UserRepository;
 use DateTime;
 use DateTimeZone;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Webmozart\PathUtil\Path;
 
 class Util
@@ -156,6 +161,59 @@ class Util
             "mobile",
             "email",
             "pinterest"
+        ];
+    }
+
+    /**
+     * Check if the given user is admin, can impersonate the user defined by $actAsId,
+     * can assume the given $role and check if it is in the role range defined by $roleCheck
+     *
+     * @param User                  $user               Required. The user to check for
+     * @param Region|null           $region             Required. The region to check for; pass null only if want to check for national director
+     * @param array                 $roleCheck          Required. An array of roles to check user for
+     * @param UserRepository        $userRepository     Required. The User doctrine repository
+     * @param DirectorRepository    $directorRepository Required. The Director doctrine repository
+     * @param string|null           $actAsId            Optional. The id of the user to impersonate
+     * @param string|null           $role               Optional. The role to assume
+     *
+     * @return array    An array with the following keys:
+     *                      'actAs':    the impersoned user or null;
+     *                      'code':     an http response code to return by the caller controller function;
+     *                      'director': the representing director object or null;
+     *                      'isAdmin':  a boolean meanings if the given user is an admin;
+     *                      'role':     the real role of the performer;
+     */
+    public static function getPerformerData(User $user, ?Region $region, array $roleCheck, UserRepository $userRepository, DirectorRepository $directorRepository, ?string $actAsId = null, ?string $role = null): array
+    {
+        $isAdmin = $user->isAdmin() && is_null($actAsId);
+        $director = null;
+
+        $checkUser = $userRepository->checkUser($user, $actAsId);
+        $actAs = static::arrayGetValue($checkUser, 'user');
+        $code = static::arrayGetValue($checkUser, 'code');
+
+        if ($code == Response::HTTP_OK && !$isAdmin) {
+            $u = is_null($actAsId) ? $user : $actAs;
+            $checkDirectorRole = $directorRepository->checkDirectorRole($u, $region, $role);
+
+            $code = static::arrayGetValue($checkDirectorRole, 'code', $code);
+            $director = static::arrayGetValue($checkDirectorRole, 'director', null);
+            $role = $director ? $director->getRole() : $role;
+        }
+
+        if ($code == Response::HTTP_OK) {
+            $role = $isAdmin ? Constants::ROLE_EXECUTIVE : $role;
+            if (!in_array($role, $roleCheck)) {
+                $code = Response::HTTP_FORBIDDEN;
+            }
+        }
+
+        return [
+            'actAS'     => $actAs,
+            'code'      => $code,
+            'director'  => $director,
+            'isAdmin'   => $isAdmin,
+            'role'      => $role
         ];
     }
 

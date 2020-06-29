@@ -15,17 +15,12 @@ class ChapterFixtures extends Fixture implements DependentFixtureInterface
 {
     const CREATED_QUANTITY = 100;
 
-    /** @var Constants */
-    private $constants;
-
     /** @var DirectorRepository */
     private $directorRepository;
 
     public function __construct(
-        Constants $constants,
         DirectorRepository $directorRepository
     ) {
-        $this->constants = $constants;
         $this->directorRepository = $directorRepository;
     }
 
@@ -53,21 +48,21 @@ class ChapterFixtures extends Fixture implements DependentFixtureInterface
             }
             sort($dates);
 
-            $currentState = $this->constants::CHAPTER_STATE_PROJECT;
+            $currentState = Constants::CHAPTER_STATE_PROJECT;
             $actualLaunchChapterDate = $actualLaunchCoregroupDate = $actualResumeDate = $closureDate = $prevResumeDate = $suspDate = null;
             $prevLaunchCoregroupDate = array_shift($dates);
             if ($prevLaunchCoregroupDate < $today && $dates[0] < $today) {
                 $actualLaunchCoregroupDate = array_shift($dates);
-                $currentState = mt_rand(1, 4) == 1 ? $currentState : $this->constants::CHAPTER_STATE_CORE_GROUP;
+                $currentState = mt_rand(1, 4) == 1 ? $currentState : Constants::CHAPTER_STATE_CORE_GROUP;
             }
 
             $prevLaunchChapterDate = array_shift($dates);
             if ($prevLaunchChapterDate < $today && $dates[0] < $today) {
                 $actualLaunchChapterDate = array_shift($dates);
-                $currentState = $currentState == $this->constants::CHAPTER_STATE_PROJECT ? $currentState : (mt_rand(1, 4) == 1 ? $currentState : $this->constants::CHAPTER_STATE_CHAPTER);
+                $currentState = $currentState == Constants::CHAPTER_STATE_PROJECT ? $currentState : (mt_rand(1, 4) == 1 ? $currentState : Constants::CHAPTER_STATE_CHAPTER);
             }
 
-            if ($currentState == $this->constants::CHAPTER_STATE_CHAPTER) {
+            if ($currentState == Constants::CHAPTER_STATE_CHAPTER) {
                 if ($dates[0] < $today && mt_rand(1, 5) == 1) {
                     $suspDate = array_shift($dates);
                     $prevResumeDate = array_shift($dates);
@@ -81,7 +76,7 @@ class ChapterFixtures extends Fixture implements DependentFixtureInterface
                 $region = $this->getReference("Region_" . mt_rand(1, RegionFixtures::CREATED_QUANTITY));
                 $directors = $this->directorRepository->findBy([
                     'region' => $region,
-                    'role'   => $this->constants::ROLE_ASSISTANT
+                    'role'   => Constants::ROLE_ASSISTANT
                 ]);
             } while (empty($directors));
             $director = Util::arrayGetValue($directors, mt_rand(1, count($directors)) -1);

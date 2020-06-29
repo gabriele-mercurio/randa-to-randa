@@ -6,6 +6,7 @@ use App\Entity\Chapter;
 use App\Entity\NewMember;
 use App\Entity\Rana;
 use App\Entity\RanaLifecycle;
+use App\Entity\Randa;
 use App\Entity\Retention;
 use App\Formatter\RanaFormatter;
 use App\Repository\DirectorRepository;
@@ -29,9 +30,6 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class RanaController extends AbstractController
 {
-    /** @var Constants */
-    private $constants;
-
     /** @var DirectorRepository */
     private $directorRepository;
 
@@ -60,7 +58,6 @@ class RanaController extends AbstractController
     private $userRepository;
 
     public function __construct(
-        Constants $constants,
         DirectorRepository $directorRepository,
         EntityManagerInterface $entityManager,
         NewMemberRepository $newMemberRepository,
@@ -72,7 +69,6 @@ class RanaController extends AbstractController
         RetentionRepository $retentionRepository,
         UserRepository $userRepository
     ) {
-        $this->constants = $constants;
         $this->directorRepository = $directorRepository;
         $this->entityManager = $entityManager;
         $this->newMemberRepository = $newMemberRepository;
@@ -115,50 +111,159 @@ class RanaController extends AbstractController
      *          type="object",
      *          @SWG\Property(property="id", type="string"),
      *          @SWG\Property(
-     *              property="chapter",
+     *              property="newMembers",
      *              type="object",
      *              @SWG\Property(
-     *                  property="chapterLaunch",
+     *                  property="APPR",
      *                  type="object",
-     *                  @SWG\Property(property="actual", type="string", description="Actual date"),
-     *                  @SWG\Property(property="prev", type="string", description="Expected date")
+     *                  @SWG\Property(property="m1", type="integer"),
+     *                  @SWG\Property(property="m2", type="integer"),
+     *                  @SWG\Property(property="m3", type="integer"),
+     *                  @SWG\Property(property="m4", type="integer"),
+     *                  @SWG\Property(property="m5", type="integer"),
+     *                  @SWG\Property(property="m6", type="integer"),
+     *                  @SWG\Property(property="m7", type="integer"),
+     *                  @SWG\Property(property="m8", type="integer"),
+     *                  @SWG\Property(property="m9", type="integer"),
+     *                  @SWG\Property(property="m10", type="integer"),
+     *                  @SWG\Property(property="m11", type="integer"),
+     *                  @SWG\Property(property="m12", type="integer")
      *              ),
-     *              @SWG\Property(property="closureDate", type="string", description="Closure date"),
      *              @SWG\Property(
-     *                  property="coreGroupLaunch",
+     *                  property="CONS",
      *                  type="object",
-     *                  @SWG\Property(property="actual", type="string", description="Actual date"),
-     *                  @SWG\Property(property="prev", type="string", description="Expected date")
+     *                  @SWG\Property(property="m1", type="integer"),
+     *                  @SWG\Property(property="m2", type="integer"),
+     *                  @SWG\Property(property="m3", type="integer"),
+     *                  @SWG\Property(property="m4", type="integer"),
+     *                  @SWG\Property(property="m5", type="integer"),
+     *                  @SWG\Property(property="m6", type="integer"),
+     *                  @SWG\Property(property="m7", type="integer"),
+     *                  @SWG\Property(property="m8", type="integer"),
+     *                  @SWG\Property(property="m9", type="integer"),
+     *                  @SWG\Property(property="m10", type="integer"),
+     *                  @SWG\Property(property="m11", type="integer"),
+     *                  @SWG\Property(property="m12", type="integer")
      *              ),
-     *              @SWG\Property(property="currentState", type="string", description="Available values: PROJECT, CORE_GROUP or CHAPTER"),
      *              @SWG\Property(
-     *                  property="director",
+     *                  property="PROP",
      *                  type="object",
-     *                  @SWG\Property(property="fullName", type="string"),
-     *                  @SWG\Property(property="id", type="integer")
-     *              ),
-     *              @SWG\Property(property="id", type="string"),
-     *              @SWG\Property(property="members", type="integer"),
-     *              @SWG\Property(property="name", type="string"),
-     *              @SWG\Property(
-     *                  property="resume",
-     *                  type="object",
-     *                  @SWG\Property(property="actual", type="string", description="Actual date"),
-     *                  @SWG\Property(property="prev", type="string", description="Expected date")
-     *              ),
-     *              @SWG\Property(property="suspDate", type="string", description="Suspension date"),
-     *              @SWG\Property(property="warning", type="string", description="Available values: NULL, 'CORE_GROUP' or 'CHAPTER'")
+     *                  @SWG\Property(property="m1", type="integer"),
+     *                  @SWG\Property(property="m2", type="integer"),
+     *                  @SWG\Property(property="m3", type="integer"),
+     *                  @SWG\Property(property="m4", type="integer"),
+     *                  @SWG\Property(property="m5", type="integer"),
+     *                  @SWG\Property(property="m6", type="integer"),
+     *                  @SWG\Property(property="m7", type="integer"),
+     *                  @SWG\Property(property="m8", type="integer"),
+     *                  @SWG\Property(property="m9", type="integer"),
+     *                  @SWG\Property(property="m10", type="integer"),
+     *                  @SWG\Property(property="m11", type="integer"),
+     *                  @SWG\Property(property="m12", type="integer")
+     *              )
      *          ),
      *          @SWG\Property(
-     *              property="randa",
+     *              property="renewedMembers",
      *              type="object",
-     *              @SWG\Property(property="id", type="string"),
-     *              @SWG\Property(property="year", type="integer"),
      *              @SWG\Property(
-     *                  property="region",
+     *                  property="APPR",
      *                  type="object",
-     *                  @SWG\Property(property="id", type="string"),
-     *                  @SWG\Property(property="name", type="string")
+     *                  @SWG\Property(property="m1", type="integer"),
+     *                  @SWG\Property(property="m2", type="integer"),
+     *                  @SWG\Property(property="m3", type="integer"),
+     *                  @SWG\Property(property="m4", type="integer"),
+     *                  @SWG\Property(property="m5", type="integer"),
+     *                  @SWG\Property(property="m6", type="integer"),
+     *                  @SWG\Property(property="m7", type="integer"),
+     *                  @SWG\Property(property="m8", type="integer"),
+     *                  @SWG\Property(property="m9", type="integer"),
+     *                  @SWG\Property(property="m10", type="integer"),
+     *                  @SWG\Property(property="m11", type="integer"),
+     *                  @SWG\Property(property="m12", type="integer")
+     *              ),
+     *              @SWG\Property(
+     *                  property="CONS",
+     *                  type="object",
+     *                  @SWG\Property(property="m1", type="integer"),
+     *                  @SWG\Property(property="m2", type="integer"),
+     *                  @SWG\Property(property="m3", type="integer"),
+     *                  @SWG\Property(property="m4", type="integer"),
+     *                  @SWG\Property(property="m5", type="integer"),
+     *                  @SWG\Property(property="m6", type="integer"),
+     *                  @SWG\Property(property="m7", type="integer"),
+     *                  @SWG\Property(property="m8", type="integer"),
+     *                  @SWG\Property(property="m9", type="integer"),
+     *                  @SWG\Property(property="m10", type="integer"),
+     *                  @SWG\Property(property="m11", type="integer"),
+     *                  @SWG\Property(property="m12", type="integer")
+     *              ),
+     *              @SWG\Property(
+     *                  property="PROP",
+     *                  type="object",
+     *                  @SWG\Property(property="m1", type="integer"),
+     *                  @SWG\Property(property="m2", type="integer"),
+     *                  @SWG\Property(property="m3", type="integer"),
+     *                  @SWG\Property(property="m4", type="integer"),
+     *                  @SWG\Property(property="m5", type="integer"),
+     *                  @SWG\Property(property="m6", type="integer"),
+     *                  @SWG\Property(property="m7", type="integer"),
+     *                  @SWG\Property(property="m8", type="integer"),
+     *                  @SWG\Property(property="m9", type="integer"),
+     *                  @SWG\Property(property="m10", type="integer"),
+     *                  @SWG\Property(property="m11", type="integer"),
+     *                  @SWG\Property(property="m12", type="integer")
+     *              )
+     *          ),
+     *          @SWG\Property(
+     *              property="retention",
+     *              type="object",
+     *              @SWG\Property(
+     *                  property="APPR",
+     *                  type="object",
+     *                  @SWG\Property(property="m1", type="integer"),
+     *                  @SWG\Property(property="m2", type="integer"),
+     *                  @SWG\Property(property="m3", type="integer"),
+     *                  @SWG\Property(property="m4", type="integer"),
+     *                  @SWG\Property(property="m5", type="integer"),
+     *                  @SWG\Property(property="m6", type="integer"),
+     *                  @SWG\Property(property="m7", type="integer"),
+     *                  @SWG\Property(property="m8", type="integer"),
+     *                  @SWG\Property(property="m9", type="integer"),
+     *                  @SWG\Property(property="m10", type="integer"),
+     *                  @SWG\Property(property="m11", type="integer"),
+     *                  @SWG\Property(property="m12", type="integer")
+     *              ),
+     *              @SWG\Property(
+     *                  property="CONS",
+     *                  type="object",
+     *                  @SWG\Property(property="m1", type="integer"),
+     *                  @SWG\Property(property="m2", type="integer"),
+     *                  @SWG\Property(property="m3", type="integer"),
+     *                  @SWG\Property(property="m4", type="integer"),
+     *                  @SWG\Property(property="m5", type="integer"),
+     *                  @SWG\Property(property="m6", type="integer"),
+     *                  @SWG\Property(property="m7", type="integer"),
+     *                  @SWG\Property(property="m8", type="integer"),
+     *                  @SWG\Property(property="m9", type="integer"),
+     *                  @SWG\Property(property="m10", type="integer"),
+     *                  @SWG\Property(property="m11", type="integer"),
+     *                  @SWG\Property(property="m12", type="integer")
+     *              ),
+     *              @SWG\Property(
+     *                  property="PROP",
+     *                  type="object",
+     *                  @SWG\Property(property="m1", type="integer"),
+     *                  @SWG\Property(property="m2", type="integer"),
+     *                  @SWG\Property(property="m3", type="integer"),
+     *                  @SWG\Property(property="m4", type="integer"),
+     *                  @SWG\Property(property="m5", type="integer"),
+     *                  @SWG\Property(property="m6", type="integer"),
+     *                  @SWG\Property(property="m7", type="integer"),
+     *                  @SWG\Property(property="m8", type="integer"),
+     *                  @SWG\Property(property="m9", type="integer"),
+     *                  @SWG\Property(property="m10", type="integer"),
+     *                  @SWG\Property(property="m11", type="integer"),
+     *                  @SWG\Property(property="m12", type="integer")
      *              )
      *          )
      *      )
@@ -184,34 +289,18 @@ class RanaController extends AbstractController
     {
         $request = Util::normalizeRequest($request);
 
-        $actAs = $request->get("actAs");
-        $code = Response::HTTP_OK;
-        $role = $request->get("role");
-        $user = $this->getUser();
-        $isAdmin = $user->isAdmin() && is_null($actAs);
-
-        $checkUser = $this->userRepository->checkUser($user, $actAs);
-        $user = Util::arrayGetValue($checkUser, 'user');
-        $code = Util::arrayGetValue($checkUser, 'code');
-
         $region = $chapter->getRegion();
-        if ($code == Response::HTTP_OK && !$isAdmin) {
-            $checkDirectorRole = $this->directorRepository->checkDirectorRole($user, $region, $role);
 
-            $code = Util::arrayGetValue($checkDirectorRole, 'code', $code);
-            $director = Util::arrayGetValue($checkDirectorRole, 'director', null);
-            $role = $director ? $director->getRole() : null;
-        }
+        $roleCheck = [
+            Constants::ROLE_EXECUTIVE,
+            Constants::ROLE_AREA,
+            Constants::ROLE_ASSISTANT
+        ];
+        $performerData = Util::getPerformerData($this->getUser(), $region, $roleCheck, $this->userRepository, $this->directorRepository, $request->get("actAs"), $request->get("role"));
 
-        if ($code == Response::HTTP_OK) {
-            $role = $isAdmin ? $this->constants::ROLE_EXECUTIVE : $role;
-            if (!in_array($role, [
-                $this->constants::ROLE_EXECUTIVE,
-                $this->constants::ROLE_AREA,
-                $this->constants::ROLE_ASSISTANT
-            ])) {
-                $code = Response::HTTP_FORBIDDEN;
-            }
+        // Assign $actAs, $code, $director, $isAdmin and $role
+        foreach ($performerData as $var => $value) {
+            $$var = $value;
         }
 
         if ($code == Response::HTTP_OK) {
@@ -222,14 +311,11 @@ class RanaController extends AbstractController
             ]);
 
             if (is_null($randa)) {
-                $this->forward('App\Controller\RandaController::createRanda', [
-                    'region'  => $region
-                ])->getContent();
-
-                $randa = $this->randaRepository->findOneBy([
-                    'region' => $region,
-                    'year' => $currentYear
-                ]);
+                $randa = new Randa();
+                $randa->setCurrentTimeslot(Constants::TIMESLOT_T0);
+                $randa->setRegion($region);
+                $randa->setYear($currentYear);
+                $this->randaRepository->save($randa);
             }
 
             $rana = $this->ranaRepository->findOneBy([
@@ -249,10 +335,11 @@ class RanaController extends AbstractController
             $this->ranaRepository->save($rana);
 
             $ranaLifeCycle = new RanaLifecycle();
-            $ranaLifeCycle->setCurrentState($this->constants::RANA_LIFECYCLE_STATUS_TODO);
-            $ranaLifeCycle->setCurrentTimeslot($this->constants::TIMESLOT_T0);
+            $ranaLifeCycle->setCurrentState(Constants::RANA_LIFECYCLE_STATUS_TODO);
+            $ranaLifeCycle->setCurrentTimeslot(Constants::TIMESLOT_T0);
             $ranaLifeCycle->setRana($rana);
             $this->ranaLifeCycleRepository->save($ranaLifeCycle);
+            $this->entityManager->refresh($rana);
 
             return new JsonResponse($this->ranaFormatter->formatData($rana, $role));
         } else {
@@ -602,44 +689,27 @@ class RanaController extends AbstractController
     {
         $request = Util::normalizeRequest($request);
 
-        $actAs = $request->get("actAs");
-        $code = Response::HTTP_OK;
-        $role = $request->get("role");
-        $user = $this->getUser();
-        $isAdmin = $user->isAdmin() && is_null($actAs);
-
-        $checkUser = $this->userRepository->checkUser($user, $actAs);
-        $user = Util::arrayGetValue($checkUser, 'user');
-        $code = Util::arrayGetValue($checkUser, 'code');
-
         $chapter = $rana->getChapter();
         $region = $chapter->getRegion();
 
-        if ($code == Response::HTTP_OK && !$isAdmin) {
-            $checkDirectorRole = $this->directorRepository->checkDirectorRole($user, $region, $role);
+        $roleCheck = [
+            Constants::ROLE_EXECUTIVE,
+            Constants::ROLE_AREA,
+            Constants::ROLE_ASSISTANT
+        ];
+        $performerData = Util::getPerformerData($this->getUser(), $region, $roleCheck, $this->userRepository, $this->directorRepository, $request->get("actAs"), $request->get("role"));
 
-            $code = Util::arrayGetValue($checkDirectorRole, 'code', $code);
-            $director = Util::arrayGetValue($checkDirectorRole, 'director', null);
-            $role = $director ? $director->getRole() : $role;
-        }
-
-        if ($code == Response::HTTP_OK) {
-            $role = $isAdmin ? $this->constants::ROLE_EXECUTIVE : $role;
-            if (!in_array($role, [
-                $this->constants::ROLE_EXECUTIVE,
-                $this->constants::ROLE_AREA,
-                $this->constants::ROLE_ASSISTANT
-            ])) {
-                $code = Response::HTTP_FORBIDDEN;
-            }
+        // Assign $actAs, $code, $director, $isAdmin and $role
+        foreach ($performerData as $var => $value) {
+            $$var = $value;
         }
 
         if ($code == Response::HTTP_OK && !$isAdmin) {
-            if ($role == $this->constants::ROLE_ASSISTANT && $chapter->getDirector() != $director) {
+            if ($role == Constants::ROLE_ASSISTANT && $chapter->getDirector() != $director) {
                 $code = Response::HTTP_FORBIDDEN;
             }
 
-            if ($role == $this->constants::ROLE_AREA && $chapter->getDirector()->getSupervisor() != $director) {
+            if ($role == Constants::ROLE_AREA && $chapter->getDirector()->getSupervisor() != $director) {
                 $code = Response::HTTP_FORBIDDEN;
             }
         }
@@ -650,16 +720,16 @@ class RanaController extends AbstractController
             $errorFields = [];
 
             $availableTimeslots = [
-                $this->constants::TIMESLOT_T0,
-                $this->constants::TIMESLOT_T1,
-                $this->constants::TIMESLOT_T2,
-                $this->constants::TIMESLOT_T3,
-                $this->constants::TIMESLOT_T4
+                Constants::TIMESLOT_T0,
+                Constants::TIMESLOT_T1,
+                Constants::TIMESLOT_T2,
+                Constants::TIMESLOT_T3,
+                Constants::TIMESLOT_T4
             ];
             $availableValueTypes = [
-                $this->constants::VALUE_TYPE_APPROVED,
-                $this->constants::VALUE_TYPE_CONSUMPTIVE,
-                $this->constants::VALUE_TYPE_PROPOSED
+                Constants::VALUE_TYPE_APPROVED,
+                Constants::VALUE_TYPE_CONSUMPTIVE,
+                Constants::VALUE_TYPE_PROPOSED
             ];
 
             if (!in_array($timeslot, $availableTimeslots)) {
@@ -673,8 +743,8 @@ class RanaController extends AbstractController
                     'rana' => $rana,
                     'timeslot' => $nextTimeslot,
                     'valueType' => [
-                        $this->constants::VALUE_TYPE_APPROVED,
-                        $this->constants::VALUE_TYPE_CONSUMPTIVE
+                        Constants::VALUE_TYPE_APPROVED,
+                        Constants::VALUE_TYPE_CONSUMPTIVE
                     ]
                 ]);
 
@@ -682,8 +752,8 @@ class RanaController extends AbstractController
                     'rana' => $rana,
                     'timeslot' => $nextTimeslot,
                     'valueType' => [
-                        $this->constants::VALUE_TYPE_APPROVED,
-                        $this->constants::VALUE_TYPE_CONSUMPTIVE
+                        Constants::VALUE_TYPE_APPROVED,
+                        Constants::VALUE_TYPE_CONSUMPTIVE
                     ]
                 ]);
 
@@ -716,45 +786,44 @@ class RanaController extends AbstractController
                     $errorFields['valueType'] = "invalid";
                 } else {
                     switch ($valueType) {
-                        case $this->constants::VALUE_TYPE_CONSUMPTIVE:
-                            if ($timeslot == $this->constants::TIMESLOT_T0) {
+                        case Constants::VALUE_TYPE_CONSUMPTIVE:
+                            if ($timeslot == Constants::TIMESLOT_T0) {
                                 $errorFields['valueType'] = "invalid";
                             }
                             break;
-                        case $this->constants::VALUE_TYPE_APPROVED:
-                            if ($role != $this->constants::ROLE_EXECUTIVE) {
+                        case Constants::VALUE_TYPE_APPROVED:
+                            if ($role != Constants::ROLE_EXECUTIVE) {
                                 $code = Response::HTTP_FORBIDDEN;
-                            } elseif ($timeslot == $this->constants::TIMESLOT_T4) {
+                            } elseif ($timeslot == Constants::TIMESLOT_T4) {
                                 $errorFields['valueType'] = "invalid";
                             } else {
                                 $lastRetentions = $this->retentionRepository->findOneBy([
                                     'rana' => $rana,
                                     'timeslot' => $timeslot,
-                                    'valueType' => $this->constants::VALUE_TYPE_CONSUMPTIVE
+                                    'valueType' => Constants::VALUE_TYPE_CONSUMPTIVE
                                 ]);
 
                                 $lastNewMembers = $this->newMemberRepository->findOneBy([
                                     'rana' => $rana,
                                     'timeslot' => $timeslot,
-                                    'valueType' => $this->constants::VALUE_TYPE_CONSUMPTIVE
+                                    'valueType' => Constants::VALUE_TYPE_CONSUMPTIVE
                                 ]);
 
                                 if (!is_null($lastRetentions) || !is_null($lastNewMembers)) {
                                     $errorFields['valueType'] = "invalid";
                                 }
                             }
-
                             break;
-                        case $this->constants::VALUE_TYPE_PROPOSED:
-                            if ($timeslot == $this->constants::TIMESLOT_T4) {
+                        case Constants::VALUE_TYPE_PROPOSED:
+                            if ($timeslot == Constants::TIMESLOT_T4) {
                                 $errorFields['valueType'] = "invalid";
                             } else {
                                 $lastRetentions = $this->retentionRepository->findBy([
                                     'rana' => $rana,
                                     'timeslot' => $timeslot,
                                     'valueType' => [
-                                        $this->constants::VALUE_TYPE_CONSUMPTIVE,
-                                        $this->constants::VALUE_TYPE_APPROVED
+                                        Constants::VALUE_TYPE_CONSUMPTIVE,
+                                        Constants::VALUE_TYPE_APPROVED
                                     ]
                                 ]);
 
@@ -762,8 +831,8 @@ class RanaController extends AbstractController
                                     'rana' => $rana,
                                     'timeslot' => $timeslot,
                                     'valueType' => [
-                                        $this->constants::VALUE_TYPE_CONSUMPTIVE,
-                                        $this->constants::VALUE_TYPE_APPROVED
+                                        Constants::VALUE_TYPE_CONSUMPTIVE,
+                                        Constants::VALUE_TYPE_APPROVED
                                     ]
                                 ]);
 
@@ -771,7 +840,6 @@ class RanaController extends AbstractController
                                     $errorFields['valueType'] = "invalid";
                                 }
                             }
-
                             break;
                     }
                 }
@@ -816,13 +884,13 @@ class RanaController extends AbstractController
             $retentionMember->setTimeslot($timeslot);
             $retentionMember->setValueType($valueType);
 
-            if ($valueType == $this->constants::VALUE_TYPE_CONSUMPTIVE) {
+            if ($valueType == Constants::VALUE_TYPE_CONSUMPTIVE) {
                 switch ($timeslot) {
-                    case $this->constants::TIMESLOT_T4:
+                    case Constants::TIMESLOT_T4:
                         $previous = $this->newMemberRepository->findOneBy([
                             'rana' => $rana,
                             'valueType' => $valueType,
-                            'timeslot' => $this->constants::TIMESLOT_T3
+                            'timeslot' => Constants::TIMESLOT_T3
                         ]);
                         $newMember->setM12($request->get("n_m12") ?? ($previous ? $previous->getM12() : 0));
                         $newMember->setM11($request->get("n_m11") ?? ($previous ? $previous->getM11() : 0));
@@ -831,16 +899,16 @@ class RanaController extends AbstractController
                         $previous = $this->retentionRepository->findOneBy([
                             'rana' => $rana,
                             'valueType' => $valueType,
-                            'timeslot' => $this->constants::TIMESLOT_T3
+                            'timeslot' => Constants::TIMESLOT_T3
                         ]);
                         $retentionMember->setM12($request->get("r_m12") ?? ($previous ? $previous->getM12() : 0));
                         $retentionMember->setM11($request->get("r_m11") ?? ($previous ? $previous->getM11() : 0));
                         $retentionMember->setM10($request->get("r_m10") ?? ($previous ? $previous->getM10() : 0));
-                    case $this->constants::TIMESLOT_T3:
+                    case Constants::TIMESLOT_T3:
                         $previous = $this->newMemberRepository->findOneBy([
                             'rana' => $rana,
                             'valueType' => $valueType,
-                            'timeslot' => $this->constants::TIMESLOT_T2
+                            'timeslot' => Constants::TIMESLOT_T2
                         ]);
                         $newMember->setM9($request->get("n_m9") ?? ($previous ? $previous->getM9() : 0));
                         $newMember->setM8($request->get("n_m8") ?? ($previous ? $previous->getM8() : 0));
@@ -849,16 +917,16 @@ class RanaController extends AbstractController
                         $previous = $this->retentionRepository->findOneBy([
                             'rana' => $rana,
                             'valueType' => $valueType,
-                            'timeslot' => $this->constants::TIMESLOT_T2
+                            'timeslot' => Constants::TIMESLOT_T2
                         ]);
                         $retentionMember->setM9($request->get("r_m9") ?? ($previous ? $previous->getM9() : 0));
                         $retentionMember->setM8($request->get("r_m8") ?? ($previous ? $previous->getM8() : 0));
                         $retentionMember->setM7($request->get("r_m7") ?? ($previous ? $previous->getM7() : 0));
-                    case $this->constants::TIMESLOT_T2:
+                    case Constants::TIMESLOT_T2:
                         $previous = $this->newMemberRepository->findOneBy([
                             'rana' => $rana,
                             'valueType' => $valueType,
-                            'timeslot' => $this->constants::TIMESLOT_T1
+                            'timeslot' => Constants::TIMESLOT_T1
                         ]);
                         $newMember->setM6($request->get("n_m6") ?? ($previous ? $previous->getM6() : 0));
                         $newMember->setM5($request->get("n_m5") ?? ($previous ? $previous->getM5() : 0));
@@ -867,12 +935,12 @@ class RanaController extends AbstractController
                         $previous = $this->retentionRepository->findOneBy([
                             'rana' => $rana,
                             'valueType' => $valueType,
-                            'timeslot' => $this->constants::TIMESLOT_T1
+                            'timeslot' => Constants::TIMESLOT_T1
                         ]);
                         $retentionMember->setM6($request->get("r_m6") ?? ($previous ? $previous->getM6() : 0));
                         $retentionMember->setM5($request->get("r_m5") ?? ($previous ? $previous->getM5() : 0));
                         $retentionMember->setM4($request->get("r_m4") ?? ($previous ? $previous->getM4() : 0));
-                    case $this->constants::TIMESLOT_T1:
+                    case Constants::TIMESLOT_T1:
                         $newMember->setM3($request->get("n_m3") ?? 0);
                         $newMember->setM2($request->get("n_m2") ?? 0);
                         $newMember->setM1($request->get("n_m1") ?? 0);
@@ -883,7 +951,7 @@ class RanaController extends AbstractController
                 }
             } else {
                 switch ($timeslot) {
-                    case $this->constants::TIMESLOT_T0:
+                    case Constants::TIMESLOT_T0:
                         $newMember->setM1($request->get("n_m1") ?? 0);
                         $newMember->setM2($request->get("n_m2") ?? 0);
                         $newMember->setM3($request->get("n_m3") ?? 0);
@@ -891,57 +959,107 @@ class RanaController extends AbstractController
                         $retentionMember->setM1($request->get("r_m1") ?? 0);
                         $retentionMember->setM2($request->get("r_m2") ?? 0);
                         $retentionMember->setM3($request->get("r_m3") ?? 0);
-                    case $this->constants::TIMESLOT_T1:
+                    case Constants::TIMESLOT_T1:
                         $previousNewMember = $this->newMemberRepository->findOneBy([
                             'rana' => $rana,
                             'valueType' => $valueType,
-                            'timeslot' => $this->constants::TIMESLOT_T0
+                            'timeslot' => Constants::TIMESLOT_T0
                         ]);
+                        $previousRetentionMember = $this->retentionRepository->findOneBy([
+                            'rana' => $rana,
+                            'valueType' => $valueType,
+                            'timeslot' => Constants::TIMESLOT_T0
+                        ]);
+
+
+                        if ($timeslot == Constants::TIMESLOT_T1) {
+                            $newMember->setM1($previousNewMember->getM1());
+                            $newMember->setM2($previousNewMember->getM2());
+                            $newMember->setM3($previousNewMember->getM3());
+                            $retentionMember->setM1($previousRetentionMember->getM1());
+                            $retentionMember->setM2($previousRetentionMember->getM2());
+                            $retentionMember->setM3($previousRetentionMember->getM3());
+                        }
                         $newMember->setM4($request->get("n_m4") ?? ($previousNewMember ? $previousNewMember->getM4() : 0));
                         $newMember->setM5($request->get("n_m5") ?? ($previousNewMember ? $previousNewMember->getM5() : 0));
                         $newMember->setM6($request->get("n_m6") ?? ($previousNewMember ? $previousNewMember->getM6() : 0));
 
-                        $previousRetentionMember = $this->retentionRepository->findOneBy([
-                            'rana' => $rana,
-                            'valueType' => $valueType,
-                            'timeslot' => $this->constants::TIMESLOT_T0
-                        ]);
                         $retentionMember->setM6($request->get("r_m6") ?? ($previousRetentionMember ? $previousRetentionMember->getM6() : 0));
                         $retentionMember->setM4($request->get("r_m4") ?? ($previousRetentionMember ? $previousRetentionMember->getM4() : 0));
                         $retentionMember->setM5($request->get("r_m5") ?? ($previousRetentionMember ? $previousRetentionMember->getM5() : 0));
-                    case $this->constants::TIMESLOT_T2:
+                    case Constants::TIMESLOT_T2:
                         $previousNewMember = $this->newMemberRepository->findOneBy([
                             'rana' => $rana,
                             'valueType' => $valueType,
-                            'timeslot' => $this->constants::TIMESLOT_T1
+                            'timeslot' => Constants::TIMESLOT_T1
                         ]);
+                        $previousRetentionMember = $this->retentionRepository->findOneBy([
+                            'rana' => $rana,
+                            'valueType' => $valueType,
+                            'timeslot' => Constants::TIMESLOT_T1
+                        ]);
+
+                        if ($timeslot == Constants::TIMESLOT_T2) {
+                            $newMember->setM1($previousNewMember->getM1());
+                            $newMember->setM2($previousNewMember->getM2());
+                            $newMember->setM3($previousNewMember->getM3());
+                            $newMember->setM4($previousNewMember->getM4());
+                            $newMember->setM5($previousNewMember->getM5());
+                            $newMember->setM6($previousNewMember->getM6());
+                            $retentionMember->setM1($previousRetentionMember->getM1());
+                            $retentionMember->setM2($previousRetentionMember->getM2());
+                            $retentionMember->setM3($previousRetentionMember->getM3());
+                            $retentionMember->setM4($previousRetentionMember->getM4());
+                            $retentionMember->setM5($previousRetentionMember->getM5());
+                            $retentionMember->setM6($previousRetentionMember->getM6());
+                        }
+
                         $newMember->setM7($request->get("n_m7") ?? ($previousNewMember ? $previousNewMember->getM7() : 0));
                         $newMember->setM8($request->get("n_m8") ?? ($previousNewMember ? $previousNewMember->getM8() : 0));
                         $newMember->setM9($request->get("n_m9") ?? ($previousNewMember ? $previousNewMember->getM9() : 0));
 
-                        $previousRetentionMember = $this->retentionRepository->findOneBy([
-                            'rana' => $rana,
-                            'valueType' => $valueType,
-                            'timeslot' => $this->constants::TIMESLOT_T1
-                        ]);
                         $retentionMember->setM7($request->get("r_m7") ?? ($previousRetentionMember ? $previousRetentionMember->getM7() : 0));
                         $retentionMember->setM8($request->get("r_m8") ?? ($previousRetentionMember ? $previousRetentionMember->getM8() : 0));
                         $retentionMember->setM9($request->get("r_m9") ?? ($previousRetentionMember ? $previousRetentionMember->getM9() : 0));
-                    case $this->constants::TIMESLOT_T3:
+                    case Constants::TIMESLOT_T3:
                         $previousNewMember = $this->newMemberRepository->findOneBy([
                             'rana' => $rana,
                             'valueType' => $valueType,
-                            'timeslot' => $this->constants::TIMESLOT_T2
+                            'timeslot' => Constants::TIMESLOT_T2
                         ]);
+                        $previousRetentionMember = $this->retentionRepository->findOneBy([
+                            'rana' => $rana,
+                            'valueType' => $valueType,
+                            'timeslot' => Constants::TIMESLOT_T2
+                        ]);
+
+                        if ($timeslot == Constants::TIMESLOT_T3) {
+
+                            $newMember->setM1($previousNewMember->getM1());
+                            $newMember->setM2($previousNewMember->getM2());
+                            $newMember->setM3($previousNewMember->getM3());
+                            $newMember->setM4($previousNewMember->getM4());
+                            $newMember->setM5($previousNewMember->getM5());
+                            $newMember->setM6($previousNewMember->getM6());
+                            $newMember->setM7($previousNewMember->getM7());
+                            $newMember->setM8($previousNewMember->getM8());
+                            $newMember->setM9($previousNewMember->getM9());
+
+                            $retentionMember->setM1($previousRetentionMember->getM1());
+                            $retentionMember->setM2($previousRetentionMember->getM2());
+                            $retentionMember->setM3($previousRetentionMember->getM3());
+                            $retentionMember->setM4($previousRetentionMember->getM4());
+                            $retentionMember->setM5($previousRetentionMember->getM5());
+                            $retentionMember->setM6($previousRetentionMember->getM6());
+                            $retentionMember->setM7($previousRetentionMember->getM7());
+                            $retentionMember->setM8($previousRetentionMember->getM8());
+                            $retentionMember->setM9($previousRetentionMember->getM9());
+                        }
+
                         $newMember->setM10($request->get("n_m10") ?? ($previousNewMember ? $previousNewMember->getM10() : 0));
                         $newMember->setM11($request->get("n_m11") ?? ($previousNewMember ? $previousNewMember->getM11() : 0));
                         $newMember->setM12($request->get("n_m12") ?? ($previousNewMember ? $previousNewMember->getM12() : 0));
 
-                        $previousRetentionMember = $this->retentionRepository->findOneBy([
-                            'rana' => $rana,
-                            'valueType' => $valueType,
-                            'timeslot' => $this->constants::TIMESLOT_T2
-                        ]);
                         $retentionMember->setM10($request->get("r_m10") ?? ($previousRetentionMember ? $previousRetentionMember->getM10() : 0));
                         $retentionMember->setM11($request->get("r_m11") ?? ($previousRetentionMember ? $previousRetentionMember->getM11() : 0));
                         $retentionMember->setM12($request->get("r_m12") ?? ($previousRetentionMember ? $previousRetentionMember->getM12() : 0));
@@ -956,13 +1074,13 @@ class RanaController extends AbstractController
                 $this->retentionRepository->save($retentionMember);
             }
 
-            $status = $this->constants::RANA_LIFECYCLE_STATUS_TODO;
+            $status = Constants::RANA_LIFECYCLE_STATUS_TODO;
             switch ($valueType) {
-                case $this->constants::VALUE_TYPE_APPROVED:
-                    $status = $this->constants::RANA_LIFECYCLE_STATUS_APPROVED;
+                case Constants::VALUE_TYPE_APPROVED:
+                    $status = Constants::RANA_LIFECYCLE_STATUS_APPROVED;
                     break;
-                case $this->constants::VALUE_TYPE_PROPOSED:
-                    $status = $this->constants::RANA_LIFECYCLE_STATUS_PROPOSED;
+                case Constants::VALUE_TYPE_PROPOSED:
+                    $status = Constants::RANA_LIFECYCLE_STATUS_PROPOSED;
                     break;
             }
 
@@ -983,7 +1101,7 @@ class RanaController extends AbstractController
                     $nextTimeslot = "T$nextSlotNumber";
                 }
 
-                $status = $this->constants::RANA_LIFECYCLE_STATUS_TODO;
+                $status = Constants::RANA_LIFECYCLE_STATUS_TODO;
             } else {
                 $nextTimeslot = $timeslot;
             }
@@ -1209,43 +1327,26 @@ class RanaController extends AbstractController
      */
     public function getRana(Chapter $chapter, Request $request): Response
     {
-        $actAs = $request->get("actAs");
-        $code = Response::HTTP_OK;
-        $role = $request->get("role");
-        $user = $this->getUser();
-        $isAdmin = $user->isAdmin() && is_null($actAs);
-
-        $checkUser = $this->userRepository->checkUser($user, $actAs);
-        $user = Util::arrayGetValue($checkUser, 'user');
-        $code = Util::arrayGetValue($checkUser, 'code');
-
         $region = $chapter->getRegion();
 
-        if ($code == Response::HTTP_OK && !$isAdmin) {
-            $checkDirectorRole = $this->directorRepository->checkDirectorRole($user, $region, $role);
+        $roleCheck = [
+            Constants::ROLE_EXECUTIVE,
+            Constants::ROLE_AREA,
+            Constants::ROLE_ASSISTANT
+        ];
+        $performerData = Util::getPerformerData($this->getUser(), $region, $roleCheck, $this->userRepository, $this->directorRepository, $request->get("actAs"), $request->get("role"));
 
-            $code = Util::arrayGetValue($checkDirectorRole, 'code', $code);
-            $director = Util::arrayGetValue($checkDirectorRole, 'director', null);
-            $role = $director ? $director->getRole() : $role;
-        }
-
-        if ($code == Response::HTTP_OK) {
-            $role = $isAdmin ? $this->constants::ROLE_EXECUTIVE : $role;
-            if (!in_array($role, [
-                $this->constants::ROLE_EXECUTIVE,
-                $this->constants::ROLE_AREA,
-                $this->constants::ROLE_ASSISTANT
-            ])) {
-                $code = Response::HTTP_FORBIDDEN;
-            }
+        // Assign $actAs, $code, $director, $isAdmin and $role
+        foreach ($performerData as $var => $value) {
+            $$var = $value;
         }
 
         if ($code == Response::HTTP_OK && !$isAdmin) {
-            if ($role == $this->constants::ROLE_ASSISTANT && $chapter->getDirector() != $director) {
+            if ($role == Constants::ROLE_ASSISTANT && $chapter->getDirector() != $director) {
                 $code = Response::HTTP_FORBIDDEN;
             }
 
-            if ($role == $this->constants::ROLE_AREA && $chapter->getDirector()->getSupervisor() != $director) {
+            if ($role == Constants::ROLE_AREA && $chapter->getDirector()->getSupervisor() != $director) {
                 $code = Response::HTTP_FORBIDDEN;
             }
         }

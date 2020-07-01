@@ -9,13 +9,18 @@ class RandaFormatter
     private const REGION_BASE_DATA = 1;
     private const REGION_FULL_DATA = 0;
 
+    /** @var RanaFormatter */
+    private $ranaFormatter;
+
     /** @var RegionFormatter */
     private $regionFormatter;
 
     /** RandaFormatter constructor */
     public function __construct(
+        RanaFormatter $ranaFormatter,
         RegionFormatter $regionFormatter
     ) {
+        $this->ranaFormatter = $ranaFormatter;
         $this->regionFormatter = $regionFormatter;
     }
 
@@ -44,6 +49,20 @@ class RandaFormatter
     public function formatBase(Randa $randa): array
     {
         return $this->format($randa, self::REGION_BASE_DATA);
+    }
+
+    /**
+     * @param Randa $randa
+     *
+     * @return array
+     */
+    public function formatData(Randa $randa): array
+    {
+        return array_merge($this->format($randa, self::REGION_BASE_DATA), [
+            'ranas' => array_map(function ($rana) {
+                return $this->ranaFormatter->formatCustomData($rana);
+            }, $randa->filteredRanas)
+        ]);
     }
 
     /**

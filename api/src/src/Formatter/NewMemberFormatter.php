@@ -67,4 +67,16 @@ class NewMemberFormatter
     {
         return $this->format($newMember, self::RANA_FULL_DATA);
     }
+
+    /**
+     * @param NewMember $newMember
+     *
+     * @return array
+     */
+    public function formatNoRana(NewMember $newMember): array
+    {
+        $details = $this->format($newMember, self::RANA_BASE_DATA);
+        unset($details['rana']);
+        return $details;
+    }
 }

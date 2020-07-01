@@ -934,6 +934,10 @@ class RanaController extends AbstractController
                 $this->newMemberRepository->save($newMember);
             }
 
+            if ($isNewRenewedMember) {
+                $this->renewedMemberRepository->save($renewedMember);
+            }
+
             if ($isNewRetentionMember) {
                 $this->retentionRepository->save($retentionMember);
             }

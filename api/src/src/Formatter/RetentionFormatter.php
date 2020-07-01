@@ -41,6 +41,7 @@ class RetentionFormatter
             'm11'       => $retention->getM11(),
             'm12'       => $retention->getM12(),
             'rana'      => $ranaDataType == self::RANA_BASE_DATA ? $this->ranaFormatter->formatBase($retention->getRana()) : $this->ranaFormatter->formatFull($retention->getRana()),
+            'timeslot'  => $retention->getTimeslot(),
             'valueType' => $retention->getValueType()
         ];
 
@@ -65,5 +66,17 @@ class RetentionFormatter
     public function formatFull(Retention $retention): array
     {
         return $this->format($retention, self::RANA_FULL_DATA);
+    }
+
+    /**
+     * @param Retention $retention
+     *
+     * @return array
+     */
+    public function formatNoRana(Retention $retention): array
+    {
+        $details = $this->format($retention, self::RANA_BASE_DATA);
+        unset($details['rana']);
+        return $details;
     }
 }

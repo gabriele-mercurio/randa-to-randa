@@ -1,5 +1,5 @@
 <template>
-  <div class="ma-4 fill-height">
+  <div v-if="!freeAccount" class="ma-4 fill-height">
     <ChaptersList
       :chapters.sync="chapters"
       :classSpec="'elevation-3'"
@@ -29,6 +29,9 @@
       <v-icon>mdi-plus</v-icon>
     </v-btn>
   </div>
+  <div v-else>
+    Free account message
+  </div>
 </template>
 
 <script>
@@ -47,7 +50,12 @@ export default {
       noChaptersFound: false
     };
   },
-  props: {},
+  props: {
+    freeAccount() {
+      console.log(this.$store.getters["isFreeAccount"]);
+      return this.$store.getters["isFreeAccount"];
+    }
+  },
   components: {
     EditChapter,
     ChaptersList

@@ -77,7 +77,8 @@ export default {
       if(response.errorCode === 404) {
         this.noChaptersFound = true;
       } else {
-        this.chapters = response
+        this.chapters = response;
+        this.$store.commit("setChapters", this.chapters);
       }
     }
   },

@@ -97,9 +97,15 @@ class RegionController extends AbstractController
             return $r1->getName() < $r2->getName() ? -1 : ($r1->getName() > $r2->getName() ? 1 : 0);
         });
 
-        return new JsonResponse(array_map(function ($region) use($regionsRoles, $user) {
+        $director = $this->directorRepository->findOneBy([
+            "region" => $region,
+            "user" => $user
+        ]);
+
+        return new JsonResponse(array_map(function ($region) use($regionsRoles, $user, $director) {
             return array_merge($this->regionFormatter->formatBase($region), [
-                'role' => $user->isAdmin() ? "ADMIN" : $regionsRoles[$region->getId()]
+                'role' => $user->isAdmin() ? "ADMIN" : $regionsRoles[$region->getId()],
+                'isFreeAccount' => $director ->isFreeAccount()
             ]);
         }, $regions));
     }

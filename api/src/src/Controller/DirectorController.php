@@ -293,7 +293,7 @@ class DirectorController extends AbstractController
                 $errorFields['email'] = "invalid";
             }
 
-            if ((!$user->isAdmin() || !is_null($actAsId)) && $isAdmin) {
+            if (!is_null($request->get("actAs")) && $isAdmin) {
                 $errorFields['isAdmin'] = "invalid";
             }
 
@@ -344,6 +344,7 @@ class DirectorController extends AbstractController
             // If the user doesn't exist, create it
             if (is_null($newUser)) {
                 $tempPasswd = Util::generatePassword();
+                file_put_contents("temp_password", $tempPasswd);
                 $isNewUser = true;
                 $newUser = new User();
                 $newUser->setEmail($email);

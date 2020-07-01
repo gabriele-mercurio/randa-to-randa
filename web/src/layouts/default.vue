@@ -165,7 +165,7 @@ export default {
     },
     setActAs() {
       this.$store.commit("setActAs", this.actAsDirector);
-      this.$store.commit("setUserRole", this.actAsDirector.role);
+      this.$store.commit("setUserRole", this.actAsDirector.rtrole);
       this.snackbarState = "success";
       this.snackbarMessageLabel = "role_changed";
       this.showSnackbar = true;

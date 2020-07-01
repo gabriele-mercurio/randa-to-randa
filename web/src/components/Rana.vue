@@ -1,39 +1,40 @@
 <template>
   <div id="rana" v-if="rana">
-    <h3>
-      <span v-if="editable" class="font-italic font-weight-light"
-        >{{ rana.timeslot }}:
-      </span>
-      <span v-else class="font-italic font-weight-light"
-        >{{ rana.timeslot }}:
-      </span>
-      <span v-if="rana">{{ rana.state }}</span>
-    </h3>
-    <div class="mb-3" v-if="editable">
-      <div class="d-flex flex-row align-center">
-        <div class="circle background-yellow"></div>
-        <div class="ml-1">Approvato</div>
+    <div class="d-flex justify-space-between align-end">
+      <div>
+        <span class="font-italic font-weight-light">{{ rana.timeslot }}: </span>
+        <span v-if="rana">{{ rana.state }}</span>
       </div>
-      <div class="d-flex flex-row align-center">
-        <div class="circle background-green"></div>
-        <div class="ml-1">Consuntivo</div>
-      </div>
+      <div v-if="editable">
+        <div class="d-flex flex-row align-center">
+          <div class="circle background-yellow"></div>
+          <div class="ml-1">Approvato</div>
+        </div>
+        <div class="d-flex flex-row align-center">
+          <div class="circle background-green"></div>
+          <div class="ml-1">Consuntivo</div>
+        </div>
 
-      <div class="d-flex flex-row align-center">
-        <div class="circle stroke-green"></div>
-        <div class="ml-1">Da compilare</div>
+        <div class="d-flex flex-row align-center">
+          <div class="circle stroke-green"></div>
+          <div class="ml-1">Da compilare</div>
+        </div>
       </div>
     </div>
+
     <v-data-table disable-pagination hide-default-footer>
       <template v-slot:body>
         <tbody>
           <tr>
-            <td></td>
+            <td rowspan="3">Nuovi</td>
             <td
               colspan="3"
               v-for="i in (0, 4)"
               :key="i"
-              class="text-center pa-0 border-right-bold border-top-bold"
+              class="text-center pa-0"
+              :class="{
+                bordered: !isPastTimeslot(i, rana.timeslot) && editable
+              }"
             >
               <div class="border-bottom background-grey pa-1">T{{ i }}</div>
               <v-row class="pa-0 ma-0">
@@ -43,20 +44,14 @@
                   :class="{
                     'border-right': isPastTimeslot(i, rana.timeslot),
                     'background-yellow':
-                      isPastTimeslot(i, rana.timeslot) || !editable
+                      isPastTimeslot(i, rana.timeslot),
+                      'stroke-green': canApprove(i, 4) || canPropose(i, 4)
                   }"
                 >
                   <v-text-field
                     :placeholder="'T' + i"
-                    :disabled="
-                      isPastTimeslot(i, rana.timeslot) ||
-                        !editable ||
-                        (!canApprove() && !canPropose())
-                    "
+                    :disabled="!canApprove(i, 4) && !canPropose(i, 4)"
                     type="number"
-                    :class="{
-                      bordered: !isPastTimeslot(i, rana.timeslot) && editable
-                    }"
                     @keyup="proposeMonths($event, i, 'newMembers')"
                     v-model="timeslotAggregations.newMembers.PREV[i]"
                   />
@@ -70,14 +65,66 @@
               </v-row>
             </td>
           </tr>
+
+          <!-- MONTHS row -->
           <tr>
-            <td></td>
+            <td
+              v-for="i in (0, 12)"
+              :key="i"
+              class="text-center pa-0"
+              :class="{
+                bordered: !isPastMonth(i, rana.timeslot) && editable
+              }"
+            >
+              <!-- month labels -->
+              <div class="border-bottom background-grey pa-1">M{{ i }}</div>
+
+              <!-- new members data -->
+              <v-row class="pa-0 ma-0">
+                <v-col
+                  :cols="isPastMonth(i, rana.timeslot) ? '6' : 12"
+                  class="pa-0 d-flex justify-center align-center"
+                  :class="{
+                    'border-righ': isPastMonth(i, rana.timeslot),
+                    'background-yellow':
+                      isPastMonth(i, rana.timeslot) ,
+                      'stroke-green': canApprove(i, 12) || canPropose(i, 12)
+                  }"
+                >
+                  <v-text-field
+                    :placeholder="'M' + i"
+                    :disabled="!canApprove(i, 12) && !canPropose(i, 12)"
+                    type="number"
+                    v-model="rana.newMembers.PREV['m' + i]"
+                    @keyup="calculateTimeslot($event, i, 'newMembers')"
+                  />
+                </v-col>
+                <v-col
+                  cols="6"
+                  class="pa-0 background-green font-italic font-weight-light disabled d-flex justify-center align-center"
+                  >{{
+                    rana.newMembers.CONS ? rana.newMembers.CONS["m" + i] : null
+                  }}
+                </v-col>
+              </v-row>
+            </td>
+          </tr>
+        </tbody>
+
+        <tbody>
+          <tr>
+            <td rowspan="3">Uscite</td>
             <td
               colspan="3"
               v-for="i in (0, 4)"
               :key="i"
-              class="text-center pa-0 border-right-bold border-top-bold"
+              class="text-center pa-0"
+              :class="{
+                bordered: !isPastTimeslot(i, rana.timeslot) && editable,
+                
+              }"
             >
+              <div class="border-bottom background-grey pa-1">T{{ i }}</div>
               <v-row class="pa-0 ma-0">
                 <v-col
                   :cols="isPastTimeslot(i, rana.timeslot) ? '6' : 12"
@@ -85,20 +132,14 @@
                   :class="{
                     'border-right': isPastTimeslot(i, rana.timeslot),
                     'background-yellow':
-                      isPastTimeslot(i, rana.timeslot) || !editable
+                      isPastTimeslot(i, rana.timeslot),
+                      'stroke-green': canApprove(i, 4) || canPropose(i, 4)
                   }"
                 >
                   <v-text-field
                     :placeholder="'T' + i"
-                    :disabled="
-                      isPastTimeslot(i, rana.timeslot) ||
-                        !editable ||
-                        (!canApprove() && !canPropose())
-                    "
+                    :disabled="!canApprove(i, 4) && !canPropose(i, 4)"
                     type="number"
-                    :class="{
-                      bordered: !isPastTimeslot(i, rana.timeslot) && editable
-                    }"
                     @keyup="proposeMonths($event, i, 'retentions')"
                     v-model="timeslotAggregations.retentions.PREV[i]"
                   />
@@ -116,25 +157,18 @@
           <!-- MONTHS row -->
           <tr>
             <td
-              class="text-center pa-0 border-top-none border-right-semibold border-bottom-bold"
-            >
-              <v-row>
-                <v-col></v-col>
-                <v-col>Nuovi</v-col>
-                <v-col>Usciti</v-col>
-                <v-col>Totali</v-col>
-              </v-row>
-            </td>
-            <td
               v-for="i in (0, 12)"
               :key="i"
-              class="text-center pa-0 border-top-none border-right-semibold border-bottom-bold"
-              :class="{ 'border-right-bold': i % 3 == 0 }"
+              class="text-center pa-0"
+              :class="{
+                'border-right-bold': i % 3 == 0,
+                bordered: !isPastMonth(i, rana.timeslot) && editable
+              }"
             >
               <!-- month labels -->
               <div class="border-bottom background-grey pa-1">M{{ i }}</div>
 
-              <!-- new members data -->
+              <!-- retentions data -->
               <v-row class="pa-0 ma-0">
                 <v-col
                   :cols="isPastMonth(i, rana.timeslot) ? '6' : 12"
@@ -142,58 +176,16 @@
                   :class="{
                     'border-righ': isPastMonth(i, rana.timeslot),
                     'background-yellow':
-                      isPastMonth(i, rana.timeslot) || !editable
+                      isPastMonth(i, rana.timeslot),
+                      'stroke-green': canApprove(i, 12) || canPropose(i, 12)
                   }"
                 >
                   <v-text-field
                     :placeholder="'M' + i"
-                    :disabled="
-                      isPastMonth(i, rana.timeslot) ||
-                        !editable ||
-                        (!canApprove() && !canPropose())
-                    "
-                    type="number"
-                    v-model="rana.newMembers.PREV['m' + i]"
-                    @keyup="calculateTimeslot($event, i, 'newMembers')"
-                    :class="{
-                      bordered: !isPastMonth(i, rana.timeslot) && editable
-                    }"
-                  />
-                </v-col>
-                <v-col
-                  v-if="isPastMonth(i, rana.timeslot)"
-                  cols="6"
-                  class="pa-0 background-green font-italic font-weight-light disabled d-flex justify-center align-center"
-                  >{{
-                    rana.newMembers.CONS ? rana.newMembers.CONS["m" + i] : null
-                  }}
-                </v-col>
-              </v-row>
-
-              <!-- retentions data -->
-              <v-row class="pa-0 ma-0 border-top-bold">
-                <v-col
-                  :cols="isPastMonth(i, rana.timeslot) ? '6' : 12"
-                  class="pa-0 d-flex justify-center align-center"
-                  :class="{
-                    'border-righ': isPastMonth(i, rana.timeslot),
-                    'background-yellow':
-                      isPastMonth(i, rana.timeslot) || !editable
-                  }"
-                >
-                  <v-text-field
-                    :placeholder="'M' + i"
-                    :disabled="
-                      isPastMonth(i, rana.timeslot) ||
-                        !editable ||
-                        (!canApprove() && !canPropose())
-                    "
+                    :disabled="!canApprove(i, 12) && !canPropose(i, 12)"
                     type="number"
                     v-model="rana.retentions.PREV['m' + i]"
                     @keyup="calculateTimeslot($event, i, 'retentions')"
-                    :class="{
-                      bordered: !isPastMonth(i, rana.timeslot) && editable
-                    }"
                   />
                 </v-col>
                 <v-col
@@ -205,13 +197,19 @@
                   }}
                 </v-col>
               </v-row>
-
-              <!-- total members data -->
-              <v-row>
-                <v-col class="pa-0">
-                  TOT
-                </v-col>
-              </v-row>
+            </td>
+          </tr>
+        </tbody>
+        <tbody>
+          <tr>
+            <td rowspan="1">Attivi</td>
+            <td
+              v-for="i in (0, 12)"
+              :key="i"
+              class="text-center pa-0 background-red"
+              :class="{ 'border-right-bold': i % 3 == 0 }"
+            >
+              {{ i }}
             </td>
           </tr>
         </tbody>
@@ -219,7 +217,7 @@
       <template slot="no-data">
         <tr style="display: none;"></tr>
       </template>
-      <template slot="footer" v-if="editable && (canPropose() || canApprove())">
+      <template slot="footer" v-if="editable && (canPropose(12, 12) || canApprove(12, 12))">
         <div class="d-flex justify-end my-4">
           <v-btn
             type="submit"
@@ -234,22 +232,19 @@
             type="submit"
             normal
             color="primary"
-            :disabled="!canApprove() && !canPropose()"
+            :disabled="!canApprove(12, 12) && !canPropose(12, 12)"
             @click="sendProposalOrApprovation()"
           >
             <span v-if="role === 'ASSISTANT'">{{ $t("send_proposal") }}</span>
             <span v-else>{{ $t("approve_proposal") }}</span>
           </v-btn>
-
-          <pre>{{rana.newMembers.PROP}}</pre>
         </div>
       </template>
     </v-data-table>
-
     <Snackbar
-      :showSnackbar.sync="showSnackbar"
+      :show.sync="showSnackbar"
       :state.sync="snackbarState"
-      :message="message"
+      :messageLabel.sync="message"
     />
   </div>
 </template>
@@ -281,7 +276,8 @@ export default {
       ranaBackup: null,
       showSnackbar: false,
       snackbarState: null,
-      message: ""
+      message: "",
+      isProposed: false
     };
   },
   props: {
@@ -307,6 +303,12 @@ export default {
     }
   },
   methods: {
+    proposedForExecutives() {
+      let r = this.rana.state === "PROPOSED" && this.role != "ASSISTANT";
+      console.log(r);
+      debugger;
+      return r;
+    },
     evaluateCurrentMembers() {
       return 1;
     },
@@ -354,30 +356,25 @@ export default {
       }
     },
 
-    canApprove() {
-      if (this.rana) {
-        return this.role === "EXECUTIVE" && this.rana.state == "PROPOSED";
+    canApprove(i, number) {
+      if(number == 12) {
+        i = Utils.getTimeslotFromMonth(i);
       }
+      if (!this.rana) return false;
+      return this.role !== "ASSISTANT" && (this.rana.state == "PROPOSED" || this.rana.state == "TODO") && this.rana.timeslot < ("T"+i);;
     },
 
-    canPropose() {
-      return true;
-      // debugger;
-      // if (!this.rana) return false;
-      // if (this.role === "ASSISTANT") {
-      //   if (this.rana.state == "TODO") {
-      //     return true;
-      //   } else {
-      //     return (
-      //       this.rana.state == "PROPOSED" &&
-      //       this.currentTimeslot > this.rana.timeslot
-      //     );
-      //   }
-      // }
+    canPropose(i, number) {
+      if (!this.rana) return false;
+      if(number == 12) {
+        i = Utils.getTimeslotFromMonth(i);
+      }
+      return this.role === "ASSISTANT" && this.rana.state == "TODO" && this.rana.timeslot < ("T"+i);
     },
 
     //check if a month is passed
     isPastMonth(m, timeslot) {
+      return false;
       let t = Utils.getTimeslotFromMonth(m);
       return "T" + t <= timeslot;
     },
@@ -395,11 +392,15 @@ export default {
       data["timeslot"] = this.rana.timeslot;
 
       let firstTimeslotMonth = Utils.getFirstTimeslotMonth(this.rana.timeslot);
-      for(let k of Object.keys(data.newMembers.PREV)) {
+      for (let k of Object.keys(data.newMembers.PREV)) {
         let index = k.substr(1, k.length) * 1;
-        if(index >= firstTimeslotMonth) {
-          data["n_" + k] = data.newMembers.PREV[k] ? data.newMembers.PREV[k] : null;
-          data["r_" + k] = data.retentions.PREV[k] ? data.retentions.PREV[k] : null;
+        if (index >= firstTimeslotMonth) {
+          data["n_" + k] = data.newMembers.PREV[k]
+            ? data.newMembers.PREV[k]
+            : null;
+          data["r_" + k] = data.retentions.PREV[k]
+            ? data.retentions.PREV[k]
+            : null;
         }
       }
       // send only future data
@@ -412,6 +413,7 @@ export default {
       if (!result.error) {
         this.message = this.$t("proposal_sent");
         this.snackbarState = "success";
+        this.$emit("updateRanas", result);
       } else {
         this.message = this.$t("proposal_error");
         this.snackbarState = "error";
@@ -420,12 +422,12 @@ export default {
 
     //check if timeslot is past
     isPastTimeslot(t, timeslot) {
+      return false;
       return "T" + t <= timeslot;
     },
 
     //calculate trimestral value each time a month changes
     calculateTimeslot(e, m, type) {
-      debugger;
       let t = Math.ceil(m / 3);
       let startFrom = (t - 1) * 3 + 1;
       let value = 0;
@@ -499,6 +501,7 @@ export default {
   watch: {
     rana: {
       handler: function(newVal, oldVal) {
+        debugger;
         if (newVal) {
           this.rana = newVal;
           this.role = this.$store.getters["getUser"];
@@ -516,49 +519,12 @@ export default {
 @import "../assets/variables.scss";
 
 #rana {
-  td,
-  th {
-    border-right: 1px solid rgba(0, 0, 0, 0.12);
-    border-top: 1px solid rgba(0, 0, 0, 0.12);
-  }
-  thead tr:last-of-type,
-  tbody tr:last-of-type {
-    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
-  }
-  th:first-of-type,
-  td:first-of-type {
-    border-left: 2px solid rgba(0, 0, 0, 0.4) !important;
-  }
-  tr:last-of-type {
-    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
-  }
-  .border-bottom {
-    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
-  }
-  .border-top-none {
-    border-top-style: none;
-  }
-  .border-right {
-    border-right: 1px solid rgba(0, 0, 0, 0.2);
-  }
-  .border-right-bold {
-    border-right: 2px solid rgba(0, 0, 0, 0.4) !important;
-    &:last-of-type {
-      border-right: none;
-    }
-  }
-  .border-top-bold {
-    border-top: 2px solid rgba(0, 0, 0, 0.4) !important;
-  }
-  .border-bottom-bold {
-    border-bottom: 2px solid rgba(0, 0, 0, 0.4) !important;
-  }
-  .border-right-semibold {
-    border-right: 1px solid rgba(0, 0, 0, 0.3);
-  }
   .v-input {
     padding: 0;
     margin: 0;
+  }
+  td {
+    border: 1px solid lightgray;
   }
   .v-input__control {
     display: flex;
@@ -597,7 +563,7 @@ export default {
     background: lighten($lightred, 35%);
   }
   .background-grey {
-    background: lighten($lightgrey, 70%);
+    background: lighten($lightgrey, 65%);
   }
   .stroke-green {
     border: 2px solid $lightgreen !important;
@@ -605,17 +571,10 @@ export default {
   tr:hover {
     background: transparent;
   }
-  .bordered {
-    border: 2px solid $lightgreen;
-    box-sizing: border-box !important;
-    margin: -2px;
-    &.v-input--is-disabled {
-      border-style: none !important;
-    }
-  }
   .circle {
-    width: 20px;
-    height: 20px;
+    width: 15px;
+    height: 15px;
+    margin-right: 5px;
     border-radius: 50%;
     border: 1px solid $lightgrey;
   }

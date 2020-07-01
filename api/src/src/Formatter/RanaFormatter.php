@@ -2,25 +2,43 @@
 
 namespace App\Formatter;
 
+use App\Util\Util;
 use App\Entity\Rana;
 use App\Util\Constants;
-use App\Util\Util;
+use App\Repository\NewMemberRepository;
+use App\Repository\RetentionRepository;
+use App\Repository\RanaLifecycleRepository;
 
 class RanaFormatter
 {
     /** @var ChapterFormatter */
     private $chapterFormatter;
 
+    /** @var NewMembersRepository */
+    private $newMembersRepository;
+
+    /** @var RetentionsRepository */
+    private $retentionsRepository;
+
     /** @var RandaFormatter */
     private $randaFormatter;
+
+    /** @var RanaLifecycleRepository */
+    private $ranaLifecycleRepository;
 
     /** RanaFormatter constructor */
     public function __construct(
         ChapterFormatter $chapterFormatter,
-        RandaFormatter $randaFormatter
+        RandaFormatter $randaFormatter,
+        RetentionRepository $retentionsRepository,
+        NewMemberRepository $newMembersRepository,
+        RanaLifecycleRepository $ranaLifecycleRepository
     ) {
         $this->chapterFormatter = $chapterFormatter;
         $this->randaFormatter = $randaFormatter;
+        $this->newMembersRepository = $newMembersRepository;
+        $this->retentionsRepository = $retentionsRepository;
+        $this->ranaLifecycleRepository = $ranaLifecycleRepository;
     }
 
     private static function divideByValueTypes(array $objects): array
@@ -82,55 +100,87 @@ class RanaFormatter
             Constants::VALUE_TYPE_PROPOSED
         ];
 
-        if ($role != Constants::ROLE_ASSISTANT) {
-            $newMembersValues = array_merge($newMembersValues, [
-                Constants::VALUE_TYPE_APPROVED => [],
-                Constants::VALUE_TYPE_CONSUMPTIVE => []
-            ]);
-            $renewedMembersValues = array_merge($renewedMembersValues, [
-                Constants::VALUE_TYPE_APPROVED => [],
-                Constants::VALUE_TYPE_CONSUMPTIVE => []
-            ]);
-            $retentionsValues = array_merge($retentionsValues, [
-                Constants::VALUE_TYPE_APPROVED => [],
-                Constants::VALUE_TYPE_CONSUMPTIVE => []
-            ]);
-            $types = array_merge($types, [
-                Constants::VALUE_TYPE_APPROVED,
-                Constants::VALUE_TYPE_CONSUMPTIVE
-            ]);
-        }
+        // if ($role != Constants::ROLE_ASSISTANT) {
+        //     $newMembersValues = array_merge($newMembersValues, [
+        //         Constants::VALUE_TYPE_APPROVED => [],
+        //         Constants::VALUE_TYPE_CONSUMPTIVE => []
+        //     ]);
+        //     $renewedMembersValues = array_merge($renewedMembersValues, [
+        //         Constants::VALUE_TYPE_APPROVED => [],
+        //         Constants::VALUE_TYPE_CONSUMPTIVE => []
+        //     ]);
+        //     $retentionsValues = array_merge($retentionsValues, [
+        //         Constants::VALUE_TYPE_APPROVED => [],
+        //         Constants::VALUE_TYPE_CONSUMPTIVE => []
+        //     ]);
+        //     $types = array_merge($types, [
+        //         Constants::VALUE_TYPE_APPROVED,
+        //         Constants::VALUE_TYPE_CONSUMPTIVE
+        //     ]);
+        // }
 
-        $lifeCycles = $rana->getRanaLifecycles()->toArray();
-
+        $lifeCycles = $rana->getRanaLifecycles();
         foreach ($lifeCycles as $lifeCycle) {
-            $currentState = $lifeCycle->getCurrentState();
-            $currentTimeslot = $lifeCycle->getCurrentTimeslot();
+            $timeslot = $lifeCycle->getCurrentTimeslot();
+            $state = $lifeCycle->getCurrentState();
+            $values_per_type = [
+                "newMembers" => [
+                    "APPR" => [],
+                    "PROP" => [],
+                    "CONS" => [],
+                ],
+                "retentions" => [
+                    "APPR" => [],
+                    "PROP" => [],
+                    "CONS" => []
+                ]
+            ];
+            
 
-            $newMembers = static::getCurrentTimeslotData($rana->getNewMembers()->toArray(), $currentTimeslot);
-            $newMembers = static::divideByValueTypes($newMembers);
-
-            $renewedMembers = static::getCurrentTimeslotData($rana->getRenewedMembers()->toArray(), $currentTimeslot);
-            $renewedMembers = static::divideByValueTypes($renewedMembers);
-
-            $retentions = static::getCurrentTimeslotData($rana->getRetentions()->toArray(), $currentTimeslot);
-            $retentions = static::divideByValueTypes($retentions);
-
-            for ($i = 1; $i <= 12; $i++) {
-                $method = "getM$i";
-                foreach ($types as $type) {
-                    $newMembersValues[$type]["m$i"] = is_null($newMembers[$type]) ? 0 : $newMembers[$type]->$method() ?? 0;
-                    $renewedMembersValues[$type]["m$i"] = is_null($renewedMembers[$type]) ? 0 : $renewedMembers[$type]->$method() ?? 0;
-                    $retentionsValues[$type]["m$i"] = is_null($retentions[$type]) ? 0 : $retentions[$type]->$method() ?? 0;
+            //if i'am not assistant and there's no proposal, take the apporved
+            $valueType = Constants::VALUE_TYPE_PROPOSED;
+            if ($role != Constants::ROLE_ASSISTANT) {
+                $proposed = $this->ranaLifecycleRepository->findOneBy([
+                    "currentState" => "PROP",
+                    "currentTimeslot" => $timeslot
+                ]);
+                if (!$proposed) {
+                    $valueType = Constants::VALUE_TYPE_APPROVED;
                 }
             }
+            $newMembers = $this->newMembersRepository->findBy([
+                "rana" => $rana,
+                "timeslot" => $timeslot
+            ]);
+            $retentions = $this->retentionsRepository->findBy([
+                "rana" => $rana,
+                "timeslot" => $timeslot
+            ]);
 
+            foreach ($newMembers as $newMember) {
+                if (!isset($values_per_type[$valueType])) {
+                    $values_per_type["newMembers"][$valueType] = [];
+                }
+                for ($i = 1; $i <= 12; $i++) {
+                    $method = "getM$i";
+                    $values_per_type["newMembers"][$valueType]["m$i"] = $newMember->$method();
+                }
+            }
+            foreach ($retentions as $retention) {
+                if (!isset($values_per_type[$valueType])) {
+                    $values_per_type["retentions"][$valueType] = [];
+                }
+                for ($i = 1; $i <= 12; $i++) {
+                    $method = "getM$i";
+                    $values_per_type["retentions"][$valueType]["m$i"] = $retention->$method();
+                }
+            }
             $allDetails[] = array_merge($this->format($rana), [
-                'newMembers'     => $newMembersValues,
+                'newMembers'     => $values_per_type["newMembers"],
                 'renewedMembers' => $renewedMembersValues,
-                'retentions'     => $retentionsValues,
-                'timeslot'       => $currentTimeslot,
-                'state'          => $currentState
+                'retentions'     => $values_per_type["retentions"],
+                'timeslot'       => $timeslot,
+                'state'          => $state
             ]);
         }
 

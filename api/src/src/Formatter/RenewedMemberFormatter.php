@@ -41,8 +41,8 @@ class RenewedMemberFormatter
             'm11'       => $renewedMember->getM11(),
             'm12'       => $renewedMember->getM12(),
             'rana'      => $ranaDataType == self::RANA_BASE_DATA ? $this->ranaFormatter->formatBase($renewedMember->getRana()) : $this->ranaFormatter->formatFull($renewedMember->getRana()),
-            'timeslot'  => $renewedMember->getM10(),
-            'valueType' => $renewedMember->getM10(),
+            'timeslot'  => $renewedMember->getTimeslot(),
+            'valueType' => $renewedMember->getValueType(),
         ];
 
         return $details;
@@ -66,5 +66,17 @@ class RenewedMemberFormatter
     public function formatFull(RenewedMember $renewedMember): array
     {
         return $this->format($renewedMember, self::RANA_FULL_DATA);
+    }
+
+    /**
+     * @param RenewedMember $renewedMember
+     *
+     * @return array
+     */
+    public function formatNoRana(RenewedMember $renewedMember): array
+    {
+        $details = $this->format($renewedMember, self::RANA_BASE_DATA);
+        unset($details['rana']);
+        return $details;
     }
 }

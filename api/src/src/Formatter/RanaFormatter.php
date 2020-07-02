@@ -14,31 +14,46 @@ class RanaFormatter
     /** @var ChapterFormatter */
     private $chapterFormatter;
 
+    /** @var NewMemberFormatter */
+    private $newMemberFormatter;
+
     /** @var NewMembersRepository */
     private $newMembersRepository;
-
-    /** @var RetentionsRepository */
-    private $retentionsRepository;
-
-    /** @var RandaFormatter */
-    private $randaFormatter;
 
     /** @var RanaLifecycleRepository */
     private $ranaLifecycleRepository;
 
+    /** @var RandaFormatter */
+    private $randaFormatter;
+
+    /** @var RenewedMemberFormatter */
+    private $renewedMemberFormatter;
+
+    /** @var RetentionFormatter */
+    private $retentionFormatter;
+
+    /** @var RetentionsRepository */
+    private $retentionsRepository;
+
     /** RanaFormatter constructor */
     public function __construct(
         ChapterFormatter $chapterFormatter,
-        RandaFormatter $randaFormatter,
-        RetentionRepository $retentionsRepository,
+        NewMemberFormatter $newMemberFormatter,
         NewMemberRepository $newMembersRepository,
-        RanaLifecycleRepository $ranaLifecycleRepository
+        RanaLifecycleRepository $ranaLifecycleRepository,
+        RandaFormatter $randaFormatter,
+        RenewedMemberFormatter $renewedMemberFormatter,
+        RetentionFormatter $retentionFormatter,
+        RetentionRepository $retentionsRepository
     ) {
         $this->chapterFormatter = $chapterFormatter;
-        $this->randaFormatter = $randaFormatter;
+        $this->newMemberFormatter = $newMemberFormatter;
         $this->newMembersRepository = $newMembersRepository;
-        $this->retentionsRepository = $retentionsRepository;
         $this->ranaLifecycleRepository = $ranaLifecycleRepository;
+        $this->randaFormatter = $randaFormatter;
+        $this->renewedMemberFormatter = $renewedMemberFormatter;
+        $this->retentionFormatter = $retentionFormatter;
+        $this->retentionsRepository = $retentionsRepository;
     }
 
     private static function divideByValueTypes(array $objects): array
@@ -83,6 +98,23 @@ class RanaFormatter
         ]);
 
         return $details;
+    }
+
+    /**
+     * @param Rana $rana
+     *
+     * @return array
+     */
+    public function formatCustomData(Rana $rana): array
+    {
+        $allDetails[] = array_merge($this->format($rana), [
+            'newMembers'     => $this->newMemberFormatter->formatNoRana($rana->filteredNewMembers),
+            'renewedMembers' => $this->renewedMemberFormatter->formatNoRana($rana->filteredRenewedMembers),
+            'retentions'     => $this->retentionFormatter->formatNoRana($rana->filteredRetentionMembers),
+            'timeslot'       => $rana->filteredNewMembers->getTimeslot()
+        ]);
+
+        return $allDetails;
     }
 
     /**
@@ -135,7 +167,7 @@ class RanaFormatter
                     "CONS" => []
                 ]
             ];
-            
+
 
             //if i'am not assistant and there's no proposal, take the apporved
             $valueType = Constants::VALUE_TYPE_PROPOSED;

@@ -48,50 +48,52 @@ class RanaRepository extends ServiceEntityRepository
         $this->retentionRepository = $retentionRepository;
     }
 
-    private function calculateMembers(Rana $rana, string $valueType, int $slot): array
+    function getPreviousRenewedMembers(Rana $rana, string $valueType, RandaRepository $randaRepository, RanaRepository $ranaRepository, RenewedMemberRepository $renewedMemberRepository): ?RenewedMember
     {
-        function getPreviousRenewedMembers(Rana $rana, string $valueType, RandaRepository $randaRepository, RanaRepository $ranaRepository, RenewedMemberRepository $renewedMemberRepository): ?RenewedMember
-        {
-            $previousRenewedMembers = null;
-            $lastYear = ((int) date("Y")) - 1;
-            $randa = $randaRepository->findOneBy([
-                'region' => $rana->getChapter()->getRegion(),
-                'year' => $lastYear
+        $previousRenewedMembers = null;
+        $lastYear = ((int) date("Y")) - 1;
+        $randa = $randaRepository->findOneBy([
+            'region' => $rana->getChapter()->getRegion(),
+            'year' => $lastYear
+        ]);
+
+        if (!is_null($randa)) {
+            $previousRana = $ranaRepository->findOneBy([
+                'chapter' => $rana->getChapter(),
+                'randa' => $randa
             ]);
 
-            if (!is_null($randa)) {
-                $previousRana = $ranaRepository->findOneBy([
-                    'chapter' => $rana->getChapter(),
-                    'randa' => $randa
+            if (!is_null($previousRana)) {
+                $previousRenewedMembers = $renewedMemberRepository->findOneBy([
+                    'rana' => $previousRana,
+                    'valueType' => $valueType,
+                    'timeslot' => Constants::TIMESLOT_T4
                 ]);
-
-                if (!is_null($previousRana)) {
-                    $previousRenewedMembers = $renewedMemberRepository->findOneBy([
-                        'rana' => $previousRana,
-                        'valueType' => $valueType,
-                        'timeslot' => Constants::TIMESLOT_T4
-                    ]);
-                }
             }
-
-            return $previousRenewedMembers;
         }
+
+        return $previousRenewedMembers;
+    }
+
+    private function calculateMembers(Rana $rana, string $valueType, int $slot): array
+    {
+
 
         switch ($slot) {
             case 0:
                 $months = ["m1", "m2", "m3"];
             case 1:
                 $months = $valueType == Constants::VALUE_TYPE_CONSUMPTIVE ? ["m1", "m2", "m3"] : ["m4", "m5", "m6"];
-            break;
+                break;
             case 2:
                 $months = $valueType == Constants::VALUE_TYPE_CONSUMPTIVE ? ["m4", "m5", "m6"] : ["m7", "m8", "m9"];
-            break;
+                break;
             case 3:
                 $months = $valueType == Constants::VALUE_TYPE_CONSUMPTIVE ? ["m7", "m8", "m9"] : ["m10", "m11", "m12"];
-            break;
+                break;
             case 4:
                 $months = ["m10", "m11", "m12"];
-            break;
+                break;
         }
         $response = [];
 
@@ -156,7 +158,7 @@ class RanaRepository extends ServiceEntityRepository
                 $response['retentionMember'][$month] = $previousRetentionMembers ? $previousRetentionMembers->$method() : 0;
             }
         } elseif (($valueType == Constants::VALUE_TYPE_CONSUMPTIVE && $slot == 1) || ($valueType != Constants::VALUE_TYPE_CONSUMPTIVE && !$slot)) {
-            $previousRenewedMembers = getPreviousRenewedMembers($rana, $valueType, $this->randaRepository, $this, $this->renewedMemberRepository);
+            $previousRenewedMembers = $this->getPreviousRenewedMembers($rana, $valueType, $this->randaRepository, $this, $this->renewedMemberRepository);
 
             foreach ($months as $month) {
                 $method = "get" . strtoupper($month);

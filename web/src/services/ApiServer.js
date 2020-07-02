@@ -53,10 +53,10 @@ class ApiServer {
 
   static async get(endpoint, config) {
     config = { ...config, ...ApiServer.commonRequestConfig };
-    let actAs = store.getters["getActAs"] ? ("?actAs=" + store.getters["getActAs"].userId) : "";
+    let params = ApiServer.evaluateParams();
     try {
       let response = await axios.get(
-        process.env.base_url + "/" + endpoint + actAs,
+        process.env.base_url + "/" + endpoint + params,
         config
       );
       return ApiServer.parseResponse(response);
@@ -65,12 +65,29 @@ class ApiServer {
     }
   }
 
+  static evaluateParams() {
+    let actAs = store.getters["getActAs"] ? ("actAs=" + store.getters["getActAs"].userId) : "";
+    let isFreeAccount = store.getters["isFreeAccount"] ? ("isFreeAccount=" + store.getters["isFreeAccount"]) : "";
+    let params = "";
+    if(actAs || isFreeAccount) {
+      params = "?";
+      if(actAs) {
+        params += actAs;
+      }
+      if(isFreeAccount) {
+        params += params == "?" ? isFreeAccount : "&" + isFreeAccount;
+      }
+    }
+    return params;
+  }
+
+
   static async post(endpoint, body, config) {
     config = { ...config, ...ApiServer.commonRequestConfig };
-    let actAs = store.getters["getActAs"] ? ("?actAs=" + store.getters["getActAs"].userId) : "";
+    let params = ApiServer.evaluateParams();
     try {
       let response = await axios.post(
-        process.env.base_url + "/" + endpoint + actAs,
+        process.env.base_url + "/" + endpoint + params,
         body,
         config
       );
@@ -82,10 +99,10 @@ class ApiServer {
 
   static async put(endpoint, body, config) {
     config = { ...config, ...ApiServer.commonRequestConfig };
-    let actAs = store.getters["getActAs"] ? ("?actAs=" + store.getters["getActAs"].userId) : "";
+    let params = ApiServer.evaluateParams();
     try {
       let response = await axios.put(
-        process.env.base_url + "/" + endpoint + actAs,
+        process.env.base_url + "/" + endpoint + params,
         body,
         config
       );

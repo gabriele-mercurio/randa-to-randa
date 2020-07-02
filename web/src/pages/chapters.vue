@@ -1,5 +1,5 @@
 <template>
-  <div class="ma-4 fill-height">
+  <div v-if="!freeAccount()" class="ma-4 fill-height">
     <ChaptersList
       :chapters.sync="chapters"
       :classSpec="'elevation-3'"
@@ -29,6 +29,9 @@
       <v-icon>mdi-plus</v-icon>
     </v-btn>
   </div>
+  <div v-else>
+    Free account message
+  </div>
 </template>
 
 <script>
@@ -47,7 +50,6 @@ export default {
       noChaptersFound: false
     };
   },
-  props: {},
   components: {
     EditChapter,
     ChaptersList
@@ -56,6 +58,10 @@ export default {
     openEditModal(chapter) {
       this.editChapter = chapter;
       this.showEditChapter = true;
+    },
+
+    freeAccount() {
+      return this.$store.getters["isFreeAccount"];
     },
 
     updateChapters(chapter) {
@@ -74,10 +80,11 @@ export default {
 
     async fetchChapters() {
       let response = await ApiServer.get(this.regionId + "/chapters");
-      if(response.errorCode === 404) {
+      if (response.errorCode === 404) {
         this.noChaptersFound = true;
       } else {
-        this.chapters = response
+        this.chapters = response;
+        this.$store.commit("setChapters", this.chapters);
       }
     }
   },

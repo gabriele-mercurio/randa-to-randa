@@ -4,7 +4,8 @@ export const state = () => ({
   role: null,
   token: null,
   region: null,
-  actAs: null
+  actAs: null,
+  chapters: []
 });
 
 export const mutations = {
@@ -25,6 +26,9 @@ export const mutations = {
   },
   setUserRole(state, role) {
     state.region.role = role;
+  },
+  setChapters(state, chapters) {
+    state.chapters = chapters;
   }
 };
 
@@ -47,5 +51,13 @@ export const getters = {
   },
   getActAs(state) {
     return state.actAs
+  },
+  getChapters(state) {
+    return state.chapters;
+  },
+  isFreeAccount(state) {
+    if(state.region) {
+      return state.region.isFreeAccount;
+    }
   }
 };

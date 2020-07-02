@@ -3,24 +3,38 @@
 namespace App\Formatter;
 
 use App\Entity\Randa;
+use App\Repository\NewMemberRepository;
+use App\Repository\RanaLifecycleRepository;
+use App\Repository\RetentionRepository;
+use Doctrine\Common\Util\Debug;
 
 class RandaFormatter
 {
     private const REGION_BASE_DATA = 1;
     private const REGION_FULL_DATA = 0;
 
-    /** @var RanaFormatter */
-    private $ranaFormatter;
+    /** @var NewMemberRepository */
+    private $newMemberRepository;
+
+    /** @var RanaLifecycleRepository */
+    private $ranaLifecycleRepository;
+
+    /** @var RetentionRepository */
+    private $retentionRepository;
 
     /** @var RegionFormatter */
     private $regionFormatter;
 
     /** RandaFormatter constructor */
     public function __construct(
-        RanaFormatter $ranaFormatter,
+        NewMemberRepository $newMemberRepository,
+        RanaLifecycleRepository $ranaLifecycleRepository,
+        RetentionRepository $retentionRepository,
         RegionFormatter $regionFormatter
     ) {
-        $this->ranaFormatter = $ranaFormatter;
+        $this->newMemberRepository = $newMemberRepository;
+        $this->ranaLifecycleRepository = $ranaLifecycleRepository;
+        $this->retentionRepository = $retentionRepository;
         $this->regionFormatter = $regionFormatter;
     }
 
@@ -58,10 +72,14 @@ class RandaFormatter
      */
     public function formatData(Randa $randa): array
     {
+        $df = new DirectorFormatter();
+        $cf = new ChapterFormatter($df);
+        $ranaFormatter = new RanaFormatter($cf, $this->newMemberRepository, $this->ranaLifecycleRepository, $this, $this->retentionRepository);
+
         return array_merge($this->format($randa, self::REGION_BASE_DATA), [
-            'ranas' => array_map(function ($rana) {
-                return $this->ranaFormatter->formatCustomData($rana);
-            }, $randa->filteredRanas)
+            'ranas' => array_map(function ($rana) use ($ranaFormatter) {
+                return $ranaFormatter->formatCustomData($rana);
+            }, $randa->filteredRanas->toArray())
         ]);
     }
 

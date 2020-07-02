@@ -14,9 +14,6 @@ class RanaFormatter
     /** @var ChapterFormatter */
     private $chapterFormatter;
 
-    /** @var NewMemberFormatter */
-    private $newMemberFormatter;
-
     /** @var NewMembersRepository */
     private $newMembersRepository;
 
@@ -26,33 +23,21 @@ class RanaFormatter
     /** @var RandaFormatter */
     private $randaFormatter;
 
-    /** @var RenewedMemberFormatter */
-    private $renewedMemberFormatter;
-
-    /** @var RetentionFormatter */
-    private $retentionFormatter;
-
     /** @var RetentionsRepository */
     private $retentionsRepository;
 
     /** RanaFormatter constructor */
     public function __construct(
         ChapterFormatter $chapterFormatter,
-        NewMemberFormatter $newMemberFormatter,
         NewMemberRepository $newMembersRepository,
         RanaLifecycleRepository $ranaLifecycleRepository,
         RandaFormatter $randaFormatter,
-        RenewedMemberFormatter $renewedMemberFormatter,
-        RetentionFormatter $retentionFormatter,
         RetentionRepository $retentionsRepository
     ) {
         $this->chapterFormatter = $chapterFormatter;
-        $this->newMemberFormatter = $newMemberFormatter;
         $this->newMembersRepository = $newMembersRepository;
         $this->ranaLifecycleRepository = $ranaLifecycleRepository;
         $this->randaFormatter = $randaFormatter;
-        $this->renewedMemberFormatter = $renewedMemberFormatter;
-        $this->retentionFormatter = $retentionFormatter;
         $this->retentionsRepository = $retentionsRepository;
     }
 
@@ -107,11 +92,15 @@ class RanaFormatter
      */
     public function formatCustomData(Rana $rana): array
     {
+        $newMemberFormatter = new NewMemberFormatter($this);
+        $renewedMemberFormatter = new RenewedMemberFormatter($this);
+        $retentionFormatter = new RetentionFormatter($this);
+
         $allDetails[] = array_merge($this->format($rana), [
-            'newMembers'     => $this->newMemberFormatter->formatNoRana($rana->filteredNewMembers),
-            'renewedMembers' => $this->renewedMemberFormatter->formatNoRana($rana->filteredRenewedMembers),
-            'retentions'     => $this->retentionFormatter->formatNoRana($rana->filteredRetentionMembers),
-            'timeslot'       => $rana->filteredNewMembers->getTimeslot()
+            'newMembers'     => $rana->filteredNewMembers ? $newMemberFormatter->formatNoRana($rana->filteredNewMembers) : [],
+            'renewedMembers' => $rana->filteredRenewedMembers ? $renewedMemberFormatter->formatNoRana($rana->filteredRenewedMembers) : [],
+            'retentions'     => $rana->filteredRetentionMembers ? $retentionFormatter->formatNoRana($rana->filteredRetentionMembers) : [],
+            'timeslot'       => $rana->filteredNewMembers ? $rana->filteredNewMembers->getTimeslot() : Constants::TIMESLOT_T0
         ]);
 
         return $allDetails;

@@ -7,7 +7,6 @@ use App\Entity\Region;
 use App\Formatter\RandaFormatter;
 use App\Repository\DirectorRepository;
 use App\Repository\NewMemberRepository;
-use App\Repository\RanaRepository;
 use App\Repository\RandaRepository;
 use App\Repository\RenewedMemberRepository;
 use App\Repository\RetentionRepository;
@@ -192,13 +191,13 @@ class RandaController extends AbstractController
      *              type="object",
      *              @SWG\Property(property="id", type="string"),
      *              @SWG\Property(property="name", type="string")
-     *          )
+     *          ),
      *          @SWG\Property(property="year", type="integer"),
      *          @SWG\Property(
      *              property="ranas",
      *              type="array",
      *              @SWG\Items(
-     *                  type="object,
+     *                  type="object",
      *                  @SWG\Property(
      *                      property="chapter",
      *                      type="object",

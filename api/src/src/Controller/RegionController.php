@@ -88,7 +88,7 @@ class RegionController extends AbstractController
                 $regionId = $region->getId();
                 if (!array_key_exists($regionId, $regions)) {
                     $regions[$regionId] = $region;
-                    $regionsRoles[$regionId] = $director->getRole();
+                    $regionsRoles[$regionId] = ["role" => $director->getRole(), "isFreeAccount" => $director->isFreeAccount()];
                 }
             }
             $regions = array_values($regions);
@@ -97,15 +97,10 @@ class RegionController extends AbstractController
             return $r1->getName() < $r2->getName() ? -1 : ($r1->getName() > $r2->getName() ? 1 : 0);
         });
 
-        $director = $this->directorRepository->findOneBy([
-            "region" => $region,
-            "user" => $user
-        ]);
-
-        return new JsonResponse(array_map(function ($region) use($regionsRoles, $user, $director) {
+        return new JsonResponse(array_map(function ($region) use($regionsRoles, $user) {
             return array_merge($this->regionFormatter->formatBase($region), [
-                'role' => $user->isAdmin() ? "ADMIN" : $regionsRoles[$region->getId()],
-                'isFreeAccount' => $director ->isFreeAccount()
+                'role' => $user->isAdmin() ? "ADMIN" : $regionsRoles[$region->getId()]["role"],
+                'isFreeAccount' => $user->isAdmin() ? false : $regionsRoles[$region->getId()]["isFreeAccount"]
             ]);
         }, $regions));
     }

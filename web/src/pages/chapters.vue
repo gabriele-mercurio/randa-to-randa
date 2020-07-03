@@ -1,15 +1,17 @@
 <template>
-  <div v-if="!freeAccount()" class="ma-4 fill-height">
-    <ChaptersList
-      :chapters.sync="chapters"
-      :classSpec="'elevation-3'"
-      v-on:edit="openEditModal"
-      v-if="!noChaptersFound"
-    />
+  <div class="ma-4 fill-height">
+    <template v-if="!freeAccount">
+      <ChaptersList
+        :chapters.sync="chapters"
+        :classSpec="'elevation-3'"
+        v-on:edit="openEditModal"
+        v-if="!noChaptersFound"
+      />
 
-    <div v-else>
-      Nessun capitolo trovato :(
-    </div>
+      <div v-else>
+        Nessun capitolo trovato :(
+      </div>
+    </template>
 
     <v-dialog
       :persistent="false"
@@ -21,6 +23,7 @@
         :show="showEditChapter"
         :editChapter.sync="editChapter"
         :users="users"
+        :freeAccount.sync="freeAccount"
         v-on:close="showEditChapter = false"
         v-on:saveChapter="updateChapters"
       />
@@ -28,9 +31,6 @@
     <v-btn fixed fab bottom right color="primary" @click="newChapter()">
       <v-icon>mdi-plus</v-icon>
     </v-btn>
-  </div>
-  <div v-else>
-    Free account message
   </div>
 </template>
 
@@ -47,7 +47,8 @@ export default {
       chapters: [],
       users: [],
       regionId: null,
-      noChaptersFound: false
+      noChaptersFound: false,
+      freeAccount: false
     };
   },
   components: {
@@ -60,13 +61,12 @@ export default {
       this.showEditChapter = true;
     },
 
-    freeAccount() {
-      return this.$store.getters["isFreeAccount"];
-    },
-
     updateChapters(chapter) {
       this.showEditChapter = false;
       this.chapters.push(chapter);
+      if(this.freeAccount) {
+        this.$router.push("rana/" + chapter.id);
+      }
     },
 
     newChapter() {
@@ -89,10 +89,20 @@ export default {
     }
   },
   created() {
-    setTimeout(() => {
+    setTimeout(async () => {
       this.regionId = this.$store.getters["getRegion"].id;
-      this.fetchChapters();
-      this.fetchUsersPerRegion();
+      if (this.$store.getters["isFreeAccount"]) {
+        this.freeAccount = true;
+        let response = await ApiServer.get("chapter/freeAccount");
+        if (!response.error) {
+          this.$router.push("rana/" + response.id);
+        } else {
+          this.newChapter();
+        }
+      } else {
+        this.fetchChapters();
+        this.fetchUsersPerRegion();
+      }
     });
   }
 };

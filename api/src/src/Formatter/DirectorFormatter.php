@@ -34,7 +34,8 @@ class DirectorFormatter
             'role'                  => $director->getRole(),
             'supervisor'            => $director->getSupervisor() ? $this->formatBase($director->getSupervisor()) : null,
             'yellowLightPercentage' => $director->getYellowLightPercentage(),
-            'userId'                => $director->getUser()->getId()
+            'userId'                => $director->getUser()->getId(),
+            'freeAccount'           => $director->isFreeAccount()
         ];
 
         return $details;

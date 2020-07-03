@@ -48,6 +48,7 @@ export default {
   send_proposal: "Manda proposta",
   reset: "Resetta",
   approve_proposal: "Approva proposta",
+  approve_without_proposal: "Approva senza proposta",
   approve_rana: "Approva rana",
   rana_proposal: "Proposta rana",
   proposal_sent: "Proposta inviata",

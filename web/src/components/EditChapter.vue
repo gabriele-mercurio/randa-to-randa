@@ -25,7 +25,7 @@
           :disabled="isCoreGroupOrChapter(chapter)"
           :invalidInterval="invalidInterval()"
           launchType="CORE GROUP"
-          :appendMessage='true'
+          :appendMessage="true"
         />
         <MonthPicker
           :defLabel="getChapterLabel(chapter)"
@@ -34,10 +34,11 @@
           :disabled="isChapter(chapter)"
           :invalidInterval="invalidInterval()"
           launchType="CHAPTER"
-          :appendMessage='true'
+          :appendMessage="true"
         />
 
         <v-select
+          v-if="!freeAccount"
           :items="users"
           label="Seleziona assistant"
           v-model="chapter.director"
@@ -51,7 +52,7 @@
     <v-card-actions class="d-flex justify-end align-center">
       <div width="100%">
         <v-btn type="submit" normal text color="primary" @click="emitClose()">
-          {{$t('cancel')}}
+          {{ $t("cancel") }}
         </v-btn>
         <v-btn
           type="submit"
@@ -61,24 +62,19 @@
           @click="saveChapter()"
           :disabled="!isFormValid()"
         >
-          {{$t('save')}}
+          {{ $t("save") }}
         </v-btn>
       </div>
     </v-card-actions>
 
-
-  <v-snackbar v-model="error" :timeout="timeout" top right>
+    <v-snackbar v-model="error" :timeout="timeout" top right>
       <v-icon color="primary">mdi-alert</v-icon>
       Errore nel salvataggio del capitolo
       <v-btn color="white" icon @click="error = false">
         <v-icon>mdi-close</v-icon>
       </v-btn>
     </v-snackbar>
-    
-
-
   </v-card>
-
 </template>
 <script>
 import Utils from "../services/Utils";
@@ -125,6 +121,10 @@ export default {
     users: {
       type: Array,
       default: null
+    },
+    freeAccount: {
+      type: Boolean,
+      default: false
     }
   },
   computed: {
@@ -184,7 +184,11 @@ export default {
     async saveChapter() {
       let data = {};
       data["name"] = this.chapter["name"];
-      data["director"] = this.chapter["director"].id;
+      if(!this.freeAccount) {
+        data["director"] = this.chapter["director"].id;
+      } else {
+        data["director"] = this.$store.getters["getUser"].id
+      }
       if (this.chapter.coreGroupLaunchType === "actual") {
         data["actualLaunchCoregroupDate"] = this.addDay(
           this.chapter.coreGroupLaunch
@@ -204,20 +208,13 @@ export default {
       try {
         let result;
         if (this.editMode) {
-          result = await ApiServer.put(
-            "chapter/" + this.chapter.id ,
-            data
-          );
+          result = await ApiServer.put("chapter/" + this.chapter.id, data);
         } else {
           let region = this.$store.getters["getRegion"];
-          result = await ApiServer.post(
-            region.id + "/chapter",
-            data
-          );
+          result = await ApiServer.post(region.id + "/chapter", data);
         }
 
-
-        let updatedChapter = { ...this.chapter};
+        let updatedChapter = { ...this.chapter };
 
         let cgLaunch = {
           prev: null,
@@ -229,22 +226,26 @@ export default {
           actual: null
         };
 
-        if(updatedChapter.coreGroupLaunchType === "actual") {
-            cgLaunch.actual = updatedChapter.coreGroupLaunch;
+        if (updatedChapter.coreGroupLaunchType === "actual") {
+          cgLaunch.actual = updatedChapter.coreGroupLaunch;
         } else {
-            cgLaunch.prev = updatedChapter.coreGroupLaunch;
+          cgLaunch.prev = updatedChapter.coreGroupLaunch;
         }
 
-        if(updatedChapter.chapterLaunchType === "actual") {
-            cLaunch.actual = updatedChapter.chapterLaunch;
+        if (updatedChapter.chapterLaunchType === "actual") {
+          cLaunch.actual = updatedChapter.chapterLaunch;
         } else {
-            cLaunch.prev = updatedChapter.chapterLaunch;
+          cLaunch.prev = updatedChapter.chapterLaunch;
         }
 
         updatedChapter.coreGroupLaunch = cgLaunch;
         updatedChapter.chapterLaunch = cLaunch;
 
-        this.$emit("saveChapter", updatedChapter);
+        if(!result.error) {
+          updatedChapter.id = result.id;
+          this.$emit("saveChapter", updatedChapter);
+        }
+
       } catch (e) {
         this.error = true;
       }

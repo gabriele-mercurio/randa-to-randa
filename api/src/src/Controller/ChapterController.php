@@ -287,11 +287,12 @@ class ChapterController extends AbstractController
     {
         $request = Util::normalizeRequest($request);
 
+        
         $roleCheck = [
             Constants::ROLE_EXECUTIVE
         ];
         $performerData = Util::getPerformerData($this->getUser(), $region, $roleCheck, $this->userRepository, $this->directorRepository, $request->get("actAs"), $request->get("role"));
-
+        
         // Assign $actAs, $code, $director, $isAdmin and $role
         foreach ($performerData as $var => $value) {
             $$var = $value;
@@ -299,7 +300,12 @@ class ChapterController extends AbstractController
 
         $errorFields = [];
 
+        if($request->get("isFreeAccount")) {
+            $code = Response::HTTP_OK;
+        }
+
         if ($code == Response::HTTP_OK) {
+
             $name = trim($request->get("name", ""));
             $chapterDirector = $request->get("director");
             $prevLaunchCoregroupDate = $request->get("prevLaunchCoregroupDate");
@@ -310,6 +316,7 @@ class ChapterController extends AbstractController
             $previuosState = null;
             $state = Constants::CHAPTER_STATE_PROJECT;
             $today = Util::UTCDateTime();
+
 
             if (empty($name)) {
                 $errorFields['name'] = "required";
@@ -388,6 +395,7 @@ class ChapterController extends AbstractController
                     }
                 }
 
+
                 if (!is_null($actualLaunchChapterDate)) {
                     if ($actualLaunchChapterDate >= $today) {
                         $prevLaunchChapterDate = $actualLaunchChapterDate;
@@ -419,10 +427,11 @@ class ChapterController extends AbstractController
         }
 
         if ($code == Response::HTTP_OK) {
+
             $d = $this->directorRepository->findOneBy([
                 'user' => $chapterDirector,
-                'region' => $region,
-                'role' => Constants::ROLE_ASSISTANT
+                'region' => $region
+                //'role' => Constants::ROLE_ASSISTANT
             ]);
 
             if (is_null($d)) {
@@ -728,7 +737,7 @@ class ChapterController extends AbstractController
                 switch ($key) {
                     case 'name':
                         $chapter->setName($value);
-                    break;
+                        break;
                     case 'director':
                         $d = $this->directorRepository->findOneBy([
                             'user' => $value,
@@ -745,19 +754,19 @@ class ChapterController extends AbstractController
                         }
 
                         $chapter->setDirector($d);
-                    break;
+                        break;
                     case 'members':
                         $chapter->setMembers($value);
-                    break;
+                        break;
                     case 'prevLaunchCoregroupDate':
                         $chapter->setPrevLaunchCoregroupDate($value);
-                    break;
+                        break;
                     case 'prevLaunchChapterDate':
                         $chapter->setPrevLaunchChapterDate($value);
-                    break;
+                        break;
                     case 'prevResumeDate':
                         $chapter->setPrevResumeDate($value);
-                    break;
+                        break;
                 }
             }
 
@@ -769,6 +778,46 @@ class ChapterController extends AbstractController
             return new JsonResponse($errorFields, $code);
         }
     }
+
+
+    /**
+     * Edit a chapter
+     * Canges to members and prevResumeDate can be made from any authorized directors; for all other fields the user must be admin or have EXECUTIVE role.
+     * Changes to launch date fields from prev to actual are not allowed: there are specific API calls to launch a coregroup or a chapter, use them instead
+     *
+     * @Route(path="/chapter/freeAccount", name="edit_chapter", methods={"GET"})
+     *
+     * @return Response
+     */
+    public function freeAccountChapter(Request $request): Response
+    {
+        $user = $this->getUser();
+        $director = $this->directorRepository->findOneBy([
+            "user" => $user
+        ]);
+        if ($director) {
+            if ($director->isFreeAccount()) {
+                $chapter = $this->chapterRepository->findOneBy([
+                    "director" => $director
+                ]);
+                if (!$chapter) {
+                    $code = Response::HTTP_NOT_FOUND;
+                    return new JsonResponse("Chapter not found", $code);
+                } else {
+                    return new JsonResponse($this->chapterFormatter->formatBase($chapter));
+                }
+            } else {
+                $code = Response::HTTP_FORBIDDEN;
+                return new JsonResponse("Not free account", $code);
+            }
+            return new JsonResponse($director->isFreeAccount(), Response::HTTP_CREATED);
+        } else {
+            $code = Response::HTTP_NOT_FOUND;
+            return new JsonResponse("", $code);
+        }
+    }
+
+
 
     /**
      * Get chapters

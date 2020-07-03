@@ -67,6 +67,20 @@
               item-value="id"
             ></v-select>
           </v-col>
+          <v-col
+            cols="12"
+            class="py-0 my-0"
+            v-if="director.role === 'ASSISTANT'"
+          >
+            <!-- <v-select
+              :items="chapters"
+              label="Seleziona capitolo"
+              v-model="director.chapter"
+              prepend-icon="mdi-account-cog-outline"
+              item-text="name"
+              item-value="id"
+            ></v-select> -->
+          </v-col>
 
           <v-col
             cols="6"
@@ -256,7 +270,8 @@ export default {
       snackbarMessage: "",
       successSnackbar: false,
       errorSnackbar: false,
-  isValid: false,
+      chapters: [],
+      isValid: false,
 
       timeout: 3000,
       rules: {
@@ -392,9 +407,15 @@ export default {
 
     async fetchAreaDirectors() {
       this.areaDirectors = await ApiServer.get("users");
+    },
+
+    async fetchChapters() {
+      this.chapters = await ApiServer.get(this.$store.getters["getRegion"].id + "/chapters");
     }
   },
-  created() {},
+  created() {
+    // this.fetchChapters();
+  },
   watch: {
     editDirector: {
       handler: function(newVal, oldVal) {

@@ -30,9 +30,13 @@
       :rana="currentRana"
       :prevRana="prevRana"
       :ranaType="'renewedMembers'"
-      :currentTimeslot="currentTimeslot"
       :editable="true"
       v-on:updateRanas="updateRanas"
+      v-if="
+        currentRana &&
+          currentRana.timeslot !== 'T4' &&
+          isPrevApproved(currentRana)
+      "
     />
 
     <v-divider class="py-6"></v-divider>
@@ -46,12 +50,7 @@
             ranas.length > 1
         "
       >
-        <Rana
-          :rana.sync="rana"
-          :ranaType="'renewedMembers'"
-          :currentTimeslot="rana.timeslot"
-          :editable="false"
-        />
+        <Rana :rana.sync="rana" :ranaType="'renewedMembers'" :editable="true" />
       </template>
 
       <EditChapter
@@ -105,9 +104,21 @@ export default {
   methods: {
     updateRanas(ranas) {
       this.ranas = ranas;
-      this.rana = this.ranas[0];
+      this.currentRana = this.ranas[0];
+      if (this.ranas.length > 1) {
+        this.prevRana = this.ranas[1];
+      }
     },
 
+    isPrevApproved(rana) {
+
+      let index;
+      let r = this.ranas.find((r, i) => {
+        index = i;
+        return rana.id === r.id;
+      });
+      return this.ranas[index+1] ? (this.ranas[index+1].state === "APPROVED" ? true : false) : true;
+    },
     isFreeAccount() {
       return false;
     },
@@ -117,7 +128,6 @@ export default {
       let index = 0;
       for (let i = 0; i < this.$store.getters["getChapters"].length; i++) {
         if (this.$store.getters["getChapters"][i].id == this.chapter.id) {
-          debugger;
           if (i < this.$store.getters["getChapters"].length + 1) {
             this.$router.push(this.$store.getters["getChapters"][i + 1].id);
           }
@@ -129,9 +139,7 @@ export default {
         alert("Nessun capitolo specificato");
       }
       this.chapter = await ApiServer.get("chapter/" + chapterId);
-      if (this.chapter.error) {
-        //alert("Errore nella get del capitolo");
-      }
+      
     },
     isPastTimeslot(timeslot) {
       return timeslot <= this.currentTimeslot;

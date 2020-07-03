@@ -6,6 +6,14 @@
     hide-default-footer
     class="elevation-3"
   >
+  <template v-slot:item.fullName="{ item }">
+  <div class="d-flex flex-column">
+    {{item.fullName}}
+    <small font-italic font-weight-light v-if="item.freeAccount">
+      (account gratuito)
+    </small>
+  </div>
+  </template>
     <template v-slot:item.actions="{ item }">
       <v-menu bottom left>
         <template v-slot:activator="{ on }">

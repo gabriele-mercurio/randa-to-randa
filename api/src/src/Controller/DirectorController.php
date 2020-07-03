@@ -303,7 +303,7 @@ class DirectorController extends AbstractController
                 $errorFields['role'] = "invalid";
             } elseif ($performerRole == Constants::ROLE_EXECUTIVE && $role == Constants::ROLE_NATIONAL) {
                 $errorFields['role'] = "too_high";
-            } elseif ($isFreeAccount && $role != Constants::ROLE_EXECUTIVE) {
+            } elseif ($isFreeAccount && !$this->getUser()->isAdmin() && $role != Constants::ROLE_EXECUTIVE) {
                 $errorFields['isFreeAccount'] = "invalid";
             }
 

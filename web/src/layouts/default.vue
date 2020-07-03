@@ -55,11 +55,11 @@
         <v-btn class="white--text" text link to="/chapters">
           {{ $t("chapters") }}
         </v-btn>
-        <v-btn class="white--text" text to="/randa">
+        <v-btn class="white--text" text to="/randa" v-if="!freeAccount">
           {{ $t("randa") }}
           <v-icon>mdi-menu-down</v-icon>
         </v-btn>
-        <v-menu offset-y>
+        <v-menu offset-y v-if="!freeAccount">
           <template v-slot:activator="{ on }">
             <v-btn class="white--text" text v-on="on">
               {{ $t("directors") }}
@@ -78,13 +78,14 @@
           </v-list>
         </v-menu>
 
-        <v-btn class="white--text" text to="/economics">
+        <v-btn class="white--text" text to="/economics" v-if="!freeAccount">>
           Economics
         </v-btn>
         <v-spacer></v-spacer>
         <v-toolbar-title class="d-flex flex-row align-center">
           <div>
-            {{ getUser() }} <small>({{ getRegion().name }})</small>
+            {{ getUser() }}  <small class="font-italic font-weight-light mr-2" v-if="freeAccount">Account gratuito</small><small>({{ getRegion().name }})</small>
+           
           </div>
           <v-btn icon @click="drawer = true" class="white--text">
             <v-icon>mdi-account</v-icon></v-btn
@@ -145,6 +146,9 @@ export default {
   computed: {
     snackbar() {
       return this.$store.getters["snackbar/getData"];
+    },
+    freeAccount() {
+      return this.$store.getters["isFreeAccount"];
     }
   },
   methods: {

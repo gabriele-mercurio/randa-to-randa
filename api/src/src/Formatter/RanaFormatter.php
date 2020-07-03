@@ -38,21 +38,21 @@ class RanaFormatter
     /** RanaFormatter constructor */
     public function __construct(
         ChapterFormatter $chapterFormatter,
-        NewMemberFormatter $newMemberFormatter,
+        // NewMemberFormatter $newMemberFormatter,
         NewMemberRepository $newMembersRepository,
         RanaLifecycleRepository $ranaLifecycleRepository,
-        RandaFormatter $randaFormatter,
-        RenewedMemberFormatter $renewedMemberFormatter,
-        RetentionFormatter $retentionFormatter,
+        // RandaFormatter $randaFormatter,
+        // RenewedMemberFormatter $renewedMemberFormatter,
+        // RetentionFormatter $retentionFormatter,
         RetentionRepository $retentionsRepository
     ) {
         $this->chapterFormatter = $chapterFormatter;
-        $this->newMemberFormatter = $newMemberFormatter;
+        // $this->newMemberFormatter = $newMemberFormatter;
         $this->newMembersRepository = $newMembersRepository;
         $this->ranaLifecycleRepository = $ranaLifecycleRepository;
-        $this->randaFormatter = $randaFormatter;
-        $this->renewedMemberFormatter = $renewedMemberFormatter;
-        $this->retentionFormatter = $retentionFormatter;
+        // $this->randaFormatter = $randaFormatter;
+        // $this->renewedMemberFormatter = $renewedMemberFormatter;
+        // $this->retentionFormatter = $retentionFormatter;
         $this->retentionsRepository = $retentionsRepository;
     }
 
@@ -107,14 +107,14 @@ class RanaFormatter
      */
     public function formatCustomData(Rana $rana): array
     {
-        $allDetails[] = array_merge($this->format($rana), [
-            'newMembers'     => $this->newMemberFormatter->formatNoRana($rana->filteredNewMembers),
-            'renewedMembers' => $this->renewedMemberFormatter->formatNoRana($rana->filteredRenewedMembers),
-            'retentions'     => $this->retentionFormatter->formatNoRana($rana->filteredRetentionMembers),
-            'timeslot'       => $rana->filteredNewMembers->getTimeslot()
-        ]);
-
-        return $allDetails;
+        // $allDetails[] = array_merge($this->format($rana), [
+        //     'newMembers'     => $this->newMemberFormatter->formatNoRana($rana->filteredNewMembers),
+        //     'renewedMembers' => $this->renewedMemberFormatter->formatNoRana($rana->filteredRenewedMembers),
+        //     'retentions'     => $this->retentionFormatter->formatNoRana($rana->filteredRetentionMembers),
+        //     'timeslot'       => $rana->filteredNewMembers->getTimeslot()
+        // ]);
+        // return $allDetails;
+        return [];
     }
 
     /**
@@ -159,12 +159,53 @@ class RanaFormatter
                 "newMembers" => [
                     "APPR" => [],
                     "PROP" => [],
-                    "CONS" => [],
+                    "CONS" => [
+                        "m1" => null,
+                        "m2" => null,
+                        "m3" => null,
+                        "m4" => null,
+                        "m5" => null,
+                        "m6" => null,
+                        "m7" => null,
+                        "m8" => null,
+                        "m9" => null,
+                        "m10" => null,
+                        "m11" => null,
+                        "m12" => null
+
+                    ],
                 ],
                 "retentions" => [
                     "APPR" => [],
                     "PROP" => [],
-                    "CONS" => []
+                    "CONS" => [
+                        "m1" => null,
+                        "m2" => null,
+                        "m3" => null,
+                        "m4" => null,
+                        "m5" => null,
+                        "m6" => null,
+                        "m7" => null,
+                        "m8" => null,
+                        "m9" => null,
+                        "m10" => null,
+                        "m11" => null,
+                        "m12" => null
+                    ]
+                ],
+                "currentMembers" => [
+                    "m1" => null,
+                    "m2" => null,
+                    "m3" => null,
+                    "m4" => null,
+                    "m5" => null,
+                    "m6" => null,
+                    "m7" => null,
+                    "m8" => null,
+                    "m9" => null,
+                    "m10" => null,
+                    "m11" => null,
+                    "m12" => null
                 ]
             ];
 
@@ -173,20 +214,24 @@ class RanaFormatter
             $valueType = Constants::VALUE_TYPE_PROPOSED;
             if ($role != Constants::ROLE_ASSISTANT) {
                 $proposed = $this->ranaLifecycleRepository->findOneBy([
-                    "currentState" => "PROP",
+                    "rana" => $rana,
+                    "currentState" => "PROPOSED",
                     "currentTimeslot" => $timeslot
                 ]);
                 if (!$proposed) {
                     $valueType = Constants::VALUE_TYPE_APPROVED;
                 }
             }
+
             $newMembers = $this->newMembersRepository->findBy([
                 "rana" => $rana,
-                "timeslot" => $timeslot
+                "timeslot" => $timeslot,
+                "valueType" => $valueType
             ]);
             $retentions = $this->retentionsRepository->findBy([
                 "rana" => $rana,
-                "timeslot" => $timeslot
+                "timeslot" => $timeslot,
+                "valueType" => $valueType
             ]);
 
             foreach ($newMembers as $newMember) {
@@ -205,6 +250,30 @@ class RanaFormatter
                 for ($i = 1; $i <= 12; $i++) {
                     $method = "getM$i";
                     $values_per_type["retentions"][$valueType]["m$i"] = $retention->$method();
+                }
+            }
+
+            $new_members_consumptive = $this->newMembersRepository->findBy([
+                "rana" => $rana,
+                "valueType" => "CONS"
+            ]);
+            $retentions_consumptive = $this->retentionsRepository->findBy([
+                "rana" => $rana,
+                "valueType" => "CONS"
+            ]);
+
+            foreach ($new_members_consumptive as $c) {
+                for ($i = 1; $i <= 12; $i++) {
+                    $method = "getM$i";
+                    $val = $c->$method() !== null ? $c->$method() : null;
+                    $values_per_type["newMembers"]["CONS"]["m$i"] = $val;
+                }
+            }
+            foreach ($retentions_consumptive as $c) {
+                for ($i = 1; $i <= 12; $i++) {
+                    $method = "getM$i";
+                    $val = $c->$method() !== null ? $c->$method() : null;
+                    $values_per_type["retentions"]["CONS"]["m$i"] = $val;
                 }
             }
             $allDetails[] = array_merge($this->format($rana), [

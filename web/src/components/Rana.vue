@@ -39,13 +39,11 @@
               <div class="border-bottom background-grey pa-1">T{{ i }}</div>
               <v-row class="pa-0 ma-0">
                 <v-col
-                  :cols="isPastTimeslot(i, rana.timeslot) ? '6' : 12"
                   class="pa-0 d-flex justify-center align-center"
                   :class="{
                     'border-right': isPastTimeslot(i, rana.timeslot),
-                    'background-yellow':
-                      isPastTimeslot(i, rana.timeslot),
-                      'stroke-green': canApprove(i, 4) || canPropose(i, 4)
+                    'background-yellow': isPastTimeslot(i, rana.timeslot),
+                    'stroke-green': canApprove(i, 4) || canPropose(i, 4)
                   }"
                 >
                   <v-text-field
@@ -58,9 +56,12 @@
                 </v-col>
                 <v-col
                   v-if="isPastTimeslot(i, rana.timeslot)"
-                  cols="6"
                   class="pa-0 background-green font-italic font-weight-light disabled d-flex justify-center align-center"
-                  >{{ timeslotAggregations.newMembers.CONS[i] }}</v-col
+                  >{{
+                    timeslotAggregations.newMembers.CONS[i] !== null
+                      ? timeslotAggregations.newMembers.CONS[i]
+                      : "X"
+                  }}</v-col
                 >
               </v-row>
             </td>
@@ -82,13 +83,11 @@
               <!-- new members data -->
               <v-row class="pa-0 ma-0">
                 <v-col
-                  :cols="isPastMonth(i, rana.timeslot) ? '6' : 12"
                   class="pa-0 d-flex justify-center align-center"
                   :class="{
                     'border-righ': isPastMonth(i, rana.timeslot),
-                    'background-yellow':
-                      isPastMonth(i, rana.timeslot) ,
-                      'stroke-green': canApprove(i, 12) || canPropose(i, 12)
+                    'background-yellow': isPastMonth(i, rana.timeslot),
+                    'stroke-green': canApprove(i, 12) || canPropose(i, 12)
                   }"
                 >
                   <v-text-field
@@ -100,11 +99,9 @@
                   />
                 </v-col>
                 <v-col
-                  cols="6"
+                  v-if="isPastMonth(i, rana.timeslot)"
                   class="pa-0 background-green font-italic font-weight-light disabled d-flex justify-center align-center"
-                  >{{
-                    rana.newMembers.CONS ? rana.newMembers.CONS["m" + i] : null
-                  }}
+                  >{{ getConsumptive(i, "newMembers") }}
                 </v-col>
               </v-row>
             </td>
@@ -120,20 +117,17 @@
               :key="i"
               class="text-center pa-0"
               :class="{
-                bordered: !isPastTimeslot(i, rana.timeslot) && editable,
-                
+                bordered: !isPastTimeslot(i, rana.timeslot) && editable
               }"
             >
               <div class="border-bottom background-grey pa-1">T{{ i }}</div>
               <v-row class="pa-0 ma-0">
                 <v-col
-                  :cols="isPastTimeslot(i, rana.timeslot) ? '6' : 12"
                   class="pa-0 d-flex justify-center align-center"
                   :class="{
                     'border-right': isPastTimeslot(i, rana.timeslot),
-                    'background-yellow':
-                      isPastTimeslot(i, rana.timeslot),
-                      'stroke-green': canApprove(i, 4) || canPropose(i, 4)
+                    'background-yellow': isPastTimeslot(i, rana.timeslot),
+                    'stroke-green': canApprove(i, 4) || canPropose(i, 4)
                   }"
                 >
                   <v-text-field
@@ -146,9 +140,12 @@
                 </v-col>
                 <v-col
                   v-if="isPastTimeslot(i, rana.timeslot)"
-                  cols="6"
                   class="pa-0 background-green font-italic font-weight-light disabled d-flex justify-center align-center"
-                  >{{ timeslotAggregations.retentions.CONS[i] }}</v-col
+                  >{{
+                    timeslotAggregations.retentions.CONS[i] !== null
+                      ? timeslotAggregations.retentions.CONS[i]
+                      : "X"
+                  }}</v-col
                 >
               </v-row>
             </td>
@@ -171,13 +168,11 @@
               <!-- retentions data -->
               <v-row class="pa-0 ma-0">
                 <v-col
-                  :cols="isPastMonth(i, rana.timeslot) ? '6' : 12"
                   class="pa-0 d-flex justify-center align-center"
                   :class="{
                     'border-righ': isPastMonth(i, rana.timeslot),
-                    'background-yellow':
-                      isPastMonth(i, rana.timeslot),
-                      'stroke-green': canApprove(i, 12) || canPropose(i, 12)
+                    'background-yellow': isPastMonth(i, rana.timeslot),
+                    'stroke-green': canApprove(i, 12) || canPropose(i, 12)
                   }"
                 >
                   <v-text-field
@@ -190,11 +185,8 @@
                 </v-col>
                 <v-col
                   v-if="isPastMonth(i, rana.timeslot)"
-                  cols="6"
                   class="pa-0 background-green font-italic font-weight-light disabled d-flex justify-center align-center"
-                  >{{
-                    rana.retentions.CONS ? rana.retentions.CONS["m" + i] : null
-                  }}
+                  >{{ getConsumptive(i, "retentions") }}
                 </v-col>
               </v-row>
             </td>
@@ -217,7 +209,7 @@
       <template slot="no-data">
         <tr style="display: none;"></tr>
       </template>
-      <template slot="footer" v-if="editable && (canPropose(12, 12) || canApprove(12, 12))">
+      <template slot="footer" v-if="canShowFooter()">
         <div class="d-flex justify-end my-4">
           <v-btn
             type="submit"
@@ -232,20 +224,27 @@
             type="submit"
             normal
             color="primary"
-            :disabled="!canApprove(12, 12) && !canPropose(12, 12)"
+            :disabled="nullFields()"
             @click="sendProposalOrApprovation()"
           >
             <span v-if="role === 'ASSISTANT'">{{ $t("send_proposal") }}</span>
-            <span v-else>{{ $t("approve_proposal") }}</span>
+            <span
+              v-if="
+                (role == 'ADMIN' || role == 'EXECUTIVE') &&
+                  rana.state == 'PROPOSED'
+              "
+              >{{ $t("approve_proposal") }}</span
+            >
+            <span
+              v-if="
+                (role == 'ADMIN' || role == 'EXECUTIVE') && rana.state == 'TODO'
+              "
+              >{{ $t("approve_without_proposal") }}</span
+            >
           </v-btn>
         </div>
       </template>
     </v-data-table>
-    <Snackbar
-      :show.sync="showSnackbar"
-      :state.sync="snackbarState"
-      :messageLabel.sync="message"
-    />
   </div>
 </template>
 <script>
@@ -274,23 +273,26 @@ export default {
         CONS: []
       },
       ranaBackup: null,
-      showSnackbar: false,
-      snackbarState: null,
-      message: "",
-      isProposed: false
+      snackbarData: {
+        showSnackbar: true,
+        snackbarState: null,
+        snackbarMessageLabel: ""
+      },
+
+      isProposed: false,
+      currentTimeslot: null
     };
   },
   props: {
     defData: [],
     rana: null,
-    currentTimeslot: null,
     editable: false,
     prevRana: null,
     ranaType: null
   },
   computed: {
     nextTimeslot() {
-      return "T" + (Utils.getNumericTimeslot() + 1);
+      return "T" + (this.currentTimeslot.substr(-1) * 1 + 1);
     },
     role: {
       get() {
@@ -303,11 +305,53 @@ export default {
     }
   },
   methods: {
+    getConsumptive(i, values) {
+      if (
+        this.rana[values].CONS["m" + i] === null ||
+        this.rana[values].CONS["m" + i] === ""
+      )
+        return "X";
+      return this.rana[values].CONS["m" + i];
+    },
+    canShowFooter() {
+      switch (this.role) {
+        case "ASSISTANT":
+          if (this.rana.timeslot === "T3") {
+            return this.rana.state !== "PROPOSED";
+          } else {
+            return this.rana.state === "TODO";
+          }
+        case "EXECUTIVE":
+        case "ADMIN":
+          return this.rana.state !== "APPROVED";
+
+        default:
+          return true;
+      }
+    },
     proposedForExecutives() {
       let r = this.rana.state === "PROPOSED" && this.role != "ASSISTANT";
-      console.log(r);
-      debugger;
       return r;
+    },
+    nullFields() {
+      return false;
+      // for (let m of Object.keys(this.rana.newMembers.PREV)) {
+      //   if (
+      //     m >= "m" + Utils.getFirstTimeslotMonth(this.nextTimeslot) &&
+      //     this.rana.newMembers.PREV[m].toString() == ""
+      //   ) {
+      //     return true;
+      //   }
+      // }
+      // for (let m of Object.keys(this.rana.retentions.PREV)) {
+      //   if (
+      //     m >= "m" + Utils.getFirstTimeslotMonth(this.nextTimeslot) &&
+      //     this.rana.retentions.PREV[m].toString() == ""
+      //   ) {
+      //     return true;
+      //   }
+      // }
+      // return false;
     },
     evaluateCurrentMembers() {
       return 1;
@@ -357,24 +401,31 @@ export default {
     },
 
     canApprove(i, number) {
-      if(number == 12) {
+      if (number == 12) {
         i = Utils.getTimeslotFromMonth(i);
       }
       if (!this.rana) return false;
-      return this.role !== "ASSISTANT" && (this.rana.state == "PROPOSED" || this.rana.state == "TODO") && this.rana.timeslot < ("T"+i);;
+      return (
+        this.role !== "ASSISTANT" &&
+        (this.rana.state == "PROPOSED" || this.rana.state == "TODO") &&
+        this.rana.timeslot < "T" + i
+      );
     },
 
     canPropose(i, number) {
       if (!this.rana) return false;
-      if(number == 12) {
+      if (number == 12) {
         i = Utils.getTimeslotFromMonth(i);
       }
-      return this.role === "ASSISTANT" && this.rana.state == "TODO" && this.rana.timeslot < ("T"+i);
+      return (
+        this.role === "ASSISTANT" &&
+        this.rana.state == "TODO" &&
+        this.rana.timeslot < "T" + i
+      );
     },
 
     //check if a month is passed
     isPastMonth(m, timeslot) {
-      return false;
       let t = Utils.getTimeslotFromMonth(m);
       return "T" + t <= timeslot;
     },
@@ -408,21 +459,26 @@ export default {
       // for (let i = firstTimeslotMonth; i <= 12; i++) {
       //   data["m" + i] = this.rana[this.].PREV["m" + i];
       // }
-      this.showSnackbar = true;
+
+      this.snackbarData.show = true;
       let result = await ApiServer.post(this.rana.id + "/rana-members", data);
       if (!result.error) {
-        this.message = this.$t("proposal_sent");
-        this.snackbarState = "success";
+        this.$store.commit("snackbar/setData", {
+          messageLabel: "proposal_sent",
+          status: "success"
+        });
+
         this.$emit("updateRanas", result);
       } else {
-        this.message = this.$t("proposal_error");
-        this.snackbarState = "error";
+        this.$store.commit("snackbar/setData", {
+          messageLabel: "proposal_error",
+          status: "success"
+        });
       }
     },
 
     //check if timeslot is past
     isPastTimeslot(t, timeslot) {
-      return false;
       return "T" + t <= timeslot;
     },
 
@@ -467,29 +523,22 @@ export default {
     setPrevisionsByRole() {
       let prop;
       let appr;
-      if (this.role === "ASSISTANT") {
-        this.rana.newMembers.PREV = this.prevRana
-          ? this.prevRana.newMembers.PROP
-          : this.rana.newMembers.PROP;
 
-        this.rana.retentions.PREV = this.prevRana
-          ? this.prevRana.retentions.PROP
-          : this.rana.retentions.PROP;
-      } else {
-        this.rana.newMembers.PREV = this.prevRana
+      this.rana.newMembers.PREV = this.prevRana
+        ? Object.keys(this.prevRana.newMembers.APPR).length
           ? this.prevRana.newMembers.APPR
-          : this.rana.newMembers.APPR;
+          : this.prevRana.newMembers.PROP
+        : Object.keys(this.rana.newMembers.APPR).length
+        ? this.rana.newMembers.APPR
+        : this.rana.newMembers.PROP;
 
-        this.rana.retentions.PREV = this.prevRana
+      this.rana.retentions.PREV = this.prevRana
+        ? Object.keys(this.prevRana.retentions.APPR).length
           ? this.prevRana.retentions.APPR
-          : this.rana.retentions.APPR;
-        // let firstMonthToApprove = Utils.getFirstTimeslotMonth(
-        //   this.rana.timeslot
-        // );
-        // for (let i = firstMonthToApprove; i <= 12; i++) {
-        //   this.data.PREV["m" + i] = this.data.APPR["m" + i];
-        // }
-      }
+          : this.prevRana.retentions.PROP
+        : Object.keys(this.rana.retentions.APPR).length
+        ? this.rana.retentions.APPR
+        : this.rana.retentions.PROP;
     }
   },
   created() {
@@ -501,10 +550,16 @@ export default {
   watch: {
     rana: {
       handler: function(newVal, oldVal) {
-        debugger;
         if (newVal) {
           this.rana = newVal;
+          this.currentTimeslot = this.rana.timeslot;
           this.role = this.$store.getters["getUser"];
+          if (
+            this.role === "EXECUTIVE" ||
+            (this.role === "ADMIN" && this.rana.state === "TODO")
+          ) {
+            this.editable = true;
+          }
           this.setPrevisionsByRole();
           this.evaluateTimeslots();
         }

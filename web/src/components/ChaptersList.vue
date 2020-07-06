@@ -8,12 +8,16 @@
   >
     <template v-slot:item.currentState="{ item }">
       <div class="d-flex flex-column">
-        <span :class="item.currentState">{{ item.currentState }}</span>
+        <span :class="item.currentState">{{ getChapterState(item.currentState) }}</span>
         <span class="font-italic font-weight-light">
           {{ getPrevResumeIfSuspended(item) }}
         </span>
       </div>
     </template>
+     <template v-slot:item.state="{ item }">
+       {{getItemState(item.state)}}
+    </template>
+    
     <template v-slot:item.actions="{ item }" v-if="!short">
       <v-menu bottom left>
         <template v-slot:activator="{ on }">
@@ -166,6 +170,7 @@ export default {
         { text: "Membri", value: "members" },
         { text: "Core group", value: "coreGroupLaunch" },
         { text: "Capitolo", value: "chapterLaunch" },
+        { text: "Stato", value: "state" },
         { value: "actions" }
       ],
       shortFields: ["name", "director.fullName", "members", "currentState"],
@@ -202,7 +207,15 @@ export default {
   methods: {
     //go to rana proposal or approve
     goToRana(item) {
-      this.$router.push("rana/" + item.id);
+      this.$router.push("/rana/" + item.id);
+    },
+
+    getChapterState(state) {
+      return Utils.getChapterState(state);
+    },
+
+    getItemState(state) {
+     return Utils.getState(state);
     },
 
     closeSuspendDialog(isSuspended) {

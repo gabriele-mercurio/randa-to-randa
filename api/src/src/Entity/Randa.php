@@ -28,8 +28,35 @@ class Randa
      */
     private $region;
 
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(type="string", nullable=true)
+     */
+    private $currentState;
+
     /** @ORM\Column(name="current_timeslot", type="string", options={"default":"T0"}) */
     private $currentTimeslot;
+
+    /**
+     *  @ORM\Column(name="note", type="string") 
+     * @ORM\JoinColumn(nullable=true) 
+     */
+    private $note;
+
+
+    /**
+     *  @ORM\Column(name="refuse_note", type="string") 
+     */
+    private $refuseNote;
+
+
+
+    /** 
+     * @ORM\Column(name="directors_previsions", type="string") 
+     * @ORM\JoinColumn(nullable=true) 
+     */
+    private $directorsPrevisions;
 
     /**
      * @var Collection|Economic[]
@@ -100,12 +127,68 @@ class Randa
         return $this->currentTimeslot;
     }
 
+
+    /** Get the value of currentState */
+    public function getCurrentState(): string
+    {
+        return $this->currentState ? $this->currentState : "DOING";
+    }
+
+    /** Set the value of note */
+    public function setNote(string $note): self
+    {
+        $this->note = $note;
+        return $this;
+    }
+
+
+    /** Set the value of refuse note */
+    public function setRefuseNote(string $refuseNote): self
+    {
+        $this->refuseNote = $refuseNote;
+        return $this;
+    }
+
+    /** Get the value of directorsPrevisions\ */
+    public function getDirectorsPrevisions(): string
+    {
+        if (!$this->directorsPrevisions) return "";
+        return $this->directorsPrevisions;
+    }
+
+    /** Set the value of note */
+    public function setDirectorsPrevisions(string $directorsPrevisions): self
+    {
+        $this->directorsPrevisions = $directorsPrevisions;
+        return $this;
+    }
+
+    /** Get the value of note */
+    public function getNote()
+    {
+        return $this->note;
+    }
+    /** Get the value of note */
+    public function getRefuseNote()
+    {
+        return $this->refuseNote;
+    }
+
     /** Set the value of currentTimeslot */
     public function setCurrentTimeslot(string $currentTimeslot): self
     {
         $this->currentTimeslot = $currentTimeslot;
         return $this;
     }
+
+
+    /** Set the value of currentState */
+    public function setCurrentState(string $currentState): self
+    {
+        $this->currentState = $currentState;
+        return $this;
+    }
+
 
     /**
      * @return Collection|Economic[]

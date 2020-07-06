@@ -1,6 +1,10 @@
 <template>
   <div class="ma-4 fill-height">
-    <template v-if="!freeAccount">
+    <template>
+      <div class="d-flex flex-column" v-if="randa_info">
+        <span><span class="font-weight-black">Randa</span>: {{ randa_info.timeslot }} {{randa_info.year}}</span>
+        <span>{{ getState(randa_info.state) }}</span>
+      </div>
       <ChaptersList
         :chapters.sync="chapters"
         :classSpec="'elevation-3'"
@@ -9,6 +13,7 @@
       />
 
       <div v-else>
+        <NoData :message="'Nessun capitolo trovato'" />
         Nessun capitolo trovato :(
       </div>
     </template>
@@ -37,8 +42,11 @@
 <script>
 import ApiServer from "../services/ApiServer";
 import Utils from "../services/Utils";
+import ForbiddenPage from "../components/ForbiddenPAge";
 import EditChapter from "../components/EditChapter";
 import ChaptersList from "../components/ChaptersList";
+import NoData from "../components/NoData";
+
 export default {
   data() {
     return {
@@ -48,12 +56,16 @@ export default {
       users: [],
       regionId: null,
       noChaptersFound: false,
-      freeAccount: false
+      freeAccount: false,
+      forbiddenPage: false,
+      randa_info: null
     };
   },
   components: {
     EditChapter,
-    ChaptersList
+    ChaptersList,
+    ForbiddenPage,
+    NoData
   },
   methods: {
     openEditModal(chapter) {
@@ -61,11 +73,15 @@ export default {
       this.showEditChapter = true;
     },
 
+    getState(randa_state) {
+      return Utils.getRandaState(randa_state);
+    },
+
     updateChapters(chapter) {
       this.showEditChapter = false;
       this.chapters.push(chapter);
-      if(this.freeAccount) {
-        this.$router.push("rana/" + chapter.id);
+      if (this.freeAccount) {
+        this.$router.push("/rana/" + chapter.id);
       }
     },
 
@@ -82,8 +98,11 @@ export default {
       let response = await ApiServer.get(this.regionId + "/chapters");
       if (response.errorCode === 404) {
         this.noChaptersFound = true;
+      } else if (response.errorCode === "403") {
+        this.forbiddenPage = true;
       } else {
-        this.chapters = response;
+        this.chapters = response.chapters;
+        this.randa_info = response.randa;
         this.$store.commit("setChapters", this.chapters);
       }
     }
@@ -91,15 +110,8 @@ export default {
   created() {
     setTimeout(async () => {
       this.regionId = this.$store.getters["getRegion"].id;
-      if (this.$store.getters["isFreeAccount"]) {
-        this.freeAccount = true;
-        let response = await ApiServer.get("chapter/freeAccount");
-        if (!response.error) {
-          this.$router.push("rana/" + response.id);
-        } else {
-          this.newChapter();
-        }
-      } else {
+      let role = this.$store.getters["getRegion"].role;
+      if (role !== "NATIONAL") {
         this.fetchChapters();
         this.fetchUsersPerRegion();
       }

@@ -20,7 +20,7 @@ class NewMember
     private $id;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Rana", cascade={"all"}, fetch="LAZY")
+     * @ORM\ManyToOne(targetEntity="Rana", fetch="LAZY")
      * @ORM\JoinColumn(nullable=false)
      */
     private $rana;
@@ -276,5 +276,47 @@ class NewMember
     {
         $this->timeslot = $timeslot;
         return $this;
+    }
+
+    public function setMonth($m, $v)
+    {
+        switch ($m) {
+            case 1:
+                $this->m1 = $v;
+                break;
+            case 2:
+                $this->m2 = $v;
+                break;
+            case 3:
+                $this->m3 = $v;
+                break;
+            case 4:
+                $this->m4 = $v;
+                break;
+            case 5:
+                $this->m5 = $v;
+                break;
+            case 6:
+                $this->m6 = $v;
+                break;
+            case 7:
+                $this->m7 = $v;
+                break;
+            case 8:
+                $this->m8 = $v;
+                break;
+            case 9:
+                $this->m9 = $v;
+                break;
+            case 10:
+                $this->m10 = $v;
+                break;
+            case 11:
+                $this->m11 = $v;
+                break;
+            case 12:
+                $this->m12 = $v;
+                break;
+        }
     }
 }

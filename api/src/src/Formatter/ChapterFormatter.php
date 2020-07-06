@@ -2,7 +2,10 @@
 
 namespace App\Formatter;
 
+use App\Entity\Randa;
 use App\Entity\Chapter;
+use App\Repository\RanaRepository;
+use App\Repository\RanaLifecycleRepository;
 
 class ChapterFormatter
 {
@@ -12,11 +15,21 @@ class ChapterFormatter
     /** @var DirectorFormatter */
     protected $directorFormatter;
 
+    /** @var RanaRepository */
+    protected $ranaRepository;
+
+    /** @var RanaLifecycleRepository */
+    protected $ranaLifecycleRepository;
+
     /** ChapterFormatter constructor */
     public function __construct(
-        DirectorFormatter $directorFormatter
+        DirectorFormatter $directorFormatter,
+        RanaRepository $ranaRepository,
+        RanaLifecycleRepository $ranaLifecycleRepository
     ) {
         $this->directorFormatter = $directorFormatter;
+        $this->ranaRepository = $ranaRepository;
+        $this->ranaLifecycleRepository = $ranaLifecycleRepository;
     }
 
     /**
@@ -69,5 +82,34 @@ class ChapterFormatter
     public function formatFull(Chapter $chapter): array
     {
         return $this->format($chapter, self::DIRECTOR_FULL_DATA);
+    }
+
+    /**
+     * @param Chapter $chapter
+     *
+     * @return array
+     */
+    public function formatWithStatus(Chapter $chapter, ?Randa $randa): array
+    {
+        $c = $this->formatBase($chapter);
+        if ($randa) {
+
+            $rana = $this->ranaRepository->findOneBy([
+                "chapter" => $chapter,
+                "randa" => $randa
+            ]);
+            if ($rana) {
+                $lifecycle = $this->ranaLifecycleRepository->findOneBy([
+                    "rana" => $rana,
+                    "currentTimeslot" => $randa->getCurrentTimeslot()
+                ]);
+                $c["state"] = $lifecycle->getCurrentState();
+            } else {
+                $c["state"] = "TODO";
+            }
+        } else {
+            $c["state"] = "TODO";
+        }
+        return $c;
     }
 }

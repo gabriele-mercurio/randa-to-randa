@@ -23,8 +23,8 @@ class Constants
     public const PAY_TYPE_MONTHLY = 'MONTHLY';
 
     // Rana LifeCycle statuses
-    public const RANA_LIFECYCLE_STATUS_APPROVED = 'APPROVED';
-    public const RANA_LIFECYCLE_STATUS_PROPOSED = 'PROPOSED';
+    public const RANA_LIFECYCLE_STATUS_APPR = 'APPR';
+    public const RANA_LIFECYCLE_STATUS_PROP = 'PROP';
     public const RANA_LIFECYCLE_STATUS_REFUSED = 'REFUSED';
     public const RANA_LIFECYCLE_STATUS_TODO = 'TODO';
 
@@ -42,7 +42,7 @@ class Constants
     public const TIMESLOT_T4 = 'T4';
 
     // ValueTypes
-    public const VALUE_TYPE_APPROVED = 'APPR';
+    public const VALUE_TYPE_APPR = 'APPR';
     public const VALUE_TYPE_CONSUMPTIVE = 'CONS';
-    public const VALUE_TYPE_PROPOSED = 'PROP';
+    public const VALUE_TYPE_PROP = 'PROP';
 }

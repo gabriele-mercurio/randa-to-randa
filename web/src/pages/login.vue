@@ -1,6 +1,6 @@
 <template>
   <v-container class="primary pa-0 ma-0" id="container">
-    <h2 class="white--text text-center py-12">Accedi a Randa to Randa</h2>
+    <h2 class="white--text text-center py-12">Accedi a ROSBI</h2>
     <v-form v-if="!isLogged" @submit.prevent="doLogin()">
       <v-card class="mx-auto mb-12 elevation-12" max-width="374">
         <v-card-title class="secondary--text text-center">
@@ -12,7 +12,6 @@
               prepend-icon="mdi-face"
               color="purple"
             ></v-text-field> -->
-
           <v-text-field
             label="Email"
             prepend-icon="mdi-face"
@@ -84,7 +83,7 @@ export default {
       if (this.getToken()) {
         this.isLogged = true;
         if (this.getRegion()) {
-          this.$router.push("home");
+          this.$router.push("/home");
         } else {
           this.fetchRegions();
         }
@@ -124,7 +123,11 @@ export default {
 
     selectRegion() {
       this.$store.commit("setRegion", this.region);
-      this.goToHome();
+      if(this.region.role !== "NATIONAL") {
+        this.goToHome();
+      } else {
+        this.$router.push("/randa/randa-revised");
+      }
     }
   }
 };

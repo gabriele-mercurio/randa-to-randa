@@ -45,6 +45,30 @@ class Utils {
   static getNextTimeslot(timeslot) {
     return "T" + ((timeslot.substr(1, 1) * 1) + 1);
   }
+
+  static getState(state) {
+    switch(state) {
+      case "TODO": return "Da compilare";
+      case "APPR": return "Approvato";
+      case "PROP": return "Proposto";
+    }
+  }
+
+  static getChapterState(state) {
+    switch(state) {
+      case "CORE_GROUP": return "Core group";
+      case "CHAPTER": return "Capitolo";
+      case "PROJECT": return "Progetto";
+    }
+  }
+
+  static getRandaState(state) {
+    switch(state) {
+      case "APPR": return "Approvato";
+      case "DOING": return "Compilazione in corso";
+      case "REFUSED": return "Rifiutato";
+    }
+  }
 }
 
 export default Utils;

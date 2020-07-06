@@ -2,24 +2,27 @@
 
 namespace App\Controller;
 
-use App\Entity\Chapter;
-use App\Entity\Director;
+use Exception;
+use App\Util\Util;
 use App\Entity\Region;
+use App\Entity\Chapter;
+use App\Util\Constants;
+use App\Entity\Director;
+use Swagger\Annotations as SWG;
+use App\Repository\RanaRepository;
+use App\Repository\UserRepository;
 use App\Formatter\ChapterFormatter;
+use App\Repository\RandaRepository;
 use App\Repository\ChapterRepository;
 use App\Repository\DirectorRepository;
-use App\Repository\UserRepository;
-use App\Util\Constants;
-use App\Util\Util;
 use Doctrine\ORM\EntityManagerInterface;
-use Exception;
+use App\Repository\RanaLifecycleRepository;
 use Nelmio\ApiDocBundle\Annotation\Security;
-use Swagger\Annotations as SWG;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 class ChapterController extends AbstractController
 {
@@ -38,18 +41,34 @@ class ChapterController extends AbstractController
     /** @var UserRepository */
     private $userRepository;
 
+    /** @var RanaLifecycleRepository */
+    private $ranaLifecycleRepository;
+
+    /** @var RandaRepository */
+    private $randaRepository;
+
+
+    /** @var RanaRepository */
+    private $ranaRepository;
+
     public function __construct(
         ChapterFormatter $chapterFormatter,
         ChapterRepository $chapterRepository,
         DirectorRepository $directorRepository,
         EntityManagerInterface $entityManager,
-        UserRepository $userRepository
+        UserRepository $userRepository,
+        RanaLifecycleRepository $ranaLifecycleRepository,
+        RandaRepository $randaRepository,
+        RanaRepository $ranaRepository
     ) {
         $this->chapterFormatter = $chapterFormatter;
         $this->chapterRepository = $chapterRepository;
         $this->directorRepository = $directorRepository;
         $this->entityManager = $entityManager;
         $this->userRepository = $userRepository;
+        $this->ranaLifecycleRepository = $ranaLifecycleRepository;
+        $this->randaRepository = $randaRepository;
+        $this->ranaRepository = $ranaRepository;
     }
 
     /**
@@ -287,12 +306,12 @@ class ChapterController extends AbstractController
     {
         $request = Util::normalizeRequest($request);
 
-        
+
         $roleCheck = [
             Constants::ROLE_EXECUTIVE
         ];
         $performerData = Util::getPerformerData($this->getUser(), $region, $roleCheck, $this->userRepository, $this->directorRepository, $request->get("actAs"), $request->get("role"));
-        
+
         // Assign $actAs, $code, $director, $isAdmin and $role
         foreach ($performerData as $var => $value) {
             $$var = $value;
@@ -300,7 +319,7 @@ class ChapterController extends AbstractController
 
         $errorFields = [];
 
-        if($request->get("isFreeAccount")) {
+        if ($request->get("isFreeAccount")) {
             $code = Response::HTTP_OK;
         }
 
@@ -642,6 +661,7 @@ class ChapterController extends AbstractController
                 }
             }
 
+            $state = $chapter->getCurrentState();
             // Check Coregroup and chapter dates
             switch ($chapter->getCurrentState()) {
                 case Constants::CHAPTER_STATE_PROJECT:
@@ -785,7 +805,7 @@ class ChapterController extends AbstractController
      * Canges to members and prevResumeDate can be made from any authorized directors; for all other fields the user must be admin or have EXECUTIVE role.
      * Changes to launch date fields from prev to actual are not allowed: there are specific API calls to launch a coregroup or a chapter, use them instead
      *
-     * @Route(path="/chapter/freeAccount", name="edit_chapter", methods={"GET"})
+     * @Route(path="/chapter/freeAccount", name="free_account", methods={"GET"})
      *
      * @return Response
      */
@@ -1015,6 +1035,15 @@ class ChapterController extends AbstractController
             $$var = $value;
         }
 
+        $currentYear = (int) date("Y");
+
+        $randa = $this->randaRepository->findOneBy([
+            "region" => $region,
+            "year" => $currentYear
+        ]);
+
+        $timeslot = $randa->getCurrentTimeslot();
+
         if ($code == Response::HTTP_OK) {
             switch ($role) {
                 case Constants::ROLE_EXECUTIVE:
@@ -1061,7 +1090,8 @@ class ChapterController extends AbstractController
                 return $name1 < $name2 ? -1 : ($name1 > $name2 ? 1 : 0);
             });
 
-            return new JsonResponse(array_map(function ($c) {
+
+            $chapters_data["chapters"] = array_map(function ($c) use ($randa) {
                 $today = Util::UTCDateTime();
                 $warning = null;
 
@@ -1071,10 +1101,102 @@ class ChapterController extends AbstractController
                     $warning = "CHAPTER";
                 }
 
-                $ret = $this->chapterFormatter->formatBase($c);
+                $ret = $this->chapterFormatter->formatWithStatus($c, $randa);
                 $ret['warning'] = $warning;
                 return $ret;
-            }, $chapters));
+            }, $chapters);
+
+            $chapters_data["randa"] = [
+                "state" => $randa->getCurrentState(),
+                "timeslot" => $randa->getCurrentTimeslot(),
+                "year" => $currentYear
+            ];
+
+            return new JsonResponse($chapters_data);
+        } else {
+            return new JsonResponse(null, $code);
+        }
+    }
+
+    /**
+     * Get chapters
+     *
+     * @Route(path="/{id}/chapters-statistics", name="chapters_stats", methods={"GET"})
+     *
+     */
+    public function chaptersStatistics(Region $region, Request $request): Response
+    {
+        $roleCheck = [
+            Constants::ROLE_EXECUTIVE,
+            Constants::ROLE_AREA,
+            Constants::ROLE_ASSISTANT
+        ];
+        $performerData = Util::getPerformerData($this->getUser(), $region, $roleCheck, $this->userRepository, $this->directorRepository, $request->get("actAs"), $request->get("role"));
+
+        // Assign $actAs, $code, $director, $isAdmin and $role
+        foreach ($performerData as $var => $value) {
+            $$var = $value;
+        }
+
+        $currentYear = (int) date("Y");
+
+        if ($code == Response::HTTP_OK) {
+
+            $data = [
+                "todo" => [],
+                "proposed" => [],
+                "approved" => []
+            ];
+
+            $chapters = $this->chapterRepository->findBy([
+                "region" => $region
+            ]);
+            $randa = $this->randaRepository->findOneBy([
+                'year' => $currentYear,
+                'region' => $region
+            ], [
+                'currentTimeslot' => 'DESC'
+            ]);
+            $timeslot = $randa->getCurrentTimeslot();
+
+
+            $all_approved = true;
+            foreach ($chapters as $chapter) {
+                $rana = $this->ranaRepository->findOneBy([
+                    "chapter" => $chapter,
+                    "randa" => $randa
+                ]);
+                if (!$rana) {
+                    $data["todo"][] = $chapter;
+                    $all_approved = false;
+                } else {
+                    $lifecycles = $this->ranaLifecycleRepository->findBy([
+                        "rana" => $rana,
+                        "currentTimeslot" => $timeslot
+                    ]);
+                    foreach ($lifecycles as $lifecycle) {
+                        switch ($lifecycle->getCurrentState()) {
+                            case "TODO":
+                                $data["todo"][] = $this->chapterFormatter->formatBase($chapter);
+                                $all_approved = false;
+                                break;
+                            case "PROP":
+                                $data["proposed"][] = $this->chapterFormatter->formatBase($chapter);
+                                $all_approved = false;
+                                break;
+                            case "APPR":
+                                $data["approved"][] = $this->chapterFormatter->formatBase($chapter);
+                                $all_approved = false;
+                                break;
+                        }
+                    }
+                }
+            }
+
+            $data["all_approved"] = $all_approved;
+            $data["randa_timeslot"] = $timeslot;
+            $data["randa_state"] = $randa->getCurrentState();
+            return new JsonResponse($data, $code);
         } else {
             return new JsonResponse(null, $code);
         }

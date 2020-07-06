@@ -67,7 +67,12 @@ class RegionController extends AbstractController
         $directors = $regions = [];
         $regionsRoles = [];
 
-        if ($user->isAdmin()) {
+        $national = $this->directorRepository->findOneBy([
+            "user" => $user,
+            "role" => "NATIONAL"
+        ]);
+
+        if ($user->isAdmin() || $national) {
             $regions = $this->regionRepository->findAll();
         } else {
             foreach ($this->directorRepository->findByUser($user) as $director) {
@@ -97,10 +102,10 @@ class RegionController extends AbstractController
             return $r1->getName() < $r2->getName() ? -1 : ($r1->getName() > $r2->getName() ? 1 : 0);
         });
 
-        return new JsonResponse(array_map(function ($region) use($regionsRoles, $user) {
+        return new JsonResponse(array_map(function ($region) use($regionsRoles, $user, $national) {
             return array_merge($this->regionFormatter->formatBase($region), [
-                'role' => $user->isAdmin() ? "ADMIN" : $regionsRoles[$region->getId()]["role"],
-                'isFreeAccount' => $user->isAdmin() ? false : $regionsRoles[$region->getId()]["isFreeAccount"]
+                'role' => $user->isAdmin() ? "ADMIN" : ($national ? 'NATIONAL' : $regionsRoles[$region->getId()]["role"]),
+                'isFreeAccount' => $user->isAdmin() || $national ? false : $regionsRoles[$region->getId()]["isFreeAccount"]
             ]);
         }, $regions));
     }

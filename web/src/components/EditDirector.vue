@@ -50,6 +50,7 @@
               v-model="director.role"
               required
               prepend-icon="mdi-tie"
+              :disabled="director.isFreeAccount"
             ></v-select>
           </v-col>
 
@@ -92,6 +93,7 @@
               label="Compenso area"
               prepend-icon="mdi-margin"
               type="number"
+              :disabled="director.isFreeAccount"
             ></v-text-field>
           </v-col>
         </v-row>
@@ -436,6 +438,15 @@ export default {
           this.doAutocomplete(newVal);
         }
       }
+    },
+    director: {
+      handler: function(newVal, oldVal) {
+        if(newVal.isFreeAccount) {
+          this.director.role = "EXECUTIVE";
+        }
+      },
+      deep: true,
+      immediate: true
     }
   }
 };

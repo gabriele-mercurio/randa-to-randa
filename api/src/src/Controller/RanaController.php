@@ -315,6 +315,7 @@ class RanaController extends AbstractController
                 $randa->setCurrentTimeslot(Constants::TIMESLOT_T0);
                 $randa->setRegion($region);
                 $randa->setYear($currentYear);
+                $randa->setCurrentState("TODO");
                 $this->randaRepository->save($randa);
             }
 
@@ -341,7 +342,7 @@ class RanaController extends AbstractController
             $this->ranaLifeCycleRepository->save($ranaLifeCycle);
             $this->entityManager->refresh($rana);
 
-            return new JsonResponse($this->ranaFormatter->formatData($rana, $role));
+            return new JsonResponse($this->ranaFormatter->formatData($rana, $role, "", $randa->getCurrentTimeslot(), null));
         } else {
             return new JsonResponse(null, $code);
         }
@@ -704,6 +705,13 @@ class RanaController extends AbstractController
             $$var = $value;
         }
 
+        $currentYear = (int) date("Y");
+        $randa = $this->randaRepository->findOneBy([
+            "region" => $region,
+            "year" => $currentYear
+        ]);
+        $timeslot = $randa->getCurrentTimeslot();
+
         if ($code == Response::HTTP_OK && !$isAdmin) {
             if ($role == Constants::ROLE_ASSISTANT && $chapter->getDirector() != $director) {
                 $code = Response::HTTP_FORBIDDEN;
@@ -715,8 +723,8 @@ class RanaController extends AbstractController
         }
 
         if ($code == Response::HTTP_OK) {
-            $timeslot = $request->get("timeslot");
             $valueType = $request->get("valueType");
+
             $errorFields = [];
 
             $availableTimeslots = [
@@ -727,9 +735,9 @@ class RanaController extends AbstractController
                 Constants::TIMESLOT_T4
             ];
             $availableValueTypes = [
-                Constants::VALUE_TYPE_APPROVED,
+                Constants::VALUE_TYPE_APPR,
                 Constants::VALUE_TYPE_CONSUMPTIVE,
-                Constants::VALUE_TYPE_PROPOSED
+                Constants::VALUE_TYPE_PROP
             ];
 
             if (!in_array($timeslot, $availableTimeslots)) {
@@ -743,7 +751,7 @@ class RanaController extends AbstractController
                     'rana' => $rana,
                     'timeslot' => $nextTimeslot,
                     'valueType' => [
-                        Constants::VALUE_TYPE_APPROVED,
+                        Constants::VALUE_TYPE_APPR,
                         Constants::VALUE_TYPE_CONSUMPTIVE
                     ]
                 ]);
@@ -752,7 +760,7 @@ class RanaController extends AbstractController
                     'rana' => $rana,
                     'timeslot' => $nextTimeslot,
                     'valueType' => [
-                        Constants::VALUE_TYPE_APPROVED,
+                        Constants::VALUE_TYPE_APPR,
                         Constants::VALUE_TYPE_CONSUMPTIVE
                     ]
                 ]);
@@ -791,7 +799,7 @@ class RanaController extends AbstractController
                                 $errorFields['valueType'] = "invalid";
                             }
                             break;
-                        case Constants::VALUE_TYPE_APPROVED:
+                        case Constants::VALUE_TYPE_APPR:
                             if ($role != Constants::ROLE_EXECUTIVE) {
                                 $code = Response::HTTP_FORBIDDEN;
                             } elseif ($timeslot == Constants::TIMESLOT_T4) {
@@ -814,7 +822,7 @@ class RanaController extends AbstractController
                                 }
                             }
                             break;
-                        case Constants::VALUE_TYPE_PROPOSED:
+                        case Constants::VALUE_TYPE_PROP:
                             if ($timeslot == Constants::TIMESLOT_T4) {
                                 $errorFields['valueType'] = "invalid";
                             } else {
@@ -823,7 +831,7 @@ class RanaController extends AbstractController
                                     'timeslot' => $timeslot,
                                     'valueType' => [
                                         Constants::VALUE_TYPE_CONSUMPTIVE,
-                                        Constants::VALUE_TYPE_APPROVED
+                                        Constants::VALUE_TYPE_APPR
                                     ]
                                 ]);
 
@@ -832,7 +840,7 @@ class RanaController extends AbstractController
                                     'timeslot' => $timeslot,
                                     'valueType' => [
                                         Constants::VALUE_TYPE_CONSUMPTIVE,
-                                        Constants::VALUE_TYPE_APPROVED
+                                        Constants::VALUE_TYPE_APPR
                                     ]
                                 ]);
 
@@ -878,6 +886,7 @@ class RanaController extends AbstractController
 
             $newMember->setRana($rana);
             $newMember->setTimeslot($timeslot);
+
             $newMember->setValueType($valueType);
 
             $retentionMember->setRana($rana);
@@ -950,6 +959,7 @@ class RanaController extends AbstractController
                         $retentionMember->setM1($request->get("r_m1") ?? 0);
                 }
             } else {
+
                 switch ($timeslot) {
                     case Constants::TIMESLOT_T0:
                         $newMember->setM1($request->get("n_m1") ?? 0);
@@ -965,14 +975,14 @@ class RanaController extends AbstractController
                             'valueType' => $valueType,
                             'timeslot' => Constants::TIMESLOT_T0
                         ]);
-                        
+
                         $previousRetentionMember = $this->retentionRepository->findOneBy([
                             'rana' => $rana,
                             'valueType' => $valueType,
                             'timeslot' => Constants::TIMESLOT_T0
                         ]);
 
-                        if($timeslot == Constants::TIMESLOT_T1) {
+                        if ($timeslot == Constants::TIMESLOT_T1) {
                             $newMember->setM1($request->get("n_m1") ?? ($previousNewMember ? $previousNewMember->getM1() : 0));
                             $newMember->setM2($request->get("n_m2") ?? ($previousNewMember ? $previousNewMember->getM2() : 0));
                             $newMember->setM3($request->get("n_m3") ?? ($previousNewMember ? $previousNewMember->getM3() : 0));
@@ -999,21 +1009,20 @@ class RanaController extends AbstractController
                             'valueType' => $valueType,
                             'timeslot' => Constants::TIMESLOT_T1
                         ]);
-                        if($timeslot == Constants::TIMESLOT_T2) {
+                        if ($timeslot == Constants::TIMESLOT_T2) {
                             $newMember->setM1($request->get("n_m1") ?? ($previousNewMember ? $previousNewMember->getM1() : 0));
                             $newMember->setM2($request->get("n_m2") ?? ($previousNewMember ? $previousNewMember->getM2() : 0));
                             $newMember->setM3($request->get("n_m3") ?? ($previousNewMember ? $previousNewMember->getM3() : 0));
                             $newMember->setM4($request->get("n_m4") ?? ($previousNewMember ? $previousNewMember->getM4() : 0));
                             $newMember->setM5($request->get("n_m5") ?? ($previousNewMember ? $previousNewMember->getM5() : 0));
                             $newMember->setM6($request->get("n_m6") ?? ($previousNewMember ? $previousNewMember->getM6() : 0));
-                            
+
                             $retentionMember->setM3($request->get("r_m3") ?? ($previousRetentionMember ? $previousRetentionMember->getM3() : 0));
                             $retentionMember->setM1($request->get("r_m1") ?? ($previousRetentionMember ? $previousRetentionMember->getM1() : 0));
                             $retentionMember->setM2($request->get("r_m2") ?? ($previousRetentionMember ? $previousRetentionMember->getM2() : 0));
                             $retentionMember->setM6($request->get("r_m6") ?? ($previousRetentionMember ? $previousRetentionMember->getM6() : 0));
                             $retentionMember->setM4($request->get("r_m4") ?? ($previousRetentionMember ? $previousRetentionMember->getM4() : 0));
                             $retentionMember->setM5($request->get("r_m5") ?? ($previousRetentionMember ? $previousRetentionMember->getM5() : 0));
-
                         }
 
                         $newMember->setM7($request->get("n_m7") ?? ($previousNewMember ? $previousNewMember->getM7() : 0));
@@ -1033,50 +1042,81 @@ class RanaController extends AbstractController
                             'valueType' => $valueType,
                             'timeslot' => Constants::TIMESLOT_T2
                         ]);
-                        
 
-                        if($timeslot == Constants::TIMESLOT_T3) {
+
+                        if ($timeslot == Constants::TIMESLOT_T3) {
                             $newMember->setM1($request->get("n_m1") ?? ($previousNewMember ? $previousNewMember->getM1() : 0));
                             $newMember->setM2($request->get("n_m2") ?? ($previousNewMember ? $previousNewMember->getM2() : 0));
                             $newMember->setM3($request->get("n_m3") ?? ($previousNewMember ? $previousNewMember->getM3() : 0));
                             $retentionMember->setM3($request->get("r_m3") ?? ($previousRetentionMember ? $previousRetentionMember->getM3() : 0));
                             $retentionMember->setM1($request->get("r_m1") ?? ($previousRetentionMember ? $previousRetentionMember->getM1() : 0));
                             $retentionMember->setM2($request->get("r_m2") ?? ($previousRetentionMember ? $previousRetentionMember->getM2() : 0));
-                            
+
                             $newMember->setM7($request->get("n_m7") ?? ($previousNewMember ? $previousNewMember->getM7() : 0));
                             $newMember->setM5($request->get("n_m5") ?? ($previousNewMember ? $previousNewMember->getM5() : 0));
                             $newMember->setM9($request->get("n_m9") ?? ($previousNewMember ? $previousNewMember->getM9() : 0));
                             $retentionMember->setM9($request->get("r_m9") ?? ($previousRetentionMember ? $previousRetentionMember->getM9() : 0));
                             $retentionMember->setM7($request->get("r_m7") ?? ($previousRetentionMember ? $previousRetentionMember->getM7() : 0));
                             $retentionMember->setM5($request->get("r_m5") ?? ($previousRetentionMember ? $previousRetentionMember->getM5() : 0));
-
                         }
                         $newMember->setM10($request->get("n_m10") ?? ($previousNewMember ? $previousNewMember->getM10() : 0));
                         $newMember->setM11($request->get("n_m11") ?? ($previousNewMember ? $previousNewMember->getM11() : 0));
                         $newMember->setM12($request->get("n_m12") ?? ($previousNewMember ? $previousNewMember->getM12() : 0));
 
-                       
+
                         $retentionMember->setM10($request->get("r_m10") ?? ($previousRetentionMember ? $previousRetentionMember->getM10() : 0));
                         $retentionMember->setM11($request->get("r_m11") ?? ($previousRetentionMember ? $previousRetentionMember->getM11() : 0));
                         $retentionMember->setM12($request->get("r_m12") ?? ($previousRetentionMember ? $previousRetentionMember->getM12() : 0));
                 }
             }
 
-            if ($isNewNewMember) {
-                $this->newMemberRepository->save($newMember);
-            }
 
-            if ($isNewRetentionMember) {
-                $this->retentionRepository->save($retentionMember);
-            }
+            $this->newMemberRepository->save($newMember);
+            $this->retentionRepository->save($retentionMember);
 
             $status = Constants::RANA_LIFECYCLE_STATUS_TODO;
             switch ($valueType) {
-                case Constants::VALUE_TYPE_APPROVED:
-                    $status = Constants::RANA_LIFECYCLE_STATUS_APPROVED;
+                case Constants::VALUE_TYPE_APPR:
+
+                    $status = Constants::RANA_LIFECYCLE_STATUS_APPR;
+
+                    $proposedNewMembers = $this->newMemberRepository->findOneBy([
+                        'rana' => $rana,
+                        'timeslot' => $timeslot,
+                        'valueType' => Constants::VALUE_TYPE_PROP
+                    ]);
+                    if (!$proposedNewMembers) {
+                        $propNewMember = new NewMember();
+                        $propNewMember->setRana($rana);
+                        $propNewMember->setTimeslot($timeslot);
+                        $propNewMember->setValueType(Constants::VALUE_TYPE_PROP);
+                        for ($i = 1; $i <= 12; $i++) {
+                            $method = "getM$i";
+                            $propNewMember->setMonth($i, $newMember->$method());
+                        }
+                        $this->newMemberRepository->save($propNewMember);
+                    } else {
+                    }
+
+                    $proposedRetention = $this->retentionRepository->findOneBy([
+                        'rana' => $rana,
+                        'timeslot' => $timeslot,
+                        'valueType' => Constants::VALUE_TYPE_PROP
+                    ]);
+                    if (!$proposedRetention) {
+                        $propRet = new Retention();
+                        $propRet->setRana($rana);
+                        $propRet->setTimeslot($timeslot);
+                        $propRet->setValueType(Constants::VALUE_TYPE_PROP);
+                        for ($i = 1; $i <= 12; $i++) {
+                            $method = "getM$i";
+                            $propRet->setMonth($i, $retentionMember->$method());
+                        }
+                        $this->retentionRepository->save($propRet);
+                    }
                     break;
-                case Constants::VALUE_TYPE_PROPOSED:
-                    $status = Constants::RANA_LIFECYCLE_STATUS_PROPOSED;
+                case Constants::VALUE_TYPE_PROP:
+                    $status = Constants::RANA_LIFECYCLE_STATUS_PROP;
                     break;
             }
 
@@ -1086,44 +1126,58 @@ class RanaController extends AbstractController
             ]);
 
             //if lifecycle exists for this rana, update status and create a new lifecycle record with todo state for next t
-            if ($currentLifeCycle) {
-                $currentLifeCycle->setCurrentState($status);
+            $currentLifeCycle->setCurrentState($status);
+            $this->entityManager->persist($currentLifeCycle);
+            $this->entityManager->flush();
 
-                $this->entityManager->flush();
 
-                $slotNumber = (int) substr($timeslot, -1);
-                if ($slotNumber < 4) {
-                    $nextSlotNumber = $slotNumber + 1;
-                    $nextTimeslot = "T$nextSlotNumber";
-                }
 
-                $status = Constants::RANA_LIFECYCLE_STATUS_TODO;
-            } else {
-                $nextTimeslot = $timeslot;
+            $slotNumber = (int) substr($timeslot, -1);
+            if ($slotNumber < 4) {
+                $nextSlotNumber = $slotNumber + 1;
+                $nextTimeslot = "T$nextSlotNumber";
             }
 
-            $nextRanaLifeCycle = $this->ranaLifeCycleRepository->findOneBy([
-                "rana" => $rana,
-                "currentTimeslot" => $nextTimeslot
-            ]);
-
-            if(!$nextRanaLifeCycle) {
-                $nextRanaLifeCycle = new RanaLifecycle();
-                $status = Constants::RANA_LIFECYCLE_STATUS_TODO;
-            }
-            $nextRanaLifeCycle->setCurrentState($status);
-            $nextRanaLifeCycle->setCurrentTimeslot($nextTimeslot);
-            $nextRanaLifeCycle->setRana($rana);
-
-            $this->ranaLifeCycleRepository->save($nextRanaLifeCycle);
-            $this->entityManager->refresh($rana);
-
-            return new JsonResponse($this->ranaFormatter->formatData($rana, $role));
+            $status = Constants::RANA_LIFECYCLE_STATUS_TODO;
         } else {
-            $errorFields = $code == Response::HTTP_BAD_REQUEST ? $errorFields : null;
-            return new JsonResponse($errorFields, $code);
+            $nextTimeslot = $timeslot;
         }
+
+        $nextRanaLifeCycle = $this->ranaLifeCycleRepository->findOneBy([
+            "rana" => $rana,
+            "currentTimeslot" => $nextTimeslot
+        ]);
+
+        if (!$nextRanaLifeCycle) {
+            $nextRanaLifeCycle = new RanaLifecycle();
+            $status = Constants::RANA_LIFECYCLE_STATUS_TODO;
+        }
+        $nextRanaLifeCycle->setCurrentState($status);
+        $nextRanaLifeCycle->setCurrentTimeslot($nextTimeslot);
+        $nextRanaLifeCycle->setRana($rana);
+
+        $this->ranaLifeCycleRepository->save($nextRanaLifeCycle);
+        $this->entityManager->refresh($rana);
+
+        $lifecycles = $this->ranaLifeCycleRepository->findBy([
+            "rana" => $rana,
+            "currentTimeslot" => $timeslot
+        ]);
+        $all_approved = true;
+        foreach ($lifecycles as $lifecycle) {
+            if ($lifecycle->getCurrentState() !== "APPR") {
+                $all_approved = false;
+            }
+        }
+        if ($all_approved) {
+            $randa->setCurrentState("TO_BE_APPR");
+            $this->randaRepository->save($randa);
+        }
+
+
+        return new JsonResponse($this->ranaFormatter->formatData($rana, $role, $all_approved, $randa->getCurrentTimeslot(), null));
     }
+
 
     /**
      * Get the chapter's rana
@@ -1333,6 +1387,7 @@ class RanaController extends AbstractController
     {
         $region = $chapter->getRegion();
 
+        $timeslot = null;
         $roleCheck = [
             Constants::ROLE_EXECUTIVE,
             Constants::ROLE_AREA,
@@ -1360,6 +1415,7 @@ class RanaController extends AbstractController
                 'region' => $region,
                 'year' => date('Y')
             ]);
+
             if (is_null($randa)) {
                 $code = Response::HTTP_NOT_FOUND;
             } else {
@@ -1374,9 +1430,60 @@ class RanaController extends AbstractController
         }
 
         if ($code == Response::HTTP_OK) {
-            return new JsonResponse($this->ranaFormatter->formatData($rana, $role));
+            return new JsonResponse($this->ranaFormatter->formatData($rana, $role, false, $timeslot = $randa->getCurrentTimeslot(), $randa->getRefuseNote()));
         } else {
             return new JsonResponse(null, $code);
         }
+    }
+
+
+    /**
+     * Create or update a members block
+     *
+     * @Route(path="/{id}/disapprove", name="disapprove_rana", methods={"PUT"})
+     *
+     * @return Response
+     */
+    public function disapproveRana(Rana $rana, Request $request): Response
+    {
+        $request = Util::normalizeRequest($request);
+
+        $chapter = $rana->getChapter();
+
+        $lifecycle = $this->ranaLifeCycleRepository->findOneBy([
+            "rana" => $rana,
+            "currentTimeslot" => $rana->getRanda()->getCurrentTimeslot(),
+            "currentState" => "APPR"
+        ]);
+        if ($lifecycle) {
+            $lifecycle->setCurrentState("PROP");
+            $this->ranaLifeCycleRepository->save($lifecycle);
+        }
+
+        $retention = $this->retentionRepository->findOneBy([
+            "rana" => $rana,
+            "valueType" => "APPR",
+            "timeslot" => $rana->getRanda()->getCurrentTimeslot()
+        ]);
+        if($retention) {
+            $this->entityManager->remove($retention);
+            $this->entityManager->flush();
+    
+        } else {
+            return new JsonResponse("NOT FOUND");
+        }
+        
+        $new_member = $this->newMemberRepository->findOneBy([
+            "rana" => $rana,
+            "valueType" => "APPR",
+            "timeslot" => $rana->getRanda()->getCurrentTimeslot()
+        ]);
+        $this->entityManager->remove($new_member);
+        $this->entityManager->flush();
+
+        $randa = $rana->getRanda();
+        $randa->setCurrentState("DOING");
+        $this->randaRepository->save($randa);
+        return new JsonResponse($this->ranaFormatter->formatData($rana, null, false,  $rana->getRanda()->getCurrentTimeslot(), null));
     }
 }

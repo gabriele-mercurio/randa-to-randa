@@ -2,8 +2,14 @@
   <div id="rana" v-if="rana">
     <div class="d-flex justify-space-between align-end">
       <div>
-        <span class="font-italic font-weight-light">{{ rana.timeslot }}: </span>
-        <span v-if="rana">{{ rana.state }}</span>
+        <div>
+          Membri inizali:
+          <span class="font-italic font-weight-light mr-2">{{
+            rana.initialMembers
+          }}</span>
+        </div>
+        <span class="font-weight-bold">{{ rana.timeslot }}: </span>
+        <span v-if="rana">{{ getRanaState(rana.state) }}</span>
       </div>
       <div v-if="editable">
         <div class="d-flex flex-row align-center">
@@ -194,14 +200,14 @@
         </tbody>
         <tbody>
           <tr>
-            <td rowspan="1">Attivi</td>
+            <td rowspan="1">Totale membri</td>
             <td
               v-for="i in (0, 12)"
               :key="i"
               class="text-center pa-0 background-red"
               :class="{ 'border-right-bold': i % 3 == 0 }"
             >
-              {{ i }}
+              {{ evaluateMembers(i) }}
             </td>
           </tr>
         </tbody>
@@ -226,15 +232,10 @@
             color="primary"
             :disabled="nullFields()"
             @click="sendProposalOrApprovation()"
+            v-if="rana.state !== 'APPR'"
           >
             <span v-if="role === 'ASSISTANT'">{{ $t("send_proposal") }}</span>
-            <span
-              v-if="
-                (role == 'ADMIN' || role == 'EXECUTIVE') &&
-                  rana.state == 'PROPOSED'
-              "
-              >{{ $t("approve_proposal") }}</span
-            >
+            <span v-if="(role == 'ADMIN' || role == 'EXECUTIVE') && rana.state == 'PROP'">{{ $t("approve_proposal") }}</span>
             <span
               v-if="
                 (role == 'ADMIN' || role == 'EXECUTIVE') && rana.state == 'TODO'
@@ -242,9 +243,23 @@
               >{{ $t("approve_without_proposal") }}</span
             >
           </v-btn>
+          <v-btn
+            color="primary"
+            @click="disapproveRana()"
+            v-if="
+              (role == 'ADMIN' || role == 'EXECUTIVE') && rana.state === 'APPR'
+            "
+            >{{ $t("disapprove_rana") }}
+          </v-btn>
         </div>
       </template>
     </v-data-table>
+
+    <div v-if="rana.refuse_note" class="elevation-9 red_card">
+      <v-icon v-on="on" small class="primary--text">mdi-alert</v-icon>
+      Nota BNI:
+      {{ rana.refuse_note }}
+    </div>
   </div>
 </template>
 <script>
@@ -305,6 +320,43 @@ export default {
     }
   },
   methods: {
+    getRanaState(state) {
+      switch (state) {
+        case "TODO":
+          if (this.role === "ASSISTANT") {
+            return "Proposta";
+          } else {
+            return "Nessuna proposta. Compila approvazione.";
+          }
+        case "PROP":
+          if (this.role === "ASSISTANT") {
+            return "Proposto";
+          } else {
+            return "Proposto. Compila approvazione.";
+          }
+        case "APPR":
+          return "Approvato";
+      }
+    },
+    async disapproveRana() {
+      let res = await ApiServer.put(this.rana.id + "/disapprove");
+      if (!res.error) {
+        this.$emit("fetchRana");
+      }
+    },
+    evaluateMembers(m) {
+      let sum = this.rana.initialMembers;
+      for (let i = 0; i < m; i++) {
+        sum +=
+          (this.rana.newMembers.PREV["m" + i]
+            ? this.rana.newMembers.PREV["m" + i]
+            : 0) -
+          (this.rana.retentions.PREV["m" + i]
+            ? this.rana.retentions.PREV["m" + i]
+            : 0);
+      }
+      return sum;
+    },
     getConsumptive(i, values) {
       if (
         this.rana[values].CONS["m" + i] === null ||
@@ -316,21 +368,14 @@ export default {
     canShowFooter() {
       switch (this.role) {
         case "ASSISTANT":
-          if (this.rana.timeslot === "T3") {
-            return this.rana.state !== "PROPOSED";
-          } else {
-            return this.rana.state === "TODO";
-          }
+          return this.rana.state === "TODO";
         case "EXECUTIVE":
-        case "ADMIN":
-          return this.rana.state !== "APPROVED";
-
         default:
           return true;
       }
     },
     proposedForExecutives() {
-      let r = this.rana.state === "PROPOSED" && this.role != "ASSISTANT";
+      let r = this.rana.state === "PROP" && this.role != "ASSISTANT";
       return r;
     },
     nullFields() {
@@ -407,7 +452,7 @@ export default {
       if (!this.rana) return false;
       return (
         this.role !== "ASSISTANT" &&
-        (this.rana.state == "PROPOSED" || this.rana.state == "TODO") &&
+        (this.rana.state == "PROP" || this.rana.state == "TODO") &&
         this.rana.timeslot < "T" + i
       );
     },
@@ -491,6 +536,15 @@ export default {
         value += (this.rana[type].PREV["m" + i] || 0) * 1;
       }
       this.$set(this.timeslotAggregations[type].PREV, t, value);
+
+      //let monthPrev = m == 1 ? this.rana.initialMembers : this.rana.members[m-1];
+      // this.$set(
+      //   this.rana.members,
+      //   m,
+      //   monthPrev +
+      //     (this.rana.newMembers.PREV["m" + m] ? this.rana.newMembers.PREV["m" + m] : 0 -
+      //       this.rana.retentions.PREV["m" + m] ? this.rana.retentions.PREV["m" + m] : 0)
+      // );
     },
 
     //evaluate a proposal fro monthly data each time a trimestral value changes
@@ -514,7 +568,18 @@ export default {
 
         let startFrom = (t - 1) * 3 + 1;
         for (let i = 0; i < months.length; i++) {
-          this.$set(this.rana[type].PREV, "m" + (startFrom + i), months[i]);
+          let index = startFrom + i;
+          this.$set(this.rana[type].PREV, "m" + index, months[i]);
+
+          // let monthPrev = i == 0 ? this.rana.initialMembers : this.rana.members[i];
+
+          // this.$set(
+          //   this.rana.members,
+          //   index,
+          //   monthPrev +
+          //     (this.rana.newMembers.PREV["m" + index] ? this.rana.newMembers.PREV["m" + index] : 0 -
+          //       this.rana.retentions.PREV["m" + index] ? this.rana.retentions.PREV["m" + index] : 0)
+          // );
         }
       }
     },
@@ -539,6 +604,10 @@ export default {
         : Object.keys(this.rana.retentions.APPR).length
         ? this.rana.retentions.APPR
         : this.rana.retentions.PROP;
+
+      if (this.prevRana) {
+        this.rana.members = this.prevRana.members;
+      }
     }
   },
   created() {

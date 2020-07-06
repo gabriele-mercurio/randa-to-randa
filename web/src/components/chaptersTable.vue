@@ -34,12 +34,7 @@ export default {
       chapters: []
     };
   },
-  created() {},
-  methods: {
-    async fetchChapters() {
-      let test = await ApiServer.get("chapters?region=1");
-      console.log(test);
-    }
-  }
+  created() {}
+  
 };
 </script>

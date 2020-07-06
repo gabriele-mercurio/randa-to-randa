@@ -52,40 +52,80 @@
         <v-btn class="white--text" text link to="/home">
           {{ $t("home") }}
         </v-btn>
-        <v-btn class="white--text" text link to="/chapters">
+        <v-btn
+          class="white--text"
+          text
+          link
+          to="/chapters"
+          v-if="!isNational()"
+        >
           {{ $t("chapters") }}
         </v-btn>
-        <v-btn class="white--text" text to="/randa" v-if="!freeAccount">
-          {{ $t("randa") }}
-          <v-icon>mdi-menu-down</v-icon>
+        <v-btn
+          class="white--text"
+          text
+          link
+          v-if="isNational()"
+          to="/randa/randa-revised"
+        >
+          Approva randa
         </v-btn>
-        <v-menu offset-y v-if="!freeAccount">
+        <v-menu offset-y v-if="!freeAccount && !isNational()">
+          <template v-slot:activator="{ on }">
+            <v-btn class="white--text" text v-on="on">
+              {{ $t("randa") }}
+              <v-icon>mdi-menu-down</v-icon>
+            </v-btn>
+          </template>
+          <v-list v-if="!isNational()">
+            <v-list-item>
+              <v-btn text to="/randa/randa-dream">
+                {{ $t("randa_dream") }}
+              </v-btn>
+            </v-list-item>
+            <v-list-item v-if="!isNational()">
+              <v-btn text to="/randa/randa-revised">
+                {{ $t("randa_revised") }}
+              </v-btn>
+            </v-list-item>
+            <v-list-item v-if="!isNational()">
+              <v-btn text to="/randa/randa">
+                {{ $t("randa") }}
+              </v-btn>
+            </v-list-item>
+          </v-list>
+        </v-menu>
+        <v-menu offset-y v-if="!freeAccount && !isNational()">
           <template v-slot:activator="{ on }">
             <v-btn class="white--text" text v-on="on">
               {{ $t("directors") }}
               <v-icon>mdi-menu-down</v-icon>
             </v-btn>
           </template>
-          <v-list>
+          <v-list v-if="!isNational()">
             <v-list-item>
               <v-btn text to="/directors">
                 {{ $t("management") }}
               </v-btn>
             </v-list-item>
-            <v-list-item>
-              Compensi
-            </v-list-item>
           </v-list>
         </v-menu>
 
-        <v-btn class="white--text" text to="/economics" v-if="!freeAccount">>
+        <v-btn
+          class="white--text"
+          text
+          to="/economics"
+          v-if="!freeAccount && !isNational()"
+        >
           Economics
         </v-btn>
         <v-spacer></v-spacer>
         <v-toolbar-title class="d-flex flex-row align-center">
           <div>
-            {{ getUser() }}  <small class="font-italic font-weight-light mr-2" v-if="freeAccount">Account gratuito</small><small>({{ getRegion().name }})</small>
-           
+            {{ getUser() }}
+            <small class="font-italic font-weight-light mr-2" v-if="freeAccount"
+              >Account gratuito</small
+            ><small>({{ getRegion().name }})</small>
           </div>
           <v-btn icon @click="drawer = true" class="white--text">
             <v-icon>mdi-account</v-icon></v-btn
@@ -157,6 +197,10 @@ export default {
       let isAdmin = this.$store.getters["getOriginalUser"].isAdmin;
       return actAs && isAdmin;
     },
+
+    isNational() {
+      return this.$store.getters["getRegion"].role === "NATIONAL";
+    },
     getUser() {
       return this.$store.getters["getUser"]
         ? this.$store.getters["getUser"].fullName
@@ -221,10 +265,10 @@ export default {
       if (this.getToken()) {
         ApiServer.setToken(this.getToken());
         if (!this.getRegion()) {
-          this.$router.push("login");
+          this.$router.push("/login");
         }
       } else {
-        this.$router.push("login");
+        this.$router.push("/login");
       }
     });
   },

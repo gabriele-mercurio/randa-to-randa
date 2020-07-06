@@ -20,7 +20,7 @@ class RanaLifecycle
     private $id;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Rana", cascade={"all"}, fetch="LAZY", inversedBy="ranaLifecycles")
+     * @ORM\ManyToOne(targetEntity="Rana", fetch="LAZY", inversedBy="ranaLifecycles")
      * @ORM\JoinColumn(nullable=false)
      */
     private $rana;

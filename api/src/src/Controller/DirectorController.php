@@ -382,6 +382,10 @@ class DirectorController extends AbstractController
             $director->setAreaPercentage($areaPercentage);
             $director->setFixedPercentage($fixedPercentage);
             $director->setFreeAccount($isFreeAccount);
+
+            if($isFreeAccount) {
+                file_put_contents("region", $region->getName());
+            }
             $director->setGreenLightPercentage($greenLigthPercentage);
             $director->setGreyLightPercentage($greyLigthPercentage);
             $director->setLaunchPercentage($launchPercentage);

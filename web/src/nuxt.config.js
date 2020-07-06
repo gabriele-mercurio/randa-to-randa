@@ -6,7 +6,7 @@ export default {
    ** Headers of the page
    */
   head: {
-    titleTemplate: "%s - " + process.env.npm_package_name,
+    titleTemplate: "ROSBI",
     title: process.env.npm_package_name || "",
     meta: [
       { charset: "utf-8" },
@@ -102,8 +102,10 @@ export default {
     extend(config, ctx) {}
   },
   env: {
-    base_url: "http://api.randa2randa.test",
+    base_url: "https://api.randa2randa.studio-mercurio.it",
+    //base_url: "http://api.randa2randa.test",
     client_id: "Randa2RandaAppClient",
     client_secret: "FwPMFRlCa78GPQrO9zRWVRbjPCoPmaBQP254nx3g"
+
   }
 };

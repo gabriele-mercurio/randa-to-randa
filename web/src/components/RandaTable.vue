@@ -13,10 +13,10 @@
               <h2>{{ getRandaType() }}</h2>
             </th>
             <th></th>
-            <th class="text-center">T0</th>
             <th class="text-center">T1</th>
             <th class="text-center">T2</th>
             <th class="text-center">T3</th>
+            <th class="text-center">T4</th>
             <th class="text-center total">Totale</th>
           </tr>
         </thead>
@@ -47,10 +47,10 @@
               <h2>{{ getRandaType() }}</h2>
             </th>
             <th></th>
-            <th class="text-center">T0</th>
             <th class="text-center">T1</th>
             <th class="text-center">T2</th>
             <th class="text-center">T3</th>
+            <th class="text-center">T4</th>
             <th class="text-center total">Totale</th>
           </tr>
         </thead>

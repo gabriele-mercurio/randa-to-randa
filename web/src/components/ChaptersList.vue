@@ -1,156 +1,169 @@
-<template>
-  <v-data-table
-    :headers="headers"
-    :items="chapters"
-    disable-pagination
-    hide-default-footer
-    :class="classSpec"
-  >
-    <template v-slot:item.currentState="{ item }">
-      <div class="d-flex flex-column">
-        <span :class="item.currentState">{{ getChapterState(item.currentState) }}</span>
-        <span class="font-italic font-weight-light">
-          {{ getPrevResumeIfSuspended(item) }}
-        </span>
-      </div>
-    </template>
-     <template v-slot:item.state="{ item }">
-       {{getItemState(item.state)}}
-    </template>
-    
-    <template v-slot:item.actions="{ item }" v-if="!short">
-      <v-menu bottom left>
-        <template v-slot:activator="{ on }">
-          <v-btn dark icon v-on="on">
-            <v-icon class="primary--text">mdi-dots-vertical</v-icon>
-          </v-btn>
-        </template>
-        <v-list>
-          <v-list-item @click="goToRana(item)">
-            <v-icon class="mr-1">mdi-text</v-icon>
-            <v-list-item-title v-if="iAmAssistant">{{
-              $t("rana_proposal")
-            }}</v-list-item-title>
-            <v-list-item-title v-else>{{
-              $t("approve_rana")
-            }}</v-list-item-title>
-          </v-list-item>
+<template
+  ><div>
+    <v-data-table
+      :headers="headers"
+      :items="chapters"
+      disable-pagination
+      hide-default-footer
+      :class="classSpec"
+      class="mb-4"
+      id="chaptersList"
+    >
+      <template v-slot:body>
+        <tr v-for="item in chapters" :key="item.id" :class="item.currentState">
+          <td class="small-font pl-2">{{ item.name }}</td>
+          <td class="small-font pl-2">
+            <div class="d-flex flex-column">
+              <span :class="item.currentState">{{
+                getChapterState(item.currentState)
+              }}</span>
+              <span class="font-italic font-weight-light">
+                {{ getPrevResumeIfSuspended(item) }}
+              </span>
+            </div>
+          </td>
+          <td class="small-font pl-2">{{ item.director.fullName }}</td>
+          <td class="small-font pl-2">{{ item.members }}</td>
+          <td class="small-font pl-2">
+            <div class="d-flex flex-column justicy-center">
+              <small
+                class="font-italic font-weight-light"
+                v-if="isPrev(item.coreGroupLaunch)"
+                >Previsional
 
-          <v-list-item @click="edit(item)">
-            <v-icon class="mr-1">mdi-pencil-outline</v-icon>
-            <v-list-item-title>Modifica capitolo</v-list-item-title>
-          </v-list-item>
-          <v-list-item
-            v-if="
-              item.currentState == 'PROJECT' ||
-                item.currentState == 'CORE_GROUP'
-            "
-            @click="launch(item, item.currentState)"
-            :class="{
-              disabled:
-                item.currentState === 'SUSPENDED' ||
-                item.currentState === 'CLOSED'
-            }"
-          >
-            <v-list-item-title>
-              <v-icon>mdi-rocket-launch-outline</v-icon>
-              Lancia {{ getStateToLaunch(item) }}
-            </v-list-item-title>
-          </v-list-item>
-          <v-list-item
-            @click="suspend(item)"
-            v-if="item.currentState == 'CHAPTER'"
-          >
-            <v-icon class="mr-1">mdi-stop-circle-outline</v-icon>
-            <v-list-item-title
-              >Sospendi {{ getStateToLaunch(item) }}</v-list-item-title
-            >
-          </v-list-item>
-          <v-list-item
-            v-if="item.currentState == 'SUSPENDED'"
-            @click="resume(item)"
-          >
-            <v-icon class="mr-1">mdi-play-circle-outline</v-icon>
-            <v-list-item-title>Riprendi capitolo</v-list-item-title>
-          </v-list-item>
+                <v-tooltip right v-if="item.warning == 'COREGROUP'">
+                  <template v-slot:activator="{ on }">
+                    <v-icon v-on="on" small class="primary--text"
+                      >mdi-alert</v-icon
+                    >
+                  </template>
+                  <span
+                    >La data prevista per il lancio del core group è stata
+                    superata!</span
+                  >
+                </v-tooltip>
+              </small>
+              <span
+                :class="{
+                  'font-italic font-weight-light': isPrev(item.coreGroupLaunch)
+                }"
+                >{{ getPrevOrActualDate(item.coreGroupLaunch) }}</span
+              >
+            </div>
+          </td>
+          <td class="small-font pl-2">
+            <div class="d-flex flex-column justicy-center">
+              <small
+                class="font-italic font-weight-light"
+                v-if="isPrev(item.chapterLaunch)"
+                >Previsional
+                <v-tooltip right v-if="item.warning == 'CHAPTER'">
+                  <template v-slot:activator="{ on }">
+                    <v-icon v-on="on" small class="primary--text"
+                      >mdi-alert</v-icon
+                    >
+                  </template>
+                  <span
+                    >La data prevista per il lancio del capitolo è stata
+                    superata!</span
+                  >
+                </v-tooltip>
+              </small>
+              <span
+                :class="{
+                  'font-italic font-weight-light': isPrev(item.chapterLaunch)
+                }"
+                >{{ getPrevOrActualDate(item.chapterLaunch) }}</span
+              >
+            </div>
+          </td>
+          <td class="small-font pl-2">{{ getItemState(item) }}</td>
+          <td>
+            <v-menu bottom left>
+              <template v-slot:activator="{ on }">
+                <v-btn dark icon v-on="on">
+                  <v-icon class="primary--text">mdi-dots-vertical</v-icon>
+                </v-btn>
+              </template>
+              <v-list>
+                <v-list-item @click="goToRana(item)">
+                  <v-icon class="mr-1">mdi-text</v-icon>
+                  <v-list-item-title v-if="iAmAssistant">{{
+                    $t("rana_proposal")
+                  }}</v-list-item-title>
+                  <v-list-item-title v-else>{{
+                    getMenuLabel(item)
+                  }}</v-list-item-title>
+                </v-list-item>
 
-          <v-list-item
-            @click="close(item)"
-            :class="{ disabled: item.currentStatus == 'CLOSED' }"
-          >
-            <v-icon class="mr-1">mdi-close</v-icon>
-            <v-list-item-title
-              >Chiudi {{ getStateToLaunch(item) }}</v-list-item-title
-            >
-          </v-list-item>
-        </v-list>
-      </v-menu>
-    </template>
-    <template v-slot:item.coreGroupLaunch="{ item }" v-if="!short">
-      <div class="d-flex flex-column justicy-center">
-        <small
-          class="font-italic font-weight-light"
-          v-if="isPrev(item.coreGroupLaunch)"
-          >Previsional
+                <v-list-item @click="edit(item)">
+                  <v-icon class="mr-1">mdi-pencil-outline</v-icon>
+                  <v-list-item-title>Modifica capitolo</v-list-item-title>
+                </v-list-item>
+                <v-list-item
+                  v-if="
+                    item.currentState == 'PROJECT' ||
+                      item.currentState == 'CORE_GROUP'
+                  "
+                  @click="launch(item, item.currentState)"
+                  :class="{
+                    disabled:
+                      item.currentState === 'SUSPENDED' ||
+                      item.currentState === 'CLOSED'
+                  }"
+                >
+                  <v-list-item-title>
+                    <v-icon>mdi-rocket-launch-outline</v-icon>
+                    Lancia {{ getStateToLaunch(item) }}
+                  </v-list-item-title>
+                </v-list-item>
+                <v-list-item
+                  @click="suspend(item)"
+                  v-if="canSuspend(item)"
+                >
+                  <v-icon class="mr-1">mdi-stop-circle-outline</v-icon>
+                  <v-list-item-title
+                    >Sospendi {{ getStateToLaunch(item) }}</v-list-item-title
+                  >
+                </v-list-item>
+                <v-list-item
+                  v-if="canClose(item)"
+                  @click="resume(item)"
+                >
+                  <v-icon class="mr-1">mdi-play-circle-outline</v-icon>
+                  <v-list-item-title>Riprendi capitolo</v-list-item-title>
+                </v-list-item>
 
-          <v-tooltip right v-if="item.warning == 'COREGROUP'">
-            <template v-slot:activator="{ on }">
-              <v-icon v-on="on" small class="primary--text">mdi-alert</v-icon>
-            </template>
-            <span
-              >La data prevista per il lancio del core group è stata
-              superata!</span
-            >
-          </v-tooltip>
-        </small>
-        <span
-          :class="{
-            'font-italic font-weight-light': isPrev(item.coreGroupLaunch)
-          }"
-          >{{ getPrevOrActualDate(item.coreGroupLaunch) }}</span
-        >
-      </div>
-    </template>
+                <v-list-item
+                  @click="close(item)"
+                  :class="{ disabled: item.currentStatus == 'CLOSED' }"
+                >
+                  <v-icon class="mr-1">mdi-close</v-icon>
+                  <v-list-item-title
+                    >Chiudi {{ getStateToLaunch(item) }}</v-list-item-title
+                  >
+                </v-list-item>
+              </v-list>
+            </v-menu>
+          </td>
+        </tr>
+      </template>
+    </v-data-table>
+    <Snackbar
+      :showSnackbar.sync="showSnackbar"
+      :state.sync="snackbarState"
+      :messageLabel.sync="snackbarMessageLabel"
+    />
 
-    <template v-slot:item.chapterLaunch="{ item }" v-if="!short">
-      <div class="d-flex flex-column justicy-center">
-        <small
-          class="font-italic font-weight-light"
-          v-if="isPrev(item.chapterLaunch)"
-          >Previsional
-          <v-tooltip right v-if="item.warning == 'CHAPTER'">
-            <template v-slot:activator="{ on }">
-              <v-icon v-on="on" small class="primary--text">mdi-alert</v-icon>
-            </template>
-            <span
-              >La data prevista per il lancio del capitolo è stata
-              superata!</span
-            >
-          </v-tooltip>
-        </small>
-        <span
-          :class="{
-            'font-italic font-weight-light': isPrev(item.chapterLaunch)
-          }"
-          >{{ getPrevOrActualDate(item.chapterLaunch) }}</span
-        >
-      </div>
-
-      <Snackbar
-        :showSnackbar.sync="showSnackbar"
-        :state.sync="snackbarState"
-        :messageLabel.sync="snackbarMessageLabel"
+    <v-dialog v-model="suspendDialog" width="500">
+      <ChapterSuspend
+        v-on:close="closeSuspendDialog"
+        :chapter.sync="currentChapter"
       />
-
-      <v-dialog v-model="suspendDialog" width="500">
-        <ChapterSuspend
-          v-on:close="closeSuspendDialog"
-          :chapter.sync="currentChapter"
-        />
-      </v-dialog>
-    </template>
-  </v-data-table>
+    </v-dialog>
+  </div>
 </template>
+
 <script>
 import ApiServer from "../services/ApiServer";
 import Utils from "../services/Utils";
@@ -164,14 +177,14 @@ export default {
   data() {
     return {
       headers: [
-        { text: "Nome", value: "name" },
-        { text: "Stato", value: "currentState" },
-        { text: "Direttore", value: "director.fullName" },
-        { text: "Membri", value: "members" },
-        { text: "Core group", value: "coreGroupLaunch" },
-        { text: "Capitolo", value: "chapterLaunch" },
-        { text: "Stato", value: "state" },
-        { value: "actions" }
+        { align: "start", text: "Nome", value: "name" },
+        { align: "start", text: "Stato", value: "currentState" },
+        { align: "start", text: "Director", value: "director.fullName" },
+        { align: "start", text: "Membri", value: "members" },
+        { align: "start", text: "Core group", value: "coreGroupLaunch" },
+        { align: "start", text: "Capitolo", value: "chapterLaunch" },
+        { align: "start", text: "Stato", value: "state" },
+        { align: "start", value: "actions" }
       ],
       shortFields: ["name", "director.fullName", "members", "currentState"],
       snackbarMessageLabel: "",
@@ -180,7 +193,8 @@ export default {
       showSnackbar: false,
       suspendDialog: false,
       prevResumeDate: null,
-      currentChapter: null
+      currentChapter: null,
+      role: null
     };
   },
   props: {
@@ -195,16 +209,44 @@ export default {
     chapters: {
       type: Array,
       default: null
+    },
+    randa_info: {
+      default: null
     }
   },
   computed: {
     iAmAssistant() {
       if (this.$store.getters["getRegion"]) {
-        return this.$store.getters["getRegion"].role === "ASSISTANT"
+        return this.$store.getters["getRegion"].role === "ASSISTANT";
       }
     }
   },
   methods: {
+    canSuspend(item) {
+      return item.currentState == 'CHAPTER' && (this.role == "ADMIN" || this.role == "EXECUTIVE");
+    },
+    canClose(item) {
+      return item.currentState == 'SUSPENDED' && (this.role == "ADMIN" || this.role == "EXECUTIVE");
+    },
+    getMenuLabel(item) {
+      this.role = this.$store.getters["getRegion"].role;
+      switch (item.state) {
+        case "APPR":
+          return "Vai a rana...";
+        case "PROP":
+          if (this.role === "ADMIN" || this.role === "EXECUTIVE") {
+            return "Approva rana...";
+          } else {
+            return "Vai a rana...";
+          }
+        case "TODO":
+          if (this.role === "ADMIN" || this.role === "EXECUTIVE") {
+            return "Approva rana...";
+          } else {
+            return "Proponi rana...";
+          }
+      }
+    },
     //go to rana proposal or approve
     goToRana(item) {
       this.$router.push("/rana/" + item.id);
@@ -214,8 +256,9 @@ export default {
       return Utils.getChapterState(state);
     },
 
-    getItemState(state) {
-     return Utils.getState(state);
+    getItemState(item) {
+      debugger;
+      return Utils.getState(item.state);
     },
 
     closeSuspendDialog(isSuspended) {
@@ -306,26 +349,45 @@ export default {
     }
   },
   created() {
-    if (this.short) {
-      this.headers = this.headers.filter(h => {
-        return this.shortFields.includes(h.value);
-      });
-    }
+    setTimeout(() => {
+      if (this.short) {
+        this.headers = this.headers.filter(h => {
+          return this.shortFields.includes(h.value);
+        });
+      }
+    });
   },
 
   watch: {
     chapters: {
-      handler: function(old, n) {}
+      handler: function(old, n) {
+        
+      }
     }
   }
 };
 </script>
-<style>
-.hidden {
-  display: none;
-}
-.disabled {
-  pointer-events: none;
-  opacity: 0.6;
+<style lang="scss">
+#chaptersList {
+  .hidden {
+    display: none;
+  }
+  .disabled {
+    pointer-events: none;
+    opacity: 0.6;
+  }
+  th {
+    background-color: lighten(lightgray, 15%);
+    .v-icon {
+      display: none !important;
+    }
+  }
+  .small-font {
+    font-size: 13px;
+  }
+  tr.CLOSED {
+    pointer-events: none;
+    opacity: .5;
+  }
 }
 </style>

@@ -1,12 +1,33 @@
 <template>
   <div class="ma-4 fill-height">
     <template>
-      <div class="d-flex flex-column" v-if="randa_info">
-        <span><span class="font-weight-black">Randa</span>: {{ randa_info.timeslot }} {{randa_info.year}}</span>
-        <span>{{ getState(randa_info.state) }}</span>
+      <div v-if="randa_info" class="my-3">
+        <span
+          ><span class="font-weight-black">Randa</span>:
+          {{ randa_info.timeslot }} {{ randa_info.year }}</span
+        >
+        <div v-if="randa_info.state === 'TODO' && allChaptersApproved()">
+          <v-btn color="primary" @click="goToRanda()">
+            Apporavazione randa
+          </v-btn>
+        </div>
+          <div v-if="randa_info.state === 'APPR'">
+          <v-btn color="primary" @click="createNextTimeslot()">
+            Avvia compilazione randa {{getNextTimeslotLabel()}}
+          </v-btn>
+        </div>
+        <span v-else class="font-italic font-weight-light"
+          >({{ getState(randa_info.state) }})
+        </span>
+      </div>
+      <div v-if="randa_info && randa_info.refuse_note && (role == 'ADMIN' || role == 'EXECUTIVE')">
+        <v-icon small class="primary--text">mdi-alert</v-icon>
+        Nota BNI:
+        {{ randa_info.refuse_note }}
       </div>
       <ChaptersList
         :chapters.sync="chapters"
+        :randa_info.sync="randa_info"
         :classSpec="'elevation-3'"
         v-on:edit="openEditModal"
         v-if="!noChaptersFound"
@@ -33,16 +54,31 @@
         v-on:saveChapter="updateChapters"
       />
     </v-dialog>
-    <v-btn fixed fab bottom right color="primary" @click="newChapter()">
-      <v-icon>mdi-plus</v-icon>
-    </v-btn>
+
+    <v-tooltip bottom>
+      <template v-slot:activator="{ on, attrs }">
+        <v-btn
+          fixed
+          fab
+          bottom
+          right
+          color="primary"
+          v-bind="attrs"
+          v-on="on"
+          @click="newChapter()"
+          alt="Nuovo capitolo"
+        >
+          <v-icon>mdi-plus</v-icon>
+        </v-btn>
+      </template>
+      <span>Nuovo capitolo</span>
+    </v-tooltip>
   </div>
 </template>
 
 <script>
 import ApiServer from "../services/ApiServer";
 import Utils from "../services/Utils";
-import ForbiddenPage from "../components/ForbiddenPAge";
 import EditChapter from "../components/EditChapter";
 import ChaptersList from "../components/ChaptersList";
 import NoData from "../components/NoData";
@@ -57,14 +93,13 @@ export default {
       regionId: null,
       noChaptersFound: false,
       freeAccount: false,
-      forbiddenPage: false,
-      randa_info: null
+      randa_info: null,
+      role: null
     };
   },
   components: {
     EditChapter,
     ChaptersList,
-    ForbiddenPage,
     NoData
   },
   methods: {
@@ -73,8 +108,40 @@ export default {
       this.showEditChapter = true;
     },
 
+    async createNextTimeslot() {
+      let response = await ApiServer.put(this.regionId + "/create-next-timeslot");
+      location.reload();
+    },
+
+    getNextTimeslotLabel() {
+      let t = this.randa_info.timeslot;
+      return "T" + (t.substr(-1) * 1 + 1);
+    },
+
+    goToRanda() {
+      this.$router.push("/randa/randa-revised");
+    },
+
     getState(randa_state) {
-      return Utils.getRandaState(randa_state);
+      if (randa_state == "TODO") {
+        if (!this.allChaptersApproved()) {
+          return "Approvare tutti i rana";
+        } else {
+          return "Approvare randa";
+        }
+      } else {
+        return Utils.getRandaState(randa_state);
+      }
+    },
+
+    allChaptersApproved() {
+      let all_approved = true;
+      this.chapters.forEach(c => {
+        if (c.state != "APPR") {
+          all_approved = false;
+        }
+      });
+      return all_approved;
     },
 
     updateChapters(chapter) {
@@ -99,7 +166,6 @@ export default {
       if (response.errorCode === 404) {
         this.noChaptersFound = true;
       } else if (response.errorCode === "403") {
-        this.forbiddenPage = true;
       } else {
         this.chapters = response.chapters;
         this.randa_info = response.randa;
@@ -111,6 +177,7 @@ export default {
     setTimeout(async () => {
       this.regionId = this.$store.getters["getRegion"].id;
       let role = this.$store.getters["getRegion"].role;
+      this.role = role;
       if (role !== "NATIONAL") {
         this.fetchChapters();
         this.fetchUsersPerRegion();

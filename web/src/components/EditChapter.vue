@@ -283,7 +283,6 @@ export default {
         if (this.editChapter) {
           this.editMode = true;
           this.chapter = { ...this.editChapter };
-
           switch (this.chapter.currentState) {
             case "PROJECT":
               this.chapter["coreGroupLaunch"] = Utils.getMonthYear(

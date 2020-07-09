@@ -98,16 +98,27 @@ class RegionController extends AbstractController
             }
             $regions = array_values($regions);
         }
-        usort($regions, function ($r1, $r2) {
+
+        // $allowed_regions = ["015cb62d-5136-4eef-b24e-1b6891a21cd3","2d32310f-00df-45a4-bece-10da699af612","0521854e-37a3-4966-bc72-8acb71d65479","26caac02-b614-4d2e-9dba-b4a4c06c1efe","d9c505e6-e86d-4e44-aee7-13603fcd6ddd"];
+        // $final_regions = [];
+        // foreach($regions as $region) {
+        //     if(in_array($region->getId(), $allowed_regions)) {
+        //         $final_regions[] = $region;
+        //     }
+        // }
+        $final_regions = $regions;
+        usort($final_regions, function ($r1, $r2) {
             return $r1->getName() < $r2->getName() ? -1 : ($r1->getName() > $r2->getName() ? 1 : 0);
         });
+
+
 
         return new JsonResponse(array_map(function ($region) use($regionsRoles, $user, $national) {
             return array_merge($this->regionFormatter->formatBase($region), [
                 'role' => $user->isAdmin() ? "ADMIN" : ($national ? 'NATIONAL' : $regionsRoles[$region->getId()]["role"]),
                 'isFreeAccount' => $user->isAdmin() || $national ? false : $regionsRoles[$region->getId()]["isFreeAccount"]
             ]);
-        }, $regions));
+        }, $final_regions));
     }
 
     /**

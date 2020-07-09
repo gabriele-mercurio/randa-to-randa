@@ -1,5 +1,5 @@
 <template>
-  <div id="randa" v-if="randa" class="px-12">
+  <div id="randa" v-if="randa" class="px-6">
     <div class="pt-6">
       <h3>
         {{ title }} <small>{{ randa.timeslot }} {{ randa.year }}</small>
@@ -12,6 +12,14 @@
         <div class="d-flex flex-row align-center">
           <div class="circle background-red"></div>
           <div class="ml-1">Chapter</div>
+        </div>
+         <div class="d-flex flex-row align-center">
+          <div><v-icon style="font-size:16px">mdi-diameter-variant</v-icon></div>
+          <div class="ml-1">Sospeso</div>
+        </div>
+        <div class="d-flex flex-row align-center">
+          <div><v-icon style="font-size:16px">mdi-close</v-icon></div>
+          <div class="ml-1">Chiuso</div>
         </div>
         <div class="d-flex flex-row align-center">
           <div class="circle background-green"></div>
@@ -34,7 +42,7 @@
             <th class="text-center" colspan="4">T2</th>
             <th class="text-center" colspan="4">T3</th>
             <th class="text-center" colspan="4">T4</th>
-            <th class="text-center" colspan="4">Totali</th>
+            <th class="text-center" colspan="4" v-if="showTotal">Totali</th>
           </tr>
           <tr>
             <th class="text-center bordered">Capitolo</th>
@@ -63,11 +71,29 @@
           >
             <td class="text-center bordered">{{ chapter.chapter }}</td>
             <td class="text-center bordered">{{ chapter.initialMembers }}</td>
-            <td
-              class="text-center text-small"
+              <td
+              class="text-center"
               :class="chapter.chapter_history ? chapter.chapter_history[0] : ''"
             >
-              <span class="circle"></span>
+              <span class="circle">
+                <v-icon
+                  v-if="
+                    chapter.chapter_history &&
+                      chapter.chapter_history[0] === 'SUSPENDED'
+                  "
+                  >mdi-diameter-variant</v-icon
+                >
+
+                <v-icon
+                  v-if="
+                    chapter.chapter_history &&
+                      chapter.chapter_history[0] === 'CLOSED'
+                  "
+                  >mdi-close</v-icon
+                >
+
+
+              </span>
             </td>
             <td class="text-center">
               {{ chapter.newMembers[0] }}
@@ -81,7 +107,23 @@
               class="text-center"
               :class="chapter.chapter_history ? chapter.chapter_history[1] : ''"
             >
-              <span class="circle"></span>
+              <span class="circle">
+                <v-icon
+                  v-if="
+                    chapter.chapter_history &&
+                      chapter.chapter_history[1] === 'SUSPENDED'
+                  "
+                  >mdi-diameter-variant</v-icon
+                >
+
+                <v-icon
+                  v-if="
+                    chapter.chapter_history &&
+                      chapter.chapter_history[1] === 'CLOSED'
+                  "
+                  >mdi-close</v-icon
+                >
+              </span>
             </td>
             <td class="text-center">
               {{ chapter.newMembers[1] }}
@@ -95,7 +137,24 @@
               class="text-center"
               :class="chapter.chapter_history ? chapter.chapter_history[2] : ''"
             >
-              <span class="circle"></span>
+              <span class="circle">
+                <v-icon
+                  v-if="
+                    chapter.chapter_history &&
+                      chapter.chapter_history[2] === 'SUSPENDED'
+                  "
+                  >mdi-diameter-variant</v-icon
+                  
+                >
+
+                <v-icon
+                  v-if="
+                    chapter.chapter_history &&
+                      chapter.chapter_history[1] === 'CLOSED'
+                  "
+                  >mdi-close</v-icon
+                >
+              </span>
             </td>
             <td class="text-center">
               {{ chapter.newMembers[2] }}
@@ -109,7 +168,23 @@
               class="text-center"
               :class="chapter.chapter_history ? chapter.chapter_history[3] : ''"
             >
-              <span class="circle"></span>
+              <span class="circle">
+                <v-icon
+                  v-if="
+                    chapter.chapter_history &&
+                      chapter.chapter_history[3] === 'SUSPENDED'
+                  "
+                  >mdi-diameter-variant</v-icon
+                >
+
+                <v-icon
+                  v-if="
+                    chapter.chapter_history &&
+                      chapter.chapter_history[3] === 'CLOSED'
+                  "
+                  >mdi-close</v-icon
+                >
+              </span>
             </td>
             <td class="text-center">
               {{ chapter.newMembers[3] }}
@@ -118,7 +193,7 @@
               {{ chapter.retentions[3] }}
             </td>
             <td class="text-center bordered">{{ chapter.members[3] }}</td>
-            <td class="text-center">{{ evaluateTotal(chapter) }}</td>
+            <td v-if="showTotal" class="text-center">{{ evaluateTotal(chapter) }}</td>
           </tr>
           <tr class="font-weight-black">
             <td>Totale</td>
@@ -166,20 +241,20 @@
               {{ totals["act"][3] }}
             </td>
 
-            <td class="text-center">
+            <td class="text-center" v-if="showTotal">
               {{
-                totals["new"][0] + 
-                totals["ret"][0] + 
-                totals["act"][0] + 
-                totals["new"][1] + 
-                totals["ret"][1] + 
-                totals["act"][1] +
-                totals["new"][2] +
-                totals["ret"][2] +
-                totals["act"][2] +
-                totals["new"][3] +
-                totals["ret"][3] +
-                totals["act"][3] 
+                totals["new"][0] +
+                  totals["ret"][0] +
+                  totals["act"][0] +
+                  totals["new"][1] +
+                  totals["ret"][1] +
+                  totals["act"][1] +
+                  totals["new"][2] +
+                  totals["ret"][2] +
+                  totals["act"][2] +
+                  totals["new"][3] +
+                  totals["ret"][3] +
+                  totals["act"][3]
               }}
             </td>
           </tr>
@@ -187,7 +262,7 @@
       </template>
     </v-data-table>
     <template v-else>
-      <div class="pa-4">
+      <div>
         <RandaTable
           :chapters="randa.chapters_ret"
           :randaType="'chapters_ret'"
@@ -233,24 +308,29 @@ export default {
     };
   },
   created() {
+    if(this.title === "Randa dream") {
+      debugger;
+    }
     let totals = {
       initial: 0,
       new: [0, 0, 0, 0],
       ret: [0, 0, 0, 0],
       act: [0, 0, 0, 0]
     };
-    this.randa.chapters.forEach(chapter => {
-      totals["initial"] += chapter.initialMembers;
-      for (let i = 0; i < 4; i++) {
-        totals["new"][i] += chapter["newMembers"][i]
-          ? chapter["newMembers"][i]
-          : 0;
-        totals["ret"][i] += chapter["retentions"][i]
-          ? chapter["retentions"][i]
-          : 0;
-        totals["act"][i] += chapter["members"][i] ? chapter["members"][i] : 0;
-      }
-    });
+    if (this.randa && this.randa.chapters) {
+      this.randa.chapters.forEach(chapter => {
+        totals["initial"] += chapter.initialMembers;
+        for (let i = 0; i < 4; i++) {
+          totals["new"][i] += chapter["newMembers"][i]
+            ? chapter["newMembers"][i]
+            : 0;
+          totals["ret"][i] += chapter["retentions"][i]
+            ? chapter["retentions"][i]
+            : 0;
+          totals["act"][i] += chapter["members"][i] ? chapter["members"][i] : 0;
+        }
+      });
+    }
 
     this.totals = totals;
   },
@@ -265,6 +345,9 @@ export default {
     layout: {
       default: "",
       type: String
+    },
+    showTotal: {
+      default: true
     }
   },
   methods: {
@@ -367,6 +450,8 @@ export default {
     }
   }
 
+  .SUSPEND,
+  .CLOSED,
   .CHAPTER,
   .CORE_GROUP {
     width: 20px !important;

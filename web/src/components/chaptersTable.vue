@@ -25,7 +25,7 @@ export default {
       headers: [
         { text: "Nome", value: "name" },
         { text: "Stato", value: "current_state" },
-        { text: "Direttore", value: "director.firstname" },
+        { text: "Director", value: "director.firstname" },
         { text: "Membri", value: "members" },
         { text: "Core group" , value: "core_group_launch"},
         { text: "Capitolo", value: "chapter_launch"},

@@ -1,8 +1,13 @@
 <template>
   <div class="ma-4 fill-height">
-    <DirectorsList v-on:edit="openEditModal" :directors.sync="directors" v-if="!noDirectorsFound"/>
+    <DirectorsList
+      v-on:edit="openEditModal"
+      :directors.sync="directors"
+      v-if="!noDirectorsFound && canSeeDirectors()"
+    />
 
-    <div v-else>Nessun director trovato :( </div>
+    <NoData v-else :message="'Nessun director da mostrare'" />
+
     <v-dialog
       :persistent="false"
       v-model="showEdit"
@@ -44,6 +49,8 @@ import ApiServer from "../services/ApiServer";
 import Utils from "../services/Utils";
 import EditDirector from "../components/EditDirector";
 import DirectorsList from "../components/DirectorsList";
+import NoData from "../components/NoData";
+
 export default {
   data() {
     return {
@@ -60,9 +67,13 @@ export default {
   props: {},
   components: {
     EditDirector,
-    DirectorsList
+    DirectorsList,
+    NoData
   },
   methods: {
+    canSeeDirectors() {
+      return this.$store.getters["getRegion"].role === "ADMIN" || this.$store.getters["getRegion"].role === "EXECUTIVE";
+    },
     openEditModal(director) {
       this.editDirector = director;
       this.showEdit = true;
@@ -73,9 +84,11 @@ export default {
     },
     async canCreateDirector() {
       let user = await this.$store.getters["getUser"];
-      return (
-        user.isAdmin || user.role === "NATIONAL" || user.role === "EXECUTIVE"
-      );
+      if (user) {
+        return (
+          user.isAdmin || user.role === "NATIONAL" || user.role === "EXECUTIVE"
+        );
+      }
     },
     async fetchAreaDirectors() {
       try {
@@ -88,7 +101,6 @@ export default {
       }
     },
     async fetchDirectors() {
-
       let response = await ApiServer.get(
         this.$store.getters["getRegion"].id + "/directors"
       );

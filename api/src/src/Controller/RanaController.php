@@ -287,65 +287,63 @@ class RanaController extends AbstractController
      */
     public function createRana(Chapter $chapter, Request $request): Response
     {
-        $request = Util::normalizeRequest($request);
+        // $request = Util::normalizeRequest($request);
 
-        $region = $chapter->getRegion();
+        // $region = $chapter->getRegion();
 
-        $roleCheck = [
-            Constants::ROLE_EXECUTIVE,
-            Constants::ROLE_AREA,
-            Constants::ROLE_ASSISTANT
-        ];
-        $performerData = Util::getPerformerData($this->getUser(), $region, $roleCheck, $this->userRepository, $this->directorRepository, $request->get("actAs"), $request->get("role"));
+        // $roleCheck = [
+        //     Constants::ROLE_EXECUTIVE,
+        //     Constants::ROLE_AREA,
+        //     Constants::ROLE_ASSISTANT
+        // ];
+        // $performerData = Util::getPerformerData($this->getUser(), $region, $roleCheck, $this->userRepository, $this->directorRepository, $request->get("actAs"), $request->get("role"));
 
-        // Assign $actAs, $code, $director, $isAdmin and $role
-        foreach ($performerData as $var => $value) {
-            $$var = $value;
-        }
+        // // Assign $actAs, $code, $director, $isAdmin and $role
+        // foreach ($performerData as $var => $value) {
+        //     $$var = $value;
+        // }
 
-        if ($code == Response::HTTP_OK) {
-            $currentYear = (int) date("Y");
-            $randa = $this->randaRepository->findOneBy([
-                'region' => $region,
-                'year' => $currentYear
-            ]);
+        // if ($code == Response::HTTP_OK) {
+        //     $currentYear = (int) date("Y");
+        //     $randa = $this->randaRepository->findOneBy([
+        //         'region' => $region,
+        //         'year' => $currentYear
+        //     ]);
 
-            if (is_null($randa)) {
-                $randa = new Randa();
-                $randa->setCurrentTimeslot(Constants::TIMESLOT_T0);
-                $randa->setRegion($region);
-                $randa->setYear($currentYear);
-                $randa->setCurrentState("TODO");
-                $this->randaRepository->save($randa);
-            }
+        //     if (is_null($randa)) {
+        //         $randa = new Randa();
+        //         $randa->setCurrentTimeslot(Constants::TIMESLOT_T0);
+        //         $randa->setRegion($region);
+        //         $randa->setYear($currentYear);
+        //         $randa->setCurrentState("TODO");
+        //         $this->randaRepository->save($randa);
+        //     }
 
-            $rana = $this->ranaRepository->findOneBy([
-                'chapter' => $chapter,
-                'randa' => $randa
-            ]);
+        //     $rana = $this->ranaRepository->findOneBy([
+        //         'chapter' => $chapter,
+        //         'randa' => $randa
+        //     ]);
 
-            if (!is_null($rana)) {
-                $code = Response::HTTP_BAD_REQUEST;
-            }
-        }
+        //     if (!is_null($rana)) {
+        //         $code = Response::HTTP_BAD_REQUEST;
+        //     }
+        // }
 
-        if ($code == Response::HTTP_OK) {
-            $rana = new Rana();
-            $rana->setChapter($chapter);
-            $rana->setRanda($randa);
-            $this->ranaRepository->save($rana);
+        // if ($code == Response::HTTP_OK) {
+        //     $rana = new Rana();
+        //     $rana->setChapter($chapter);
+        //     $rana->setRanda($randa);
+        //     $this->ranaRepository->save($rana);
 
-            $ranaLifeCycle = new RanaLifecycle();
-            $ranaLifeCycle->setCurrentState(Constants::RANA_LIFECYCLE_STATUS_TODO);
-            $ranaLifeCycle->setCurrentTimeslot(Constants::TIMESLOT_T0);
-            $ranaLifeCycle->setRana($rana);
-            $this->ranaLifeCycleRepository->save($ranaLifeCycle);
-            $this->entityManager->refresh($rana);
+        //     $ranaLifeCycle = new RanaLifecycle();
+        //     $ranaLifeCycle->setCurrentState(Constants::RANA_LIFECYCLE_STATUS_TODO);
+        //     $ranaLifeCycle->setCurrentTimeslot(Constants::TIMESLOT_T0);
+        //     $ranaLifeCycle->setRana($rana);
+        //     $this->ranaLifeCycleRepository->save($ranaLifeCycle);
+        //     $this->entityManager->refresh($rana);
 
-            return new JsonResponse($this->ranaFormatter->formatData($rana, $role, "", $randa->getCurrentTimeslot(), null));
-        } else {
-            return new JsonResponse(null, $code);
-        }
+        //     return new JsonResponse($this->ranaFormatter->formatData($rana, $role, "", $randa->getCurrentTimeslot(), null));
+            return new JsonResponse(null);
     }
 
     /**
@@ -1482,7 +1480,7 @@ class RanaController extends AbstractController
         $this->entityManager->flush();
 
         $randa = $rana->getRanda();
-        $randa->setCurrentState("DOING");
+        $randa->setCurrentState("TODO");
         $this->randaRepository->save($randa);
         return new JsonResponse($this->ranaFormatter->formatData($rana, null, false,  $rana->getRanda()->getCurrentTimeslot(), null));
     }

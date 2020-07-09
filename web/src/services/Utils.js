@@ -1,6 +1,6 @@
 class Utils {
   static getMonthYear(date) {
-    let d = new Date(date);
+    let d = date ? new Date(date) : new Date();
     let month = (d.getMonth() + 1).toString().padStart(2, "0");
     let year = d.getFullYear();
     return year + "-" + month;
@@ -59,13 +59,14 @@ class Utils {
       case "CORE_GROUP": return "Core group";
       case "CHAPTER": return "Capitolo";
       case "PROJECT": return "Progetto";
+      case "CLOSED": return "Chiuso";
     }
   }
 
   static getRandaState(state) {
     switch(state) {
       case "APPR": return "Approvato";
-      case "DOING": return "Compilazione in corso";
+      case "TODO": return "Compilazione in corso";
       case "REFUSED": return "Rifiutato";
     }
   }

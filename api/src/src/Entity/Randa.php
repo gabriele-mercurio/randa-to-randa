@@ -131,7 +131,7 @@ class Randa
     /** Get the value of currentState */
     public function getCurrentState(): string
     {
-        return $this->currentState ? $this->currentState : "DOING";
+        return $this->currentState ? $this->currentState : "TODO";
     }
 
     /** Set the value of note */

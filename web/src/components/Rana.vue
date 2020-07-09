@@ -8,7 +8,9 @@
             rana.initialMembers
           }}</span>
         </div>
-        <span class="font-weight-bold">{{ rana.timeslot }}: </span>
+        <span class="font-weight-bold"
+          >{{ getTimeslotLabel(rana.timeslot) }}:
+        </span>
         <span v-if="rana">{{ getRanaState(rana.state) }}</span>
       </div>
       <div v-if="editable">
@@ -39,7 +41,7 @@
               :key="i"
               class="text-center pa-0"
               :class="{
-                bordered: !isPastTimeslot(i, rana.timeslot) && editable
+                bordered: !canCompile(i, 'timeslot') && editable
               }"
             >
               <div class="border-bottom background-grey pa-1">T{{ i }}</div>
@@ -47,26 +49,25 @@
                 <v-col
                   class="pa-0 d-flex justify-center align-center"
                   :class="{
-                    'border-right': isPastTimeslot(i, rana.timeslot),
-                    'background-yellow': isPastTimeslot(i, rana.timeslot),
-                    'stroke-green': canApprove(i, 4) || canPropose(i, 4)
+                    'border-right': !canCompile(i, 'timeslot'),
+                    'background-yellow': !canCompile(i, 'timeslot'),
+                    'stroke-green': canCompile(i, 'timeslot')
                   }"
                 >
                   <v-text-field
-                    :placeholder="'T' + i"
-                    :disabled="!canApprove(i, 4) && !canPropose(i, 4)"
+                    :disabled="!canCompile(i, 'timeslot')"
                     type="number"
                     @keyup="proposeMonths($event, i, 'newMembers')"
                     v-model="timeslotAggregations.newMembers.PREV[i]"
                   />
                 </v-col>
                 <v-col
-                  v-if="isPastTimeslot(i, rana.timeslot)"
+                  v-if="!canCompile(i, 'timeslot')"
                   class="pa-0 background-green font-italic font-weight-light disabled d-flex justify-center align-center"
                   >{{
                     timeslotAggregations.newMembers.CONS[i] !== null
                       ? timeslotAggregations.newMembers.CONS[i]
-                      : "X"
+                      : ""
                   }}</v-col
                 >
               </v-row>
@@ -80,32 +81,33 @@
               :key="i"
               class="text-center pa-0"
               :class="{
-                bordered: !isPastMonth(i, rana.timeslot) && editable
+                bordered: canCompile(i, 'month') && editable
               }"
             >
               <!-- month labels -->
-              <div class="border-bottom background-grey pa-1">M{{ i }}</div>
+              <div class="border-bottom background-grey pa-1">
+                {{ getMonthLabel(i) }}
+              </div>
 
               <!-- new members data -->
               <v-row class="pa-0 ma-0">
                 <v-col
                   class="pa-0 d-flex justify-center align-center"
                   :class="{
-                    'border-righ': isPastMonth(i, rana.timeslot),
-                    'background-yellow': isPastMonth(i, rana.timeslot),
-                    'stroke-green': canApprove(i, 12) || canPropose(i, 12)
+                    'border-righ': !canCompile(i, 'month'),
+                    'background-yellow': !canCompile(i, 'month'),
+                    'stroke-green': canCompile(i, 'month')
                   }"
                 >
                   <v-text-field
-                    :placeholder="'M' + i"
-                    :disabled="!canApprove(i, 12) && !canPropose(i, 12)"
+                    :disabled="!canCompile(i, 'month')"
                     type="number"
                     v-model="rana.newMembers.PREV['m' + i]"
                     @keyup="calculateTimeslot($event, i, 'newMembers')"
                   />
                 </v-col>
                 <v-col
-                  v-if="isPastMonth(i, rana.timeslot)"
+                  v-if="!canCompile(i, 'month')"
                   class="pa-0 background-green font-italic font-weight-light disabled d-flex justify-center align-center"
                   >{{ getConsumptive(i, "newMembers") }}
                 </v-col>
@@ -123,7 +125,7 @@
               :key="i"
               class="text-center pa-0"
               :class="{
-                bordered: !isPastTimeslot(i, rana.timeslot) && editable
+                bordered: canCompile(i, 'timeslot') && editable
               }"
             >
               <div class="border-bottom background-grey pa-1">T{{ i }}</div>
@@ -131,26 +133,25 @@
                 <v-col
                   class="pa-0 d-flex justify-center align-center"
                   :class="{
-                    'border-right': isPastTimeslot(i, rana.timeslot),
-                    'background-yellow': isPastTimeslot(i, rana.timeslot),
-                    'stroke-green': canApprove(i, 4) || canPropose(i, 4)
+                    'border-right': !canCompile(i, 'timeslot'),
+                    'background-yellow': !canCompile(i, 'timeslot'),
+                    'stroke-green': canCompile(i, 'timeslot')
                   }"
                 >
                   <v-text-field
-                    :placeholder="'T' + i"
-                    :disabled="!canApprove(i, 4) && !canPropose(i, 4)"
+                    :disabled="!canCompile(i, 'timeslot')"
                     type="number"
                     @keyup="proposeMonths($event, i, 'retentions')"
                     v-model="timeslotAggregations.retentions.PREV[i]"
                   />
                 </v-col>
                 <v-col
-                  v-if="isPastTimeslot(i, rana.timeslot)"
+                  v-if="!canCompile(i, 'timeslot')"
                   class="pa-0 background-green font-italic font-weight-light disabled d-flex justify-center align-center"
                   >{{
                     timeslotAggregations.retentions.CONS[i] !== null
                       ? timeslotAggregations.retentions.CONS[i]
-                      : "X"
+                      : ""
                   }}</v-col
                 >
               </v-row>
@@ -165,32 +166,31 @@
               class="text-center pa-0"
               :class="{
                 'border-right-bold': i % 3 == 0,
-                bordered: !isPastMonth(i, rana.timeslot) && editable
+                bordered: canCompile(i, 'month') && editable
               }"
             >
               <!-- month labels -->
-              <div class="border-bottom background-grey pa-1">M{{ i }}</div>
+              <div class="border-bottom background-grey pa-1">{{getMonthLabel(i)}}</div>
 
               <!-- retentions data -->
               <v-row class="pa-0 ma-0">
                 <v-col
                   class="pa-0 d-flex justify-center align-center"
                   :class="{
-                    'border-righ': isPastMonth(i, rana.timeslot),
-                    'background-yellow': isPastMonth(i, rana.timeslot),
-                    'stroke-green': canApprove(i, 12) || canPropose(i, 12)
+                    'border-righ': !canCompile(i, 'month'),
+                    'background-yellow': !canCompile(i, 'month'),
+                    'stroke-green': canCompile(i, 'month')
                   }"
                 >
                   <v-text-field
-                    :placeholder="'M' + i"
-                    :disabled="!canApprove(i, 12) && !canPropose(i, 12)"
+                    :disabled="!canCompile(i, 'month')"
                     type="number"
                     v-model="rana.retentions.PREV['m' + i]"
                     @keyup="calculateTimeslot($event, i, 'retentions')"
                   />
                 </v-col>
                 <v-col
-                  v-if="isPastMonth(i, rana.timeslot)"
+                  v-if="!canCompile(9, 'month')"
                   class="pa-0 background-green font-italic font-weight-light disabled d-flex justify-center align-center"
                   >{{ getConsumptive(i, "retentions") }}
                 </v-col>
@@ -235,7 +235,12 @@
             v-if="rana.state !== 'APPR'"
           >
             <span v-if="role === 'ASSISTANT'">{{ $t("send_proposal") }}</span>
-            <span v-if="(role == 'ADMIN' || role == 'EXECUTIVE') && rana.state == 'PROP'">{{ $t("approve_proposal") }}</span>
+            <span
+              v-if="
+                (role == 'ADMIN' || role == 'EXECUTIVE') && rana.state == 'PROP'
+              "
+              >{{ $t("approve_proposal") }}</span
+            >
             <span
               v-if="
                 (role == 'ADMIN' || role == 'EXECUTIVE') && rana.state == 'TODO'
@@ -320,6 +325,42 @@ export default {
     }
   },
   methods: {
+    getMonthLabel(i) {
+      switch (i) {
+        case 1:
+          return "Gen";
+        case 2:
+          return "Feb";
+        case 3:
+          return "Mar";
+        case 4:
+          return "Apr";
+        case 5:
+          return "Mag";
+        case 6:
+          return "Giu";
+        case 7:
+          return "Lug";
+        case 8:
+          return "Ago";
+        case 9:
+          return "Set";
+        case 10:
+          return "Ott";
+        case 11:
+          return "Nov";
+        case 12:
+          return "Dic";
+      }
+    },
+    getTimeslotLabel(timeslot) {
+      switch (timeslot) {
+        case "T0":
+          return "Rana 2020";
+        default:
+          return "Rana revised " + timeslot;
+      }
+    },
     getRanaState(state) {
       switch (state) {
         case "TODO":
@@ -347,13 +388,17 @@ export default {
     evaluateMembers(m) {
       let sum = this.rana.initialMembers;
       for (let i = 0; i < m; i++) {
-        sum +=
-          (this.rana.newMembers.PREV["m" + i]
-            ? this.rana.newMembers.PREV["m" + i]
-            : 0) -
-          (this.rana.retentions.PREV["m" + i]
-            ? this.rana.retentions.PREV["m" + i]
-            : 0);
+        let n = this.rana.newMembers.CONS["m" + i]
+          ? this.rana.newMembers.CONS["m" + i]
+          : this.rana.newMembers.PREV["m" + i]
+          ? this.rana.newMembers.PREV["m" + i]
+          : 0;
+        let r = this.rana.retentions.CONS["m" + i]
+          ? this.rana.retentions.CONS["m" + i]
+          : this.rana.retentions.PREV["m" + i]
+          ? this.rana.retentions.PREV["m" + i]
+          : 0;
+        sum += n - r;
       }
       return sum;
     },
@@ -362,7 +407,7 @@ export default {
         this.rana[values].CONS["m" + i] === null ||
         this.rana[values].CONS["m" + i] === ""
       )
-        return "X";
+        return "";
       return this.rana[values].CONS["m" + i];
     },
     canShowFooter() {
@@ -445,34 +490,31 @@ export default {
       }
     },
 
-    canApprove(i, number) {
-      if (number == 12) {
-        i = Utils.getTimeslotFromMonth(i);
+    canApprove(i) {
+      if (this.role == "ADMIN" || this.role == "EXECUTIVE") {
+        if (this.rana.state == "PROP" || this.rana.state == "TODO") {
+          if ("T" + i >= this.rana.timeslot) {
+            return true;
+          }
+        }
       }
-      if (!this.rana) return false;
-      return (
-        this.role !== "ASSISTANT" &&
-        (this.rana.state == "PROP" || this.rana.state == "TODO") &&
-        this.rana.timeslot < "T" + i
-      );
+      return false;
     },
 
-    canPropose(i, number) {
-      if (!this.rana) return false;
-      if (number == 12) {
-        i = Utils.getTimeslotFromMonth(i);
+    canPropose(i) {
+      if (this.rana.state == "TODO" && "T" + i >= this.rana.timeslot) {
+        return true;
       }
-      return (
-        this.role === "ASSISTANT" &&
-        this.rana.state == "TODO" &&
-        this.rana.timeslot < "T" + i
-      );
+      return false;
     },
 
-    //check if a month is passed
-    isPastMonth(m, timeslot) {
-      let t = Utils.getTimeslotFromMonth(m);
-      return "T" + t <= timeslot;
+    canCompile(i, valueType) {
+      if (valueType === "month") {
+        i = Utils.getTimeslotFromMonth(i);
+      }
+      let canApprove = this.canPropose(i, valueType);
+      let canPropose = this.canApprove(i, valueType);
+      return canApprove || canPropose;
     },
 
     //restore backed up data
@@ -520,11 +562,6 @@ export default {
           status: "success"
         });
       }
-    },
-
-    //check if timeslot is past
-    isPastTimeslot(t, timeslot) {
-      return "T" + t <= timeslot;
     },
 
     //calculate trimestral value each time a month changes

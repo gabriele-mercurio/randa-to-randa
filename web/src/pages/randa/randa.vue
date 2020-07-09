@@ -22,6 +22,7 @@ export default {
     return {
       randa: null,
       showApproveRanda: false,
+      allRanaApproved: false,
       isNational: false,
       noData: false
     };

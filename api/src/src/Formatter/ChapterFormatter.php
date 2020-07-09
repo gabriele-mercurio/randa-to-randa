@@ -23,13 +23,9 @@ class ChapterFormatter
 
     /** ChapterFormatter constructor */
     public function __construct(
-        DirectorFormatter $directorFormatter,
-        RanaRepository $ranaRepository,
-        RanaLifecycleRepository $ranaLifecycleRepository
+        DirectorFormatter $directorFormatter
     ) {
         $this->directorFormatter = $directorFormatter;
-        $this->ranaRepository = $ranaRepository;
-        $this->ranaLifecycleRepository = $ranaLifecycleRepository;
     }
 
     /**
@@ -89,27 +85,10 @@ class ChapterFormatter
      *
      * @return array
      */
-    public function formatWithStatus(Chapter $chapter, ?Randa $randa): array
+    public function formatWithStatus(Chapter $chapter, String $status): array
     {
         $c = $this->formatBase($chapter);
-        if ($randa) {
-
-            $rana = $this->ranaRepository->findOneBy([
-                "chapter" => $chapter,
-                "randa" => $randa
-            ]);
-            if ($rana) {
-                $lifecycle = $this->ranaLifecycleRepository->findOneBy([
-                    "rana" => $rana,
-                    "currentTimeslot" => $randa->getCurrentTimeslot()
-                ]);
-                $c["state"] = $lifecycle->getCurrentState();
-            } else {
-                $c["state"] = "TODO";
-            }
-        } else {
-            $c["state"] = "TODO";
-        }
+        $c["status"] = $status;
         return $c;
     }
 }

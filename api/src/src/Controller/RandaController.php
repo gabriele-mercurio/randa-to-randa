@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use Exception;
 use App\Util\Util;
 use App\Entity\Rana;
 use App\Entity\Randa;
@@ -9,7 +10,7 @@ use App\Entity\Region;
 use App\Util\Constants;
 use App\Entity\NewMember;
 use App\Entity\Retention;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Entity\RanaLifecycle;
 use Swagger\Annotations as SWG;
 use App\Formatter\RandaFormatter;
 use App\Repository\RanaRepository;
@@ -19,6 +20,8 @@ use App\Repository\ChapterRepository;
 use App\Repository\DirectorRepository;
 use App\Repository\NewMemberRepository;
 use App\Repository\RetentionRepository;
+use Doctrine\ORM\EntityManagerInterface;
+use App\OldDB\Repository\RegionRepository;
 use App\Repository\RanaLifecycleRepository;
 use App\Repository\RenewedMemberRepository;
 use Nelmio\ApiDocBundle\Annotation\Security;
@@ -67,6 +70,9 @@ class RandaController extends AbstractController
     /** @var RanaLifecycleRepository */
     private $ranaLifecycleRepository;
 
+    /** @var RegionRepository */
+    private $regionRepository;
+
 
     public function __construct(
         DirectorRepository $directorRepository,
@@ -79,7 +85,8 @@ class RandaController extends AbstractController
         RanaLifecycleRepository $ranaLifecycleRepository,
         ChapterRepository $chapterRepository,
         RanaRepository $ranaRepository,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        RegionRepository $regionRepository
     ) {
         $this->directorRepository = $directorRepository;
         $this->newMemberRepository = $newMemberRepository;
@@ -92,6 +99,7 @@ class RandaController extends AbstractController
         $this->chapterRepository = $chapterRepository;
         $this->ranaRepository = $ranaRepository;
         $this->entityManager = $entityManager;
+        $this->regionRepository = $regionRepository;
     }
 
     /**
@@ -197,6 +205,10 @@ class RandaController extends AbstractController
      */
     public function getRandaRevised(Region $region, Request $request): Response
     {
+        $request = Util::normalizeRequest($request);
+
+        $timeslot = $request->get("timeslot");
+
         $roleCheck = [
             Constants::ROLE_EXECUTIVE
         ];
@@ -207,18 +219,29 @@ class RandaController extends AbstractController
             $$var = $value;
         }
 
-        $randa = $this->randaRepository->findOneBy([
-            'year' => (int) date("Y"),
-            'region' => $region
-        ], [
-            'currentTimeslot' => 'DESC'
-        ]);
+        if (!$timeslot) {
+
+            $randa = $this->randaRepository->findOneBy([
+                'year' => (int) date("Y"),
+                'region' => $region
+            ], [
+                'currentTimeslot' => 'DESC'
+            ]);
+            $timeslot = $randa->getCurrentTimeslot();
+        } else {
+
+            $randa = $this->randaRepository->findOneBy([
+                'year' => (int) date("Y"),
+                'region' => $region,
+                "currentTimeslot" => $timeslot
+            ]);
+        }
+
 
         if ($randa) {
 
             $ranas = $randa->getRanas();
             $chapters = $region->getChapters();
-            $timeslot = $randa->getCurrentTimeslot();
 
             $data = [
                 "chapters" => []
@@ -232,80 +255,113 @@ class RandaController extends AbstractController
                     "randa" => $randa
                 ]);
 
+                $lifecycle = $this->ranaLifecycleRepository->findOneBy([
+                    "rana" => $rana,
+                    "currentTimeslot" => $timeslot,
+                    "currentState" => "APPR"
+                ]);
+
+                if (!$lifecycle) {
+                    $all_approved = false;
+                }
+
                 if ($rana) {
 
-                    $approved = $this->ranaLifecycleRepository->findOneBy([
+                    $new_members_cons = $this->newMemberRepository->findOneBy([
                         "rana" => $rana,
-                        "currentTimeslot" => $timeslot
+                        "valueType" => "CONS",
+                        "timeslot" => "T0"
                     ]);
 
 
-                    $approved_new_members = $this->newMemberRepository->findOneBy([
-                        "rana" => $rana,
-                        "valueType" => "APPR",
-                        "timeslot" => $timeslot
-                    ]);
+                    $new_members_appr = $this->newMemberRepository->findOneBy(
+                        [
+                            "rana" => $rana,
+                            "valueType" => "APPR"
+                        ],
+                        [
+                            'timeslot' => 'DESC'
+                        ]
+                    );
 
-                    $approved_new_members_ts = [];
-                    if ($approved_new_members) {
-                        $sum = 0;
-                        for ($i = 1; $i <= 12; $i++) {
-                            $method = "getM$i";
-                            $val = $approved_new_members->$method();
-                            $sum += $val;
-                            if ($i % 3 == 0) {
-                                $approved_new_members_ts[] = $sum;
-                                $sum = 0;
-                            }
+                    $new_members_ts = [];
+                    $sum = 0;
+                    for ($i = 1; $i <= 12; $i++) {
+                        $method = "getM$i";
+                        $val = 0;
+                        if ($new_members_cons) {
+                            $val = $new_members_cons->$method();
+                        }
+                        if (is_null($val) && $new_members_appr) {
+                            $val = $new_members_appr->$method();
+                        }
+                        $sum += $val;
+                        if ($i % 3 == 0) {
+                            $new_members_ts[] = $sum;
+                            $sum = 0;
                         }
                     }
 
-                    $approved_retentions = $this->retentionRepository->findOneBy([
+
+                    $retentions_cons = $this->retentionRepository->findOneBy([
                         "rana" => $rana,
-                        "valueType" => "APPR",
-                        "timeslot" => $timeslot
+                        "valueType" => "CONS",
+                        "timeslot" => "T0"
                     ]);
 
-                    $approved_retentions_ts = [];
-                    if ($approved_retentions) {
-                        $sum = 0;
-                        for ($i = 1; $i <= 12; $i++) {
-                            $method = "getM$i";
-                            $val = $approved_retentions->$method();
-                            $sum += $val;
-                            if ($i % 3 == 0) {
-                                $approved_retentions_ts[] = $sum;
-                                $sum = 0;
-                            }
+
+                    $retentions_appr = $this->retentionRepository->findOneBy(
+                        [
+                            "rana" => $rana,
+                            "valueType" => "APPR"
+                        ],
+                        [
+                            'timeslot' => 'DESC'
+                        ]
+                    );
+
+                    $retentions_ts = [];
+                    $sum = 0;
+                    for ($i = 1; $i <= 12; $i++) {
+                        $method = "getM$i";
+                        $val = 0;
+                        if ($retentions_cons) {
+                            $val = $retentions_cons->$method();
+                        }
+                        if (is_null($val) && $retentions_appr) {
+                            $val = $retentions_appr->$method();
+                        }
+                        $sum += $val;
+                        if ($i % 3 == 0) {
+                            $retentions_ts[] = $sum;
+                            $sum = 0;
                         }
                     }
+
 
                     $members = [];
-                    if ($approved_retentions_ts && $approved_new_members_ts) {
+                    if ($retentions_ts && $new_members_ts) {
                         for ($i = 0; $i < 4; $i++) {
                             if ($i == 0) {
                                 $prev_data = $chapter->getMembers();
                             } else {
                                 $prev_data = $members[$i - 1];
                             }
-                            $members[] = $prev_data + ($approved_new_members_ts[$i] - $approved_retentions_ts[$i]);
+                            $members[] = $prev_data + ($new_members_ts[$i] - $retentions_ts[$i]);
                         }
                     }
 
                     $chapter_history = RandaController::getChapterHistory($rana);
 
-                    if ($approved->getCurrentState() !== "APPR") {
-                        $all_approved = false;
-                    }
                     $chapter_data = [
                         "chapter" => $chapter->getName(),
                         "state" => $chapter->getCurrentState(),
                         "initialMembers" => $chapter->getMembers(),
-                        "newMembers" => $approved_new_members_ts,
-                        "retentions" => $approved_retentions_ts,
+                        "newMembers" => $new_members_ts,
+                        "retentions" => $retentions_ts,
                         "members" => $members,
                         "chapter_history" => $chapter_history,
-                        "approved" => $approved && $approved->getCurrentState() === "APPR",
+                        "approved" => $lifecycle ? true : false
                     ];
                 } else {
                     $all_approved = false;
@@ -351,9 +407,12 @@ class RandaController extends AbstractController
     public static function getChapterHistory(Rana $rana)
     {
         $chapter = $rana->getChapter();
+        $timeslot = $rana->getRanda()->getCurrentTimeslot();
+        $number_timeslot = (int) substr($timeslot, -1);
         $currentYear = (int) date("Y");
 
-        $chapter_history = [];
+        $chapter_history = ["CHAPTER", "CHAPTER", "CHAPTER", "CHAPTER"];
+
         $prev_cg = $chapter->getPrevLaunchCoregroupDate();
         $prev_c = $chapter->getPrevLaunchChapterDate();
         $actual_cg = $chapter->getActualLaunchCoregroupDate();
@@ -389,6 +448,46 @@ class RandaController extends AbstractController
                 }
             }
         }
+
+        $susp_date = $chapter->getSuspDate();
+        $res_date = $chapter->getPrevResumeDate();
+
+        $closure_date = $chapter->getClosureDate();
+
+        if ($susp_date) {
+            if ($susp_date->format("Y") == $currentYear) {
+                $m = $susp_date->format("m");
+                $t = ceil($m / 3);
+                for ($i = 0; $i < 4; $i++) {
+                    if ($i >= $t - 1) {
+                        if (!$res_date) {
+                            $chapter_history[$i] = "SUSPENDED";
+                        } else {
+                            if ($res_date->format("Y") == $currentYear) {
+                                $m2 = $res_date->format("m");
+                                $t2 = ceil($m2 / 3);
+                                if ($i < $t2) {
+                                    $chapter_history[$i] = "SUSPENDED";
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if ($closure_date) {
+            if ($closure_date->format("Y") == $currentYear) {
+                $m = $closure_date->format("m");
+                $t = ceil($m / 3);
+                for ($i = 0; $i < 4; $i++) {
+                    if ($i >= $t - 1) {
+                        $chapter_history[$i] = "CLOSED";
+                    }
+                }
+            }
+        }
+
 
         return $chapter_history;
     }
@@ -540,13 +639,24 @@ class RandaController extends AbstractController
         $randa = $this->randaRepository->findOneBy([
             'year' => (int) date("Y"),
             'region' => $region
-        ], [
-            'currentTimeslot' => 'DESC'
         ]);
 
+        file_put_contents("pippo", "randa exists", FILE_APPEND);
+        
         if ($randa) {
-            $ranas = $randa->getRanas();
+
             $timeslot = $randa->getCurrentTimeslot();
+            file_put_contents("pippo", $timeslot . "\n", FILE_APPEND);
+            if($randa->getCurrentState() == "TODO") {
+                $num = substr($timeslot, -1);
+                if($num > 0) {
+                    $timeslot = "T" + ($num * 1 - 1);
+                } else {
+                    return new JsonResponse(false);
+                }
+            } 
+
+            $ranas = $randa->getRanas();
 
             $data = [
                 "chapters" => []
@@ -557,64 +667,96 @@ class RandaController extends AbstractController
                 $chapter = $rana->getChapter();
                 $chapter_history = RandaController::getChapterHistory($rana);
 
-                $proposed_new_members = $this->newMemberRepository->findOneBy([
+                $new_members_cons = $this->newMemberRepository->findOneBy([
                     "rana" => $rana,
-                    "valueType" => "PROP",
-                    "timeslot" => $timeslot
+                    "valueType" => "CONS",
+                    "timeslot" => "T0"
                 ]);
 
-                $proposed_new_members_ts = [];
-                if ($proposed_new_members) {
-                    $sum = 0;
-                    for ($i = 1; $i <= 12; $i++) {
-                        $method = "getM$i";
-                        $val = $proposed_new_members->$method();
-                        $sum += $val;
-                        if ($i % 3 == 0) {
-                            $proposed_new_members_ts[] = $sum;
-                            $sum = 0;
-                        }
+
+                $new_members_appr = $this->newMemberRepository->findOneBy(
+                    [
+                        "rana" => $rana,
+                        "valueType" => "PROP"
+                    ],
+                    [
+                        'timeslot' => 'DESC'
+                    ]
+                );
+
+                $new_members_ts = [];
+                $sum = 0;
+                for ($i = 1; $i <= 12; $i++) {
+                    $method = "getM$i";
+                    $val = 0;
+                    if ($new_members_cons) {
+                        $val = $new_members_cons->$method();
+                    }
+                    if (is_null($val) && $new_members_appr) {
+                        $val = $new_members_appr->$method();
+                    }
+                    $sum += $val;
+                    if ($i % 3 == 0) {
+                        $new_members_ts[] = $sum;
+                        $sum = 0;
                     }
                 }
-                $proposed_retentions = $this->retentionRepository->findOneBy([
+
+
+                $retentions_cons = $this->retentionRepository->findOneBy([
                     "rana" => $rana,
-                    "valueType" => "PROP",
-                    "timeslot" => $timeslot
+                    "valueType" => "CONS",
+                    "timeslot" => "T0"
                 ]);
 
 
-                $proposed_retentions_ts = [];
-                if ($proposed_retentions) {
-                    $sum = 0;
-                    for ($i = 1; $i <= 12; $i++) {
-                        $method = "getM$i";
-                        $val = $proposed_retentions->$method();
-                        $sum += $val;
-                        if ($i % 3 == 0) {
-                            $proposed_retentions_ts[] = $sum;
-                            $sum = 0;
-                        }
+                $retentions_appr = $this->retentionRepository->findOneBy(
+                    [
+                        "rana" => $rana,
+                        "valueType" => "PROP"
+                    ],
+                    [
+                        'timeslot' => 'DESC'
+                    ]
+                );
+
+                $retentions_ts = [];
+                $sum = 0;
+                for ($i = 1; $i <= 12; $i++) {
+                    $method = "getM$i";
+                    $val = 0;
+                    if ($retentions_cons) {
+                        $val = $retentions_cons->$method();
+                    }
+                    if (is_null($val) && $retentions_appr) {
+                        $val = $retentions_appr->$method();
+                    }
+                    $sum += $val;
+                    if ($i % 3 == 0) {
+                        $retentions_ts[] = $sum;
+                        $sum = 0;
                     }
                 }
 
 
                 $members = [];
-                if ($proposed_new_members && $proposed_retentions) {
+                if ($retentions_ts && $new_members_ts) {
                     for ($i = 0; $i < 4; $i++) {
                         if ($i == 0) {
                             $prev_data = $chapter->getMembers();
                         } else {
                             $prev_data = $members[$i - 1];
                         }
-                        $members[] = $prev_data + ($proposed_new_members_ts[$i] - $proposed_retentions_ts[$i]);
+                        $members[] = $prev_data + ($new_members_ts[$i] - $retentions_ts[$i]);
                     }
                 }
+
 
                 $chapter_data = [
                     "chapter" => $chapter->getName(),
                     "initialMembers" => $chapter->getMembers(),
-                    "newMembers" => $proposed_new_members_ts,
-                    "retentions" => $proposed_retentions_ts,
+                    "newMembers" => $new_members_ts,
+                    "retentions" => $retentions_ts,
                     "members" => $members,
                 ];
 
@@ -643,8 +785,6 @@ class RandaController extends AbstractController
     }
 
 
-
-
     /**
      * Get a Randa
      *
@@ -660,16 +800,41 @@ class RandaController extends AbstractController
         $directors = $request->get("directors");
         $timeslot = $request->get("timeslot");
         $currentYear = (int) date("Y");
+
         $randa = $this->randaRepository->findOneBy([
             "region" => $region,
-            "year" => $currentYear
+            "year" => $currentYear,
+            "currentTimeslot" => $timeslot
         ]);
+
+        $nexttimeslot = "T" . (substr($timeslot, -1) + 1);
         if ($randa) {
-            $randa->setCurrentTimeslot($timeslot);
             $randa->setCurrentState("APPR");
+            $randa->setCurrentTimeslot($nexttimeslot);
             $randa->setDirectorsPrevisions($directors);
             $randa->setNote($note);
+            $this->randaRepository->save($randa);
         }
+
+
+        $chapters = $this->chapterRepository->findBy([
+            "region" => $region
+        ]);
+
+        foreach ($chapters as $chapter) {
+            $rana = new Rana();
+            $rana->setChapter($chapter);
+            $rana->setRanda($randa);
+            $this->ranaRepository->save($rana);
+
+            $ranaLifeCycle = new RanaLifecycle();
+            $ranaLifeCycle->setCurrentState(Constants::RANA_LIFECYCLE_STATUS_TODO);
+            $ranaLifeCycle->setCurrentTimeslot(Constants::TIMESLOT_T0);
+            $ranaLifeCycle->setRana($rana);
+            $this->ranaLifecycleRepository->save($ranaLifeCycle);
+            $this->entityManager->refresh($rana);
+        }
+
         $this->randaRepository->save($randa);
         return new JsonResponse(true);
     }
@@ -704,6 +869,75 @@ class RandaController extends AbstractController
     }
 
 
+    /**
+     * Get a Randa
+     *
+     * @Route(path="/{id}/create-next-timeslot", name="create_next_timeslot", methods={"PUT"})
+     *
+     * 
+     *
+     * @return Response
+     */
+    public function createNextTimeslot(Region $region, Request $request): Response
+    {
+
+        try {
+            $currentYear = (int) date("Y");
+            $randa = $this->randaRepository->findOneBy([
+                "region" => $region,
+                "year" => $currentYear
+            ]);
+
+            $timeslot = $randa->getCurrentTimeslot();
+
+            $slotNumber = (int) substr($timeslot, -1);
+
+            $nextSlotNumber = $slotNumber + 1;
+            $nextTimeslot = "T$nextSlotNumber";
+
+            $randa->setCurrentTimeslot($nextTimeslot);
+            $randa->setCurrentState("TODO");
+
+            // file_put_contents("pippo", $timeslot . "\n", FILE_APPEND);
+            // file_put_contents("pippo", $slotNumber . "\n", FILE_APPEND);
+            // file_put_contents("pippo", $nextSlotNumber . "\n", FILE_APPEND);
+            // file_put_contents("pippo", $nextTimeslot . "\n", FILE_APPEND);
+
+            $this->randaRepository->save($randa);
+
+            $chapters = $this->chapterRepository->findBy([
+                "region" => $region
+            ]);
+            foreach ($chapters as $chapter) {
+
+                $rana = $this->ranaRepository->findOneBy([
+                    "randa" => $randa,
+                    "chapter" => $chapter
+                ]);
+                if (!$rana) {
+                    $rana = new Rana();
+                    $rana->setChapter($chapter);
+                    $rana->setRanda($randa);
+                    $this->ranaRepository->save($rana);
+                }
+
+                $ranaLifeCycle = new RanaLifecycle();
+                $ranaLifeCycle->setCurrentState("TODO");
+                $ranaLifeCycle->setCurrentTimeslot($nextTimeslot);
+                $ranaLifeCycle->setRana($rana);
+                $this->ranaLifecycleRepository->save($ranaLifeCycle);
+                $this->entityManager->refresh($rana);
+
+            }
+           
+            return new JsonResponse(true);
+        } catch (Exception $e) {
+            file_put_contents("pippo", $e->getMessage());
+            return new JsonResponse(false);
+        }
+    }
+
+
 
     /**
      * Get a Randa
@@ -717,11 +951,22 @@ class RandaController extends AbstractController
 
         $randa = $this->randaRepository->findOneBy([
             "region" => $region,
-            "year" => $currentYear,
-            "currentState" => "APPR"
+            "year" => $currentYear
         ]);
 
         if ($randa) {
+            $timeslot = $randa->getCurrentTimeslot();
+
+            if($randa->getCurrentState() == "TODO") {
+                return new JsonResponse(false);
+                $num = (int) substr($timeslot, -1);
+                if($num > 0) {
+                    $timeslot = "T" . ($num * 1 - 1);
+                } else {
+                    return new JsonResponse(false);
+                }
+            } 
+
 
             $chapters = $this->chapterRepository->findBy([
                 "currentState" => "CORE_GROUP",
@@ -1080,6 +1325,7 @@ class RandaController extends AbstractController
 
             $directors = $randa->getDirectorsPrevisions() ? $randa->getDirectorsPrevisions() : "0,0,0,0";
             $data["directors"] = explode(",", $directors);
+            $data["randa_state"] = $randa->getCurrentState();
 
             return new JsonResponse($data);
         } else {

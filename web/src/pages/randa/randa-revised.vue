@@ -1,115 +1,133 @@
-<template>
-  <div v-if="randaRevised && randaRevised.randa_state === 'APPR'">
-    <Randa :title="'Randa revised'" :randa="randaRevised" />
-    <div class="d-flex justify-end px-12 pt-6">
-      <v-btn
-        v-if="!isNational"
-        :disabled="
-          !allRanaApproved ||
-            (randaRevised.randa_state == 'APPR' && !isNational)
-        "
-        @click="showApproveRanda = true"
-      >
-        Approva randa
-      </v-btn>
-      <v-btn v-if="isNational" @click="showDisapproveRanda = true" >
-        Rifiuta
-      </v-btn>
+<template
+  ><div>
+    <div v-if="randaRevised || (randa && randa.randa_state === 'APPR')">
+      <div v-if="isNational">
+        <Randa :title="'Randa'" :randa="randa" :layout="'split'" :showTotal="false"/>
+        <div class="d-flex justify-end pa-4 px-10">
+          <v-btn
+            @click="showDisapproveRanda = true"
+            :disabled="randa.randa_state == 'REFUSED'"
+          >
+            Rifiuta
+          </v-btn>
+        </div>
+        <v-btn v-if="!isNational" @click="showApproveRanda = true">
+          Approva</v-btn
+        >
+        <v-dialog v-model="showDisapproveRanda" width="500">
+          <v-card>
+            <v-card-title class="headline primary white--text" primary-title>
+              Rifiuta randa
+            </v-card-title>
+            <v-card-text class="pa-5">
+              <v-textarea
+                v-model="refuseNote"
+                label="Nota randa"
+                prepend-icon="mdi-tag"
+              ></v-textarea>
+            </v-card-text>
+            <v-card-actions class="d-flex justify-end align-center">
+              <div width="100%">
+                <v-btn
+                  type="submit"
+                  normal
+                  text
+                  color="primary"
+                  @click="showDisapproveRanda = false"
+                >
+                  {{ $t("cancel") }}
+                </v-btn>
+                <v-btn
+                  type="submit"
+                  normal
+                  text
+                  color="primary"
+                  @click="refuseRanda()"
+                  :disabled="!refuseNote"
+                >
+                  {{ $t("conferma") }}
+                </v-btn>
+              </div>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+      </div>
+      <div v-else>
+        <Randa :title="'Randa revised'" :randa="randaRevised" :showTotal="false"/>
+        <div class="d-flex justify-end px-12 pt-6 mb-6">
+          <v-btn
+          color="primary"
+            v-if="!isNational"
+            :disabled="
+              !allRanaApproved ||
+                (randaRevised.randa_state == 'APPR' && !isNational)
+            "
+            @click="showApproveRanda = true"
+          >
+            Approva randa
+          </v-btn>
+        </div>
+      </div>
+
+      <v-dialog v-model="showApproveRanda" width="500">
+        <v-card>
+          <v-card-title class="headline primary white--text" primary-title>
+            Approva randa
+          </v-card-title>
+          <v-card-text class="pa-5">
+            <v-textarea
+              v-model="note"
+              label="Nota randa"
+              prepend-icon="mdi-tag"
+            ></v-textarea>
+            <div class="d-flex flex-row">
+              <v-text-field
+                label="Director"
+                class="ma-2"
+                v-for="i in (0, 4)"
+                :key="i"
+                v-model="directors[i - 1]"
+              />
+            </div>
+          </v-card-text>
+          <v-card-actions class="d-flex justify-end align-center">
+            <div width="100%">
+              <v-btn
+                type="submit"
+                normal
+                text
+                color="primary"
+                @click="showApproveRanda = false"
+              >
+                {{ $t("cancel") }}
+              </v-btn>
+              <v-btn
+                type="submit"
+                normal
+                text
+                color="primary"
+                @click="approveRanda()"
+                :disabled="!isFormValid()"
+              >
+                {{ $t("conferma") }}
+              </v-btn>
+            </div>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
+      <div v-if="false" class="elevation-9 red_card">
+        <v-icon v-on="on" small class="primary--text">mdi-alert</v-icon>
+        Nota BNI:
+        <!-- {{ rana.refuse_note }} -->
+      </div>
     </div>
-
-    <v-dialog v-model="showApproveRanda" width="500">
-      <v-card>
-        <v-card-title class="headline primary white--text" primary-title>
-          Approva randa
-        </v-card-title>
-        <v-card-text class="pa-5">
-          <v-textarea
-            v-model="note"
-            label="Nota randa"
-            prepend-icon="mdi-tag"
-          ></v-textarea>
-          <div class="d-flex flex-row">
-            <v-text-field
-              label="Director"
-              class="ma-2"
-              v-for="i in (0, 4)"
-              :key="i"
-              v-model="directors[i - 1]"
-            />
-          </div>
-        </v-card-text>
-        <v-card-actions class="d-flex justify-end align-center">
-          <div width="100%">
-            <v-btn
-              type="submit"
-              normal
-              text
-              color="primary"
-              @click="showApproveRanda = false"
-            >
-              {{ $t("cancel") }}
-            </v-btn>
-            <v-btn
-              type="submit"
-              normal
-              text
-              color="primary"
-              @click="approveRanda()"
-              :disabled="!isFormValid()"
-            >
-              {{ $t("conferma") }}
-            </v-btn>
-          </div>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-
-    <v-dialog v-model="showDisapproveRanda" width="500">
-      <v-card>
-        <v-card-title class="headline primary white--text" primary-title>
-          Rifiuta randa
-        </v-card-title>
-        <v-card-text class="pa-5">
-          <v-textarea
-            v-model="refuseNote"
-            label="Nota randa"
-            prepend-icon="mdi-tag"
-          ></v-textarea>
-        </v-card-text>
-        <v-card-actions class="d-flex justify-end align-center">
-          <div width="100%">
-            <v-btn
-              type="submit"
-              normal
-              text
-              color="primary"
-              @click="showDisapproveRanda = false"
-            >
-              {{ $t("cancel") }}
-            </v-btn>
-            <v-btn
-              type="submit"
-              normal
-              text
-              color="primary"
-              @click="refuseRanda()"
-              :disabled="!refuseNote"
-            >
-              {{ $t("conferma") }}
-            </v-btn>
-          </div>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-
-    <div v-if="false" class="elevation-9 red_card">
-      <v-icon v-on="on" small class="primary--text">mdi-alert</v-icon>
-      Nota BNI:
-      <!-- {{ rana.refuse_note }} -->
-    </div>
-  </div>
-  <div v-else>
-    <NoData :message="'Nessun randa da visualizzare'" />
+    <!-- <div v-if="oldRandas.length">
+      <div v-for="randa in oldRandas">
+        <Randa :title="'Randa'" :randa="randa" :showTotal="false"/>
+      </div>
+    </div> -->
+    <NoData v-else :message="'Nessun randa da visualizzare'" />
   </div>
 </template>
 <script>
@@ -126,19 +144,29 @@ export default {
   data() {
     return {
       randaRevised: null,
+      randa: null,
       allRanaApproved: false,
       note: "",
       refuseNote: "",
       directors: [0, 0, 0, 0],
       showApproveRanda: false,
       showDisapproveRanda: false,
-      isNational: false
+      isNational: false,
+      oldRandas: []
     };
   },
   created() {
     setTimeout(() => {
-      this.fetchRandaRevised();
-      this.isNational = this.$store.getters["getRegion"].role === "NATIONAL";
+      this.isNational =
+        this.$store.getters["getRegion"].role &&
+        this.$store.getters["getRegion"].role === "NATIONAL";
+
+      if (this.isNational) {
+        this.fetchRanda();
+      } else {
+        this.fetchRandaRevised();
+        this.fetchOldRandas();
+      }
     });
   },
   methods: {
@@ -147,12 +175,12 @@ export default {
       this.randaRevised = await ApiServer.put(region + "/refuse-randa", {
         refuseNote: this.refuseNote
       });
+      this.randa.randa_state = "TODO";
       this.showDisapproveRanda = false;
     },
     async fetchRandaRevised() {
       let region = this.$store.getters["getRegion"].id;
       this.randaRevised = await ApiServer.get(region + "/randa-revised");
-      debugger;
       if (!this.randaRevised) {
         this.$store.commit("snackbar/setData", {
           messageLabel: "no_randa_to_show",
@@ -162,6 +190,23 @@ export default {
         this.allRanaApproved = this.randaRevised.all_approved;
       }
     },
+    async fetchOldRandas() {
+      let region = this.$store.getters["getRegion"].id;
+      this.oldRandas[0] = await ApiServer.get(region + "/randa-revised?timeslot=T2");
+    },
+    async fetchRanda() {
+      let region = this.$store.getters["getRegion"].id;
+      this.randa = await ApiServer.get(region + "/randa");
+      if (!this.randa) {
+        this.$store.commit("snackbar/setData", {
+          messageLabel: "no_randa_to_show",
+          status: "error"
+        });
+      } else {
+        this.allRanaApproved = this.randa.all_approved;
+      }
+    },
+
     async approveRanda() {
       let region = this.$store.getters["getRegion"].id;
       this.randaRevised = await ApiServer.put(region + "/approve-randa", {

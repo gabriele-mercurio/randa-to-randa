@@ -113,7 +113,7 @@ class RanaFormatter
         $retentionFormatter = new RetentionFormatter($this);
 
         $allDetails[] = array_merge($this->format($rana), [
-            'initialMembers'     => $rana->getChapter()->getMembers(),
+            'initialMembers' => $rana->getChapter()->getMembers(),
             'newMembers'     => $rana->filteredNewMembers ? $newMemberFormatter->formatNoRana($rana->filteredNewMembers) : [],
             'renewedMembers' => $rana->filteredRenewedMembers ? $renewedMemberFormatter->formatNoRana($rana->filteredRenewedMembers) : [],
             'retentions'     => $rana->filteredRetentionMembers ? $retentionFormatter->formatNoRana($rana->filteredRetentionMembers) : [],

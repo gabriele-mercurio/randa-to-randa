@@ -15,6 +15,8 @@ use App\Formatter\ChapterFormatter;
 use App\Repository\RandaRepository;
 use App\Repository\ChapterRepository;
 use App\Repository\DirectorRepository;
+use App\Repository\NewMemberRepository;
+use App\Repository\RetentionRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Repository\RanaLifecycleRepository;
 use Nelmio\ApiDocBundle\Annotation\Security;
@@ -47,9 +49,19 @@ class ChapterController extends AbstractController
     /** @var RandaRepository */
     private $randaRepository;
 
+    /** @var NewMemberRepository */
+    private $newMemberRepository;
+
+    /** @var RetentionRepository */
+    private $retentionRepository;
+
 
     /** @var RanaRepository */
     private $ranaRepository;
+
+    /** @var RanaRepository */
+    private $retention;
+
 
     public function __construct(
         ChapterFormatter $chapterFormatter,
@@ -59,7 +71,9 @@ class ChapterController extends AbstractController
         UserRepository $userRepository,
         RanaLifecycleRepository $ranaLifecycleRepository,
         RandaRepository $randaRepository,
-        RanaRepository $ranaRepository
+        RanaRepository $ranaRepository,
+        RetentionRepository $retentionRepository,
+        NewMemberRepository $newMemberRepository
     ) {
         $this->chapterFormatter = $chapterFormatter;
         $this->chapterRepository = $chapterRepository;
@@ -69,6 +83,8 @@ class ChapterController extends AbstractController
         $this->ranaLifecycleRepository = $ranaLifecycleRepository;
         $this->randaRepository = $randaRepository;
         $this->ranaRepository = $ranaRepository;
+        $this->newMemberRepository = $newMemberRepository;
+        $this->retentionRepository = $retentionRepository;
     }
 
     /**
@@ -1040,6 +1056,8 @@ class ChapterController extends AbstractController
         $randa = $this->randaRepository->findOneBy([
             "region" => $region,
             "year" => $currentYear
+        ], [
+            "currentTimeslot" => "DESC"
         ]);
 
         $timeslot = $randa->getCurrentTimeslot();
@@ -1090,6 +1108,83 @@ class ChapterController extends AbstractController
                 return $name1 < $name2 ? -1 : ($name1 > $name2 ? 1 : 0);
             });
 
+            foreach ($chapters as $chapter) {
+                $rana = $this->ranaRepository->findOneBy([
+                    "chapter" => $chapter,
+                    "randa" => $randa
+                ]);
+                if ($rana) {
+                    $new_members_cons = $this->newMemberRepository->findOneBy([
+                        "rana" => $rana,
+                        "valueType" => "CONS",
+                        "timeslot" => "T0"
+                    ]);
+
+
+                    $new_members_appr = $this->newMemberRepository->findOneBy(
+                        [
+                            "rana" => $rana,
+                            "valueType" => "APPR"
+                        ],
+                        [
+                            'timeslot' => 'DESC'
+                        ]
+                    );
+
+                    $new_members_ts = [];
+                    for ($i = 1; $i <= 12; $i++) {
+                        $method = "getM$i";
+                        $val = 0;
+                        if ($new_members_cons) {
+                            $val = $new_members_cons->$method();
+                        }
+                        if (is_null($val) && $new_members_appr) {
+                            $val = $new_members_appr->$method();
+                        }
+                        $new_members_ts[] = $val;
+                    }
+
+
+                    $retentions_cons = $this->retentionRepository->findOneBy([
+                        "rana" => $rana,
+                        "valueType" => "CONS",
+                        "timeslot" => "T0"
+                    ]);
+
+
+                    $retentions_appr = $this->retentionRepository->findOneBy(
+                        [
+                            "rana" => $rana,
+                            "valueType" => "APPR"
+                        ],
+                        [
+                            'timeslot' => 'DESC'
+                        ]
+                    );
+
+                    $retentions_ts = [];
+                    for ($i = 1; $i <= 12; $i++) {
+                        $method = "getM$i";
+                        $val = 0;
+                        if ($retentions_cons) {
+                            $val = $retentions_cons->$method();
+                        }
+                        if (is_null($val) && $retentions_appr) {
+                            $val = $retentions_appr->$method();
+                        }
+                        $retentions_ts[] = $val;
+                    }
+
+
+                    $members = $chapter->getMembers();
+                    for ($i = 0; $i < 12; $i++) {
+                        $members +=  ($new_members_ts[$i] - $retentions_ts[$i]);
+                    }
+                }
+
+                $chapter->setMembers($members);
+            }
+
 
             $chapters_data["chapters"] = array_map(function ($c) use ($randa) {
                 $today = Util::UTCDateTime();
@@ -1101,7 +1196,31 @@ class ChapterController extends AbstractController
                     $warning = "CHAPTER";
                 }
 
-                $ret = $this->chapterFormatter->formatWithStatus($c, $randa);
+
+                if ($randa) {
+
+                    $rana = $this->ranaRepository->findOneBy([
+                        "chapter" => $c,
+                        "randa" => $randa
+                    ]);
+                    if ($rana) {
+                        $lifecycle = $this->ranaLifecycleRepository->findOneBy([
+                            "rana" => $rana,
+                            "currentTimeslot" => $randa->getCurrentTimeslot()
+                        ]);
+                        if ($lifecycle) {
+
+                            $state = $lifecycle->getCurrentState();
+                        } else {
+                            $state = "TODO";
+                        }
+                    } else {
+                        $state = "TODO";
+                    }
+                } else {
+                    $state = "TODO";
+                }
+                $ret = $this->chapterFormatter->formatWithStatus($c, $state);
                 $ret['warning'] = $warning;
                 return $ret;
             }, $chapters);
@@ -1111,6 +1230,15 @@ class ChapterController extends AbstractController
                 "timeslot" => $randa->getCurrentTimeslot(),
                 "year" => $currentYear
             ];
+
+
+            // foreach($chapters as $chapter) {
+            //     $rana = $this->chapterRepository->findOneBy([
+            //         "chapter" => $rana,
+            //         "randa" => $randa
+            //     ]);
+            //     $this->retent
+            // }
 
             return new JsonResponse($chapters_data);
         } else {
@@ -1154,11 +1282,9 @@ class ChapterController extends AbstractController
             $randa = $this->randaRepository->findOneBy([
                 'year' => $currentYear,
                 'region' => $region
-            ], [
-                'currentTimeslot' => 'DESC'
             ]);
-            $timeslot = $randa->getCurrentTimeslot();
 
+            $timeslot = $randa->getCurrentTimeslot();
 
             $all_approved = true;
             foreach ($chapters as $chapter) {
@@ -1196,6 +1322,7 @@ class ChapterController extends AbstractController
             $data["all_approved"] = $all_approved;
             $data["randa_timeslot"] = $timeslot;
             $data["randa_state"] = $randa->getCurrentState();
+            $data["randa_refuse_note"] = $randa->getRefuseNote();
             return new JsonResponse($data, $code);
         } else {
             return new JsonResponse(null, $code);

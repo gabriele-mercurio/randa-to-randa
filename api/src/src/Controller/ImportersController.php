@@ -14,6 +14,7 @@ use App\Repository\RegionRepository;
 use App\Repository\ChapterRepository;
 use App\Repository\DirectorRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use App\Repository\RanaLifecycleRepository;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -42,6 +43,10 @@ class ImportersController extends AbstractController
     /** @var RandaRepository */
     private $randaRepository;
 
+     /** @var RanaLifecycleRepository */
+     private $ranaLifecycleRepository;
+
+
     public function __construct(
         ChapterRepository $chapterRepository,
         DirectorRepository $directorRepository,
@@ -49,7 +54,8 @@ class ImportersController extends AbstractController
         RegionRepository $regionRepository,
         UserRepository $userRepository,
         RanaRepository $ranaRepository,
-        RandaRepository $randaRepository
+        RandaRepository $randaRepository,
+        RanaLifecycleRepository $ranaLifecycleRepository
     ) {
         $this->chapterRepository = $chapterRepository;
         $this->directorRepository = $directorRepository;
@@ -58,6 +64,7 @@ class ImportersController extends AbstractController
         $this->regionRepository = $regionRepository;
         $this->ranaRepository = $ranaRepository;
         $this->randaRepository = $randaRepository;
+        $this->ranaLifecycleRepository = $ranaLifecycleRepository;
     }
 
 
@@ -113,80 +120,80 @@ class ImportersController extends AbstractController
         //     }
         // }
 
-       // old chapters
+        // old chapters
         if (($handle = fopen("../resources/old_chapters.csv", "r")) !== FALSE) {
             // $row = 0;
             // while (($data = fgetcsv($handle, 1000)) !== FALSE) {
-                // if($row > 0) {
-                //     if(isset($chapters_names_map[$data[3]])) {
-                //         $chapter_name = $chapters_names_map[$data[3]];
-                //         $chapter = $this->chapterRepository->findOneBy(["name" => $chapter_name]);
-                //         if ($chapter) {
-                //             $director_old_id = $data[4];
-                //             $director_new_id = $hashed_directors[$director_old_id];
-                //             //$region = $this->regionRepository->find($hashed_regions[$data[1]]);
-                //             $director = $this->directorRepository->find($director_new_id);
-                //             if($director) {
-                //                 $chapter->setDirector($director);
-                //                 $this->entityManager->persist($chapter);
-                //                 $this->entityManager->flush();
-                //             } else {
-                //                 echo "Region not found: " . $director_old_id . "\n\n";
-                //             }
-                            
-                //         }
-                //     } else {
-                //         echo "Chapter not found: " . $chapter_name . "\n\n";
-                //     }
-                    
-                    // $row++;
-                    // if ($row > 2) {
-                    //     $chapter_name = $data[3];
-                    //     if (isset($chapters_names_map[$chapter_name])) {
-                    //         $chapter = $this->chapterRepository->findOneBy(["name" => $chapters_names_map[$chapter_name]]);
-                    //         if (!$chapter) {
-                    //             $chapter = new Chapter();
-                    //         }
-                    //         $chapter->setName($data[3]);
-                    //         $chapter->setName($data[3]);
-                    //         $chapterState = "CORE GROUP";
-                    //         switch ($data[5]) {
-                    //             case "CAPITOLO":
-                    //                 $chapterState = "CHAPTER";
-                    //                 break;
-                    //             case "CHIUSO":
-                    //                 $chapterState = "CLOSED";
-                    //                 break;
-                    //             case "PROGETTO":
-                    //                 $chapterState = "PROJECT";
-                    //                 break;
-                    //         }
-                    //         $chapter->setCurrentState($chapterState);
-                    //         $chapter->setActualLaunchCoreGroupDate(Util::UTCDateTime($data[6]));
-                    //         $chapter->setActualLaunchChapterDate(Util::UTCDateTime($data[7]));
-    
-                    //         if (isset($hashed_directors[$data[4]])) {
-                    //             $directorEntity = $this->directorRepository->find($hashed_directors[$data[4]]);
-                    //             $chapter->setDirector($directorEntity);
-                    //             $chapter->setMembers($data[10]);
-    
-                    //             if (isset($hashed_regions[$data[2]])) {
-                    //                 $regionEntity = $this->regionRepository->find($hashed_regions[$data[2]]);
-                    //                 $chapter->setRegion($regionEntity);
-                    //             }
-                    //             $this->entityManager->persist($chapter);
-                    //             $this->entityManager->flush();
-                    //         } else {
-                    //             file_put_contents("chapter_logs", "DIRECTOR NOT FOUND: " . $data[4] . "\n", FILE_APPEND);
-                    //         }
-                    //     } else {
-                    //         file_put_contents("chapter_logs", "CHAPTER NOT FOUND: " . $chapter_name[4] . "\n", FILE_APPEND);
-    
-                    //     }
-                    //}
-                // }
+            // if($row > 0) {
+            //     if(isset($chapters_names_map[$data[3]])) {
+            //         $chapter_name = $chapters_names_map[$data[3]];
+            //         $chapter = $this->chapterRepository->findOneBy(["name" => $chapter_name]);
+            //         if ($chapter) {
+            //             $director_old_id = $data[4];
+            //             $director_new_id = $hashed_directors[$director_old_id];
+            //             //$region = $this->regionRepository->find($hashed_regions[$data[1]]);
+            //             $director = $this->directorRepository->find($director_new_id);
+            //             if($director) {
+            //                 $chapter->setDirector($director);
+            //                 $this->entityManager->persist($chapter);
+            //                 $this->entityManager->flush();
+            //             } else {
+            //                 echo "Region not found: " . $director_old_id . "\n\n";
+            //             }
 
-                // $row++;
+            //         }
+            //     } else {
+            //         echo "Chapter not found: " . $chapter_name . "\n\n";
+            //     }
+
+            // $row++;
+            // if ($row > 2) {
+            //     $chapter_name = $data[3];
+            //     if (isset($chapters_names_map[$chapter_name])) {
+            //         $chapter = $this->chapterRepository->findOneBy(["name" => $chapters_names_map[$chapter_name]]);
+            //         if (!$chapter) {
+            //             $chapter = new Chapter();
+            //         }
+            //         $chapter->setName($data[3]);
+            //         $chapter->setName($data[3]);
+            //         $chapterState = "CORE GROUP";
+            //         switch ($data[5]) {
+            //             case "CAPITOLO":
+            //                 $chapterState = "CHAPTER";
+            //                 break;
+            //             case "CHIUSO":
+            //                 $chapterState = "CLOSED";
+            //                 break;
+            //             case "PROGETTO":
+            //                 $chapterState = "PROJECT";
+            //                 break;
+            //         }
+            //         $chapter->setCurrentState($chapterState);
+            //         $chapter->setActualLaunchCoreGroupDate(Util::UTCDateTime($data[6]));
+            //         $chapter->setActualLaunchChapterDate(Util::UTCDateTime($data[7]));
+
+            //         if (isset($hashed_directors[$data[4]])) {
+            //             $directorEntity = $this->directorRepository->find($hashed_directors[$data[4]]);
+            //             $chapter->setDirector($directorEntity);
+            //             $chapter->setMembers($data[10]);
+
+            //             if (isset($hashed_regions[$data[2]])) {
+            //                 $regionEntity = $this->regionRepository->find($hashed_regions[$data[2]]);
+            //                 $chapter->setRegion($regionEntity);
+            //             }
+            //             $this->entityManager->persist($chapter);
+            //             $this->entityManager->flush();
+            //         } else {
+            //             file_put_contents("chapter_logs", "DIRECTOR NOT FOUND: " . $data[4] . "\n", FILE_APPEND);
+            //         }
+            //     } else {
+            //         file_put_contents("chapter_logs", "CHAPTER NOT FOUND: " . $chapter_name[4] . "\n", FILE_APPEND);
+
+            //     }
+            //}
+            // }
+
+            // $row++;
             // }
             // fclose($handle);
         }
@@ -265,7 +272,6 @@ class ImportersController extends AbstractController
 
                     $this->entityManager->persist($newMembers);
                     $this->entityManager->persist($retentions);
-                   
                 }
                 $this->entityManager->flush();
                 $row++;
@@ -273,5 +279,40 @@ class ImportersController extends AbstractController
         }
 
         return new JsonResponse();
+    }
+
+
+
+    /**
+     * Importer for chapters from the old DB
+     *
+     * @Route(path="/utils", name="chapter_importer", methods={"GET"})
+     *
+     */
+    public function utils(): Response
+    {
+        $approved_randas = $this->randaRepository->findBy([
+            "currentState" => "APPR"
+        ]);
+        $i = 0;
+        foreach($approved_randas as $approved_randa) {
+            $ranas = $this->ranaRepository->findBy([
+                "randa" => $approved_randa
+            ]);
+            foreach($ranas as $rana) {
+                $lifecycles = $this->ranaLifecycleRepository->findBy([
+                    "rana" => $rana,
+                    "currentTimeslot" => $approved_randa->getCurrentTimeslot()
+                    ]);
+                    foreach($lifecycles as $lifecycle) {
+                        if($lifecycle->getCurrentState() !== "APPR") {
+                            echo $approved_randa->getRegion()->getName() . " --- ";
+                            echo $rana->getChapter()->getName() . ": ";
+                        echo $lifecycle->getCurrentState() . "<br>";
+                    }
+                }
+            }
+        }
+        return new JsonResponse($i);
     }
 }

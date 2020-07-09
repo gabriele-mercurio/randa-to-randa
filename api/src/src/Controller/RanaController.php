@@ -287,63 +287,63 @@ class RanaController extends AbstractController
      */
     public function createRana(Chapter $chapter, Request $request): Response
     {
-        // $request = Util::normalizeRequest($request);
+        $request = Util::normalizeRequest($request);
 
-        // $region = $chapter->getRegion();
+        $region = $chapter->getRegion();
 
-        // $roleCheck = [
-        //     Constants::ROLE_EXECUTIVE,
-        //     Constants::ROLE_AREA,
-        //     Constants::ROLE_ASSISTANT
-        // ];
-        // $performerData = Util::getPerformerData($this->getUser(), $region, $roleCheck, $this->userRepository, $this->directorRepository, $request->get("actAs"), $request->get("role"));
+        $roleCheck = [
+            Constants::ROLE_EXECUTIVE,
+            Constants::ROLE_AREA,
+            Constants::ROLE_ASSISTANT
+        ];
+        $performerData = Util::getPerformerData($this->getUser(), $region, $roleCheck, $this->userRepository, $this->directorRepository, $request->get("actAs"), $request->get("role"));
 
-        // // Assign $actAs, $code, $director, $isAdmin and $role
-        // foreach ($performerData as $var => $value) {
-        //     $$var = $value;
-        // }
+        // Assign $actAs, $code, $director, $isAdmin and $role
+        foreach ($performerData as $var => $value) {
+            $$var = $value;
+        }
 
-        // if ($code == Response::HTTP_OK) {
-        //     $currentYear = (int) date("Y");
-        //     $randa = $this->randaRepository->findOneBy([
-        //         'region' => $region,
-        //         'year' => $currentYear
-        //     ]);
+        if ($code == Response::HTTP_OK) {
+            $currentYear = (int) date("Y");
+            $randa = $this->randaRepository->findOneBy([
+                'region' => $region,
+                'year' => $currentYear
+            ]);
 
-        //     if (is_null($randa)) {
-        //         $randa = new Randa();
-        //         $randa->setCurrentTimeslot(Constants::TIMESLOT_T0);
-        //         $randa->setRegion($region);
-        //         $randa->setYear($currentYear);
-        //         $randa->setCurrentState("TODO");
-        //         $this->randaRepository->save($randa);
-        //     }
+            if (is_null($randa)) {
+                $randa = new Randa();
+                $randa->setCurrentTimeslot(Constants::TIMESLOT_T0);
+                $randa->setRegion($region);
+                $randa->setYear($currentYear);
+                $randa->setCurrentState("TODO");
+                $this->randaRepository->save($randa);
+            }
 
-        //     $rana = $this->ranaRepository->findOneBy([
-        //         'chapter' => $chapter,
-        //         'randa' => $randa
-        //     ]);
+            $rana = $this->ranaRepository->findOneBy([
+                'chapter' => $chapter,
+                'randa' => $randa
+            ]);
 
-        //     if (!is_null($rana)) {
-        //         $code = Response::HTTP_BAD_REQUEST;
-        //     }
-        // }
+            if (!is_null($rana)) {
+                $code = Response::HTTP_BAD_REQUEST;
+            }
+        }
 
-        // if ($code == Response::HTTP_OK) {
-        //     $rana = new Rana();
-        //     $rana->setChapter($chapter);
-        //     $rana->setRanda($randa);
-        //     $this->ranaRepository->save($rana);
+        if ($code == Response::HTTP_OK) {
+            $rana = new Rana();
+            $rana->setChapter($chapter);
+            $rana->setRanda($randa);
+            $this->ranaRepository->save($rana);
 
-        //     $ranaLifeCycle = new RanaLifecycle();
-        //     $ranaLifeCycle->setCurrentState(Constants::RANA_LIFECYCLE_STATUS_TODO);
-        //     $ranaLifeCycle->setCurrentTimeslot(Constants::TIMESLOT_T0);
-        //     $ranaLifeCycle->setRana($rana);
-        //     $this->ranaLifeCycleRepository->save($ranaLifeCycle);
-        //     $this->entityManager->refresh($rana);
+            $ranaLifeCycle = new RanaLifecycle();
+            $ranaLifeCycle->setCurrentState(Constants::RANA_LIFECYCLE_STATUS_TODO);
+            $ranaLifeCycle->setCurrentTimeslot(Constants::TIMESLOT_T0);
+            $ranaLifeCycle->setRana($rana);
+            $this->ranaLifeCycleRepository->save($ranaLifeCycle);
+            $this->entityManager->refresh($rana);
 
-        //     return new JsonResponse($this->ranaFormatter->formatData($rana, $role, "", $randa->getCurrentTimeslot(), null));
-            return new JsonResponse(null);
+            return new JsonResponse($this->ranaFormatter->formatData($rana, $role, "", $randa->getCurrentTimeslot(), null));
+        }
     }
 
     /**
@@ -899,54 +899,54 @@ class RanaController extends AbstractController
                             'valueType' => $valueType,
                             'timeslot' => Constants::TIMESLOT_T3
                         ]);
-                        $newMember->setM12($request->get("n_m12") ?? ($previous ? $previous->getM12() : 0));
-                        $newMember->setM11($request->get("n_m11") ?? ($previous ? $previous->getM11() : 0));
-                        $newMember->setM10($request->get("n_m10") ?? ($previous ? $previous->getM10() : 0));
+                        $newMember->setM12($request->get("n_m12") ?? ($previous ? ($previous->getM12() ? $previous->getM12() : 0) : 0));
+                        $newMember->setM11($request->get("n_m11") ?? ($previous ? ($previous->getM11() ? $previous->getM11() : 0) : 0));
+                        $newMember->setM10($request->get("n_m10") ?? ($previous ? ($previous->getM10() ? $previous->getM10() : 0) : 0));
 
                         $previous = $this->retentionRepository->findOneBy([
                             'rana' => $rana,
                             'valueType' => $valueType,
                             'timeslot' => Constants::TIMESLOT_T3
                         ]);
-                        $retentionMember->setM12($request->get("r_m12") ?? ($previous ? $previous->getM12() : 0));
-                        $retentionMember->setM11($request->get("r_m11") ?? ($previous ? $previous->getM11() : 0));
-                        $retentionMember->setM10($request->get("r_m10") ?? ($previous ? $previous->getM10() : 0));
+                        $retentionMember->setM12($request->get("r_m12") ?? ($previous ? ($previous->getM12() ? $previous->getM12() : 0) : 0));
+                        $retentionMember->setM11($request->get("r_m11") ?? ($previous ? ($previous->getM11() ? $previous->getM11() : 0) : 0));
+                        $retentionMember->setM10($request->get("r_m10") ?? ($previous ? ($previous->getM10() ? $previous->getM10() : 0) : 0));
                     case Constants::TIMESLOT_T3:
                         $previous = $this->newMemberRepository->findOneBy([
                             'rana' => $rana,
                             'valueType' => $valueType,
                             'timeslot' => Constants::TIMESLOT_T2
                         ]);
-                        $newMember->setM9($request->get("n_m9") ?? ($previous ? $previous->getM9() : 0));
-                        $newMember->setM8($request->get("n_m8") ?? ($previous ? $previous->getM8() : 0));
-                        $newMember->setM7($request->get("n_m7") ?? ($previous ? $previous->getM7() : 0));
+                        $newMember->setM9($request->get("n_m9") ?? ($previous ? ($previous->getM9() ? $previous->getM9() : 0) : 0));
+                        $newMember->setM8($request->get("n_m8") ?? ($previous ? ($previous->getM8() ? $previous->getM8() : 0) : 0));
+                        $newMember->setM7($request->get("n_m7") ?? ($previous ? ($previous->getM7() ? $previous->getM7() : 0) : 0));
 
                         $previous = $this->retentionRepository->findOneBy([
                             'rana' => $rana,
                             'valueType' => $valueType,
                             'timeslot' => Constants::TIMESLOT_T2
                         ]);
-                        $retentionMember->setM9($request->get("r_m9") ?? ($previous ? $previous->getM9() : 0));
-                        $retentionMember->setM8($request->get("r_m8") ?? ($previous ? $previous->getM8() : 0));
-                        $retentionMember->setM7($request->get("r_m7") ?? ($previous ? $previous->getM7() : 0));
+                        $retentionMember->setM9($request->get("r_m9") ?? ($previous ? ($previous->getM9() ? $previous->getM9() : 0) : 0));
+                        $retentionMember->setM8($request->get("r_m8") ?? ($previous ? ($previous->getM8() ? $previous->getM8() : 0) : 0));
+                        $retentionMember->setM7($request->get("r_m7") ?? ($previous ? ($previous->getM7() ? $previous->getM7() : 0) : 0));
                     case Constants::TIMESLOT_T2:
                         $previous = $this->newMemberRepository->findOneBy([
                             'rana' => $rana,
                             'valueType' => $valueType,
                             'timeslot' => Constants::TIMESLOT_T1
                         ]);
-                        $newMember->setM6($request->get("n_m6") ?? ($previous ? $previous->getM6() : 0));
-                        $newMember->setM5($request->get("n_m5") ?? ($previous ? $previous->getM5() : 0));
-                        $newMember->setM4($request->get("n_m4") ?? ($previous ? $previous->getM4() : 0));
+                        $newMember->setM6($request->get("n_m6") ?? ($previous ? ($previous->getM6() ? $previous->getM6() : 0) : 0));
+                        $newMember->setM5($request->get("n_m5") ?? ($previous ? ($previous->getM5() ? $previous->getM6() : 0) : 0));
+                        $newMember->setM4($request->get("n_m4") ?? ($previous ? ($previous->getM4() ? $previous->getM4() : 0) : 0));
 
                         $previous = $this->retentionRepository->findOneBy([
                             'rana' => $rana,
                             'valueType' => $valueType,
                             'timeslot' => Constants::TIMESLOT_T1
                         ]);
-                        $retentionMember->setM6($request->get("r_m6") ?? ($previous ? $previous->getM6() : 0));
-                        $retentionMember->setM5($request->get("r_m5") ?? ($previous ? $previous->getM5() : 0));
-                        $retentionMember->setM4($request->get("r_m4") ?? ($previous ? $previous->getM4() : 0));
+                        $retentionMember->setM6($request->get("r_m6") ?? ($previous ? ($previous->getM6() ? $previous->getM6() : 0) : 0));
+                        $retentionMember->setM5($request->get("r_m5") ?? ($previous ? ($previous->getM5() ? $previous->getM6() : 0) : 0));
+                        $retentionMember->setM4($request->get("r_m4") ?? ($previous ? ($previous->getM4() ? $previous->getM4() : 0) : 0));
                     case Constants::TIMESLOT_T1:
                         $newMember->setM3($request->get("n_m3") ?? 0);
                         $newMember->setM2($request->get("n_m2") ?? 0);
@@ -981,21 +981,21 @@ class RanaController extends AbstractController
                         ]);
 
                         if ($timeslot == Constants::TIMESLOT_T1) {
-                            $newMember->setM1($request->get("n_m1") ?? ($previousNewMember ? $previousNewMember->getM1() : 0));
-                            $newMember->setM2($request->get("n_m2") ?? ($previousNewMember ? $previousNewMember->getM2() : 0));
-                            $newMember->setM3($request->get("n_m3") ?? ($previousNewMember ? $previousNewMember->getM3() : 0));
-                            $retentionMember->setM3($request->get("r_m3") ?? ($previousRetentionMember ? $previousRetentionMember->getM3() : 0));
-                            $retentionMember->setM1($request->get("r_m1") ?? ($previousRetentionMember ? $previousRetentionMember->getM1() : 0));
-                            $retentionMember->setM2($request->get("r_m2") ?? ($previousRetentionMember ? $previousRetentionMember->getM2() : 0));
+                            $newMember->setM1($request->get("n_m1") ?? ($previousNewMember ? ($previousNewMember->getM1() ? $previousNewMember->getM1() : 0) : 0));
+                            $newMember->setM2($request->get("n_m2") ?? ($previousNewMember ? ($previousNewMember->getM2() ? $previousNewMember->getM2() : 0) : 0));
+                            $newMember->setM3($request->get("n_m3") ?? ($previousNewMember ? ($previousNewMember->getM3() ? $previousNewMember->getM3() : 0) : 0));
+                            $retentionMember->setM3($request->get("r_m3") ?? ($previousRetentionMember ? ($previousRetentionMember->getM3() ? $previousRetentionMember->getM3() : 0) : 0));
+                            $retentionMember->setM1($request->get("r_m1") ?? ($previousRetentionMember ? ($previousRetentionMember->getM1() ? $previousRetentionMember->getM1() : 0) : 0));
+                            $retentionMember->setM2($request->get("r_m2") ?? ($previousRetentionMember ? ($previousRetentionMember->getM2() ? $previousRetentionMember->getM2() : 0) : 0));
                         }
 
-                        $newMember->setM4($request->get("n_m4") ?? ($previousNewMember ? $previousNewMember->getM4() : 0));
-                        $newMember->setM5($request->get("n_m5") ?? ($previousNewMember ? $previousNewMember->getM5() : 0));
-                        $newMember->setM6($request->get("n_m6") ?? ($previousNewMember ? $previousNewMember->getM6() : 0));
+                        $newMember->setM4($request->get("n_m4") ?? ($previousNewMember ? ($previousNewMember->getM4() ? $previousNewMember->getM4() : 0) : 0));
+                        $newMember->setM5($request->get("n_m5") ?? ($previousNewMember ? ($previousNewMember->getM5() ? $previousNewMember->getM5() : 0) : 0));
+                        $newMember->setM6($request->get("n_m6") ?? ($previousNewMember ? ($previousNewMember->getM6() ? $previousNewMember->getM6() : 0) : 0));
 
-                        $retentionMember->setM6($request->get("r_m6") ?? ($previousRetentionMember ? $previousRetentionMember->getM6() : 0));
-                        $retentionMember->setM4($request->get("r_m4") ?? ($previousRetentionMember ? $previousRetentionMember->getM4() : 0));
-                        $retentionMember->setM5($request->get("r_m5") ?? ($previousRetentionMember ? $previousRetentionMember->getM5() : 0));
+                        $retentionMember->setM6($request->get("r_m6") ?? ($previousRetentionMember ? ($previousRetentionMember->getM6() ? $previousRetentionMember->getM6() : 0) : 0));
+                        $retentionMember->setM4($request->get("r_m4") ?? ($previousRetentionMember ? ($previousRetentionMember->getM4() ? $previousRetentionMember->getM4() : 0) : 0));
+                        $retentionMember->setM5($request->get("r_m5") ?? ($previousRetentionMember ? ($previousRetentionMember->getM5() ? $previousRetentionMember->getM5() : 0) : 0));
                     case Constants::TIMESLOT_T2:
                         $previousNewMember = $this->newMemberRepository->findOneBy([
                             'rana' => $rana,
@@ -1008,27 +1008,27 @@ class RanaController extends AbstractController
                             'timeslot' => Constants::TIMESLOT_T1
                         ]);
                         if ($timeslot == Constants::TIMESLOT_T2) {
-                            $newMember->setM1($request->get("n_m1") ?? ($previousNewMember ? $previousNewMember->getM1() : 0));
-                            $newMember->setM2($request->get("n_m2") ?? ($previousNewMember ? $previousNewMember->getM2() : 0));
-                            $newMember->setM3($request->get("n_m3") ?? ($previousNewMember ? $previousNewMember->getM3() : 0));
-                            $newMember->setM4($request->get("n_m4") ?? ($previousNewMember ? $previousNewMember->getM4() : 0));
-                            $newMember->setM5($request->get("n_m5") ?? ($previousNewMember ? $previousNewMember->getM5() : 0));
-                            $newMember->setM6($request->get("n_m6") ?? ($previousNewMember ? $previousNewMember->getM6() : 0));
+                            $newMember->setM1($request->get("n_m1") ?? ($previousNewMember ? ($previousNewMember->getM1() ? $previousNewMember->getM1() : 0) : 0));
+                            $newMember->setM2($request->get("n_m2") ?? ($previousNewMember ? ($previousNewMember->getM2() ? $previousNewMember->getM2() : 0) : 0));
+                            $newMember->setM3($request->get("n_m3") ?? ($previousNewMember ? ($previousNewMember->getM3() ? $previousNewMember->getM3() : 0) : 0));
+                            $newMember->setM4($request->get("n_m4") ?? ($previousNewMember ? ($previousNewMember->getM4() ? $previousNewMember->getM4() : 0) : 0));
+                            $newMember->setM5($request->get("n_m5") ?? ($previousNewMember ? ($previousNewMember->getM5() ? $previousNewMember->getM5() : 0) : 0));
+                            $newMember->setM6($request->get("n_m6") ?? ($previousNewMember ? ($previousNewMember->getM6() ? $previousNewMember->getM6() : 0) : 0));
 
-                            $retentionMember->setM3($request->get("r_m3") ?? ($previousRetentionMember ? $previousRetentionMember->getM3() : 0));
-                            $retentionMember->setM1($request->get("r_m1") ?? ($previousRetentionMember ? $previousRetentionMember->getM1() : 0));
-                            $retentionMember->setM2($request->get("r_m2") ?? ($previousRetentionMember ? $previousRetentionMember->getM2() : 0));
-                            $retentionMember->setM6($request->get("r_m6") ?? ($previousRetentionMember ? $previousRetentionMember->getM6() : 0));
-                            $retentionMember->setM4($request->get("r_m4") ?? ($previousRetentionMember ? $previousRetentionMember->getM4() : 0));
-                            $retentionMember->setM5($request->get("r_m5") ?? ($previousRetentionMember ? $previousRetentionMember->getM5() : 0));
+                            $retentionMember->setM3($request->get("r_m3") ?? ($previousRetentionMember ? ($previousRetentionMember->getM3() ? $previousRetentionMember->getM3() : 0) : 0));
+                            $retentionMember->setM1($request->get("r_m1") ?? ($previousRetentionMember ? ($previousRetentionMember->getM1() ? $previousRetentionMember->getM1() : 0) : 0));
+                            $retentionMember->setM2($request->get("r_m2") ?? ($previousRetentionMember ? ($previousRetentionMember->getM2() ? $previousRetentionMember->getM2() : 0) : 0));
+                            $retentionMember->setM6($request->get("r_m6") ?? ($previousRetentionMember ? ($previousRetentionMember->getM6() ? $previousRetentionMember->getM6() : 0) : 0));
+                            $retentionMember->setM4($request->get("r_m4") ?? ($previousRetentionMember ? ($previousRetentionMember->getM4() ? $previousRetentionMember->getM4() : 0) : 0));
+                            $retentionMember->setM5($request->get("r_m5") ?? ($previousRetentionMember ? ($previousRetentionMember->getM5() ? $previousRetentionMember->getM5() : 0) : 0));
                         }
 
-                        $newMember->setM7($request->get("n_m7") ?? ($previousNewMember ? $previousNewMember->getM7() : 0));
-                        $newMember->setM8($request->get("n_m8") ?? ($previousNewMember ? $previousNewMember->getM8() : 0));
-                        $newMember->setM9($request->get("n_m9") ?? ($previousNewMember ? $previousNewMember->getM9() : 0));
-                        $retentionMember->setM7($request->get("r_m7") ?? ($previousRetentionMember ? $previousRetentionMember->getM7() : 0));
-                        $retentionMember->setM8($request->get("r_m8") ?? ($previousRetentionMember ? $previousRetentionMember->getM8() : 0));
-                        $retentionMember->setM9($request->get("r_m9") ?? ($previousRetentionMember ? $previousRetentionMember->getM9() : 0));
+                        $newMember->setM7($request->get("n_m7") ?? ($previousNewMember ? ($previousNewMember->getM7() ? $previousNewMember->getM7() : 0) : 0));
+                        $newMember->setM8($request->get("n_m8") ?? ($previousNewMember ? ($previousNewMember->getM8() ? $previousNewMember->getM8() : 0) : 0));
+                        $newMember->setM9($request->get("n_m9") ?? ($previousNewMember ? ($previousNewMember->getM9() ? $previousNewMember->getM9() : 0) : 0));
+                        $retentionMember->setM7($request->get("r_m7") ?? ($previousRetentionMember ? ($previousRetentionMember->getM7() ? $previousRetentionMember->getM7() : 0) : 0));
+                        $retentionMember->setM8($request->get("r_m8") ?? ($previousRetentionMember ? ($previousRetentionMember->getM8() ? $previousRetentionMember->getM8() : 0) : 0));
+                        $retentionMember->setM9($request->get("r_m9") ?? ($previousRetentionMember ? ($previousRetentionMember->getM9() ? $previousRetentionMember->getM9() : 0) : 0));
                     case Constants::TIMESLOT_T3:
                         $previousNewMember = $this->newMemberRepository->findOneBy([
                             'rana' => $rana,
@@ -1043,28 +1043,28 @@ class RanaController extends AbstractController
 
 
                         if ($timeslot == Constants::TIMESLOT_T3) {
-                            $newMember->setM1($request->get("n_m1") ?? ($previousNewMember ? $previousNewMember->getM1() : 0));
-                            $newMember->setM2($request->get("n_m2") ?? ($previousNewMember ? $previousNewMember->getM2() : 0));
-                            $newMember->setM3($request->get("n_m3") ?? ($previousNewMember ? $previousNewMember->getM3() : 0));
-                            $retentionMember->setM3($request->get("r_m3") ?? ($previousRetentionMember ? $previousRetentionMember->getM3() : 0));
-                            $retentionMember->setM1($request->get("r_m1") ?? ($previousRetentionMember ? $previousRetentionMember->getM1() : 0));
-                            $retentionMember->setM2($request->get("r_m2") ?? ($previousRetentionMember ? $previousRetentionMember->getM2() : 0));
+                            $newMember->setM1($request->get("n_m1") ?? ($previousNewMember ? ($previousNewMember->getM1() ? $previousNewMember->getM1() : 0) : 0));
+                            $newMember->setM2($request->get("n_m2") ?? ($previousNewMember ? ($previousNewMember->getM2() ? $previousNewMember->getM2() : 0) : 0));
+                            $newMember->setM3($request->get("n_m3") ?? ($previousNewMember ? ($previousNewMember->getM3() ? $previousNewMember->getM3() : 0) : 0));
+                            $retentionMember->setM3($request->get("r_m3") ?? ($previousRetentionMember ? ($previousRetentionMember->getM3() ? $previousRetentionMember->getM3() : 0) : 0));
+                            $retentionMember->setM1($request->get("r_m1") ?? ($previousRetentionMember ? ($previousRetentionMember->getM1() ? $previousRetentionMember->getM1() : 0) : 0));
+                            $retentionMember->setM2($request->get("r_m2") ?? ($previousRetentionMember ? ($previousRetentionMember->getM2() ? $previousRetentionMember->getM2() : 0) : 0));
 
-                            $newMember->setM7($request->get("n_m7") ?? ($previousNewMember ? $previousNewMember->getM7() : 0));
-                            $newMember->setM5($request->get("n_m5") ?? ($previousNewMember ? $previousNewMember->getM5() : 0));
-                            $newMember->setM9($request->get("n_m9") ?? ($previousNewMember ? $previousNewMember->getM9() : 0));
-                            $retentionMember->setM9($request->get("r_m9") ?? ($previousRetentionMember ? $previousRetentionMember->getM9() : 0));
-                            $retentionMember->setM7($request->get("r_m7") ?? ($previousRetentionMember ? $previousRetentionMember->getM7() : 0));
-                            $retentionMember->setM5($request->get("r_m5") ?? ($previousRetentionMember ? $previousRetentionMember->getM5() : 0));
+                            $newMember->setM7($request->get("n_m7") ?? ($previousNewMember ? ($previousNewMember->getM7() ? $previousNewMember->getM7() : 0) : 0));
+                            $newMember->setM5($request->get("n_m5") ?? ($previousNewMember ? ($previousNewMember->getM5() ? $previousNewMember->getM5() : 0) : 0));
+                            $newMember->setM9($request->get("n_m9") ?? ($previousNewMember ? ($previousNewMember->getM9() ? $previousNewMember->getM9() : 0) : 0));
+                            $retentionMember->setM9($request->get("r_m9") ?? ($previousRetentionMember ? ($previousRetentionMember->getM9() ? $previousRetentionMember->getM9() : 0) : 0));
+                            $retentionMember->setM7($request->get("r_m7") ?? ($previousRetentionMember ? ($previousRetentionMember->getM7() ? $previousRetentionMember->getM7() : 0) : 0));
+                            $retentionMember->setM5($request->get("r_m5") ?? ($previousRetentionMember ? ($previousRetentionMember->getM5() ? $previousRetentionMember->getM5() : 0) : 0));
                         }
-                        $newMember->setM10($request->get("n_m10") ?? ($previousNewMember ? $previousNewMember->getM10() : 0));
-                        $newMember->setM11($request->get("n_m11") ?? ($previousNewMember ? $previousNewMember->getM11() : 0));
-                        $newMember->setM12($request->get("n_m12") ?? ($previousNewMember ? $previousNewMember->getM12() : 0));
+                        $newMember->setM10($request->get("n_m10") ?? ($previousNewMember ? ($previousNewMember->getM10() ? $previousNewMember->getM10() : 0) : 0));
+                        $newMember->setM11($request->get("n_m11") ?? ($previousNewMember ? ($previousNewMember->getM11() ? $previousNewMember->getM11() : 0) : 0));
+                        $newMember->setM12($request->get("n_m12") ?? ($previousNewMember ? ($previousNewMember->getM12() ? $previousNewMember->getM12() : 0) : 0));
 
 
-                        $retentionMember->setM10($request->get("r_m10") ?? ($previousRetentionMember ? $previousRetentionMember->getM10() : 0));
-                        $retentionMember->setM11($request->get("r_m11") ?? ($previousRetentionMember ? $previousRetentionMember->getM11() : 0));
-                        $retentionMember->setM12($request->get("r_m12") ?? ($previousRetentionMember ? $previousRetentionMember->getM12() : 0));
+                        $retentionMember->setM10($request->get("r_m10") ?? ($previousRetentionMember ? ($previousRetentionMember->getM10() ? $previousRetentionMember->getM10() : 0) : 0));
+                        $retentionMember->setM11($request->get("r_m11") ?? ($previousRetentionMember ? ($previousRetentionMember->getM11() ? $previousRetentionMember->getM11() : 0) : 0));
+                        $retentionMember->setM12($request->get("r_m12") ?? ($previousRetentionMember ? ($previousRetentionMember->getM12() ? $previousRetentionMember->getM12() : 0) : 0));
                 }
             }
 
@@ -1463,14 +1463,13 @@ class RanaController extends AbstractController
             "valueType" => "APPR",
             "timeslot" => $rana->getRanda()->getCurrentTimeslot()
         ]);
-        if($retention) {
+        if ($retention) {
             $this->entityManager->remove($retention);
             $this->entityManager->flush();
-    
         } else {
             return new JsonResponse("NOT FOUND");
         }
-        
+
         $new_member = $this->newMemberRepository->findOneBy([
             "rana" => $rana,
             "valueType" => "APPR",

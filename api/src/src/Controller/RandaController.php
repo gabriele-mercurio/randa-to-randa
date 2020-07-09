@@ -642,19 +642,19 @@ class RandaController extends AbstractController
         ]);
 
         file_put_contents("pippo", "randa exists", FILE_APPEND);
-        
+
         if ($randa) {
 
             $timeslot = $randa->getCurrentTimeslot();
             file_put_contents("pippo", $timeslot . "\n", FILE_APPEND);
-            if($randa->getCurrentState() == "TODO") {
+            if ($randa->getCurrentState() == "TODO") {
                 $num = substr($timeslot, -1);
-                if($num > 0) {
+                if ($num > 0) {
                     $timeslot = "T" + ($num * 1 - 1);
                 } else {
                     return new JsonResponse(false);
                 }
-            } 
+            }
 
             $ranas = $randa->getRanas();
 
@@ -927,9 +927,8 @@ class RandaController extends AbstractController
                 $ranaLifeCycle->setRana($rana);
                 $this->ranaLifecycleRepository->save($ranaLifeCycle);
                 $this->entityManager->refresh($rana);
-
             }
-           
+
             return new JsonResponse(true);
         } catch (Exception $e) {
             file_put_contents("pippo", $e->getMessage());
@@ -947,308 +946,229 @@ class RandaController extends AbstractController
      * **/
     public function getRanda(Region $region, Request $request): Response
     {
-        $currentYear = (int) date("Y");
 
-        $randa = $this->randaRepository->findOneBy([
-            "region" => $region,
-            "year" => $currentYear
-        ]);
+        try {
+            $currentYear = (int) date("Y");
 
-        if ($randa) {
-            $timeslot = $randa->getCurrentTimeslot();
-
-            if($randa->getCurrentState() == "TODO") {
-                return new JsonResponse(false);
-                $num = (int) substr($timeslot, -1);
-                if($num > 0) {
-                    $timeslot = "T" . ($num * 1 - 1);
-                } else {
-                    return new JsonResponse(false);
-                }
-            } 
-
-
-            $chapters = $this->chapterRepository->findBy([
-                "currentState" => "CORE_GROUP",
-                "region" => $region
-            ]);
-
-            $data["core_groups_new"] = [];
-            $data["core_groups_ret"] = [];
-            $data["core_groups_act"] = [];
-            $data["chapters_new"] = [];
-            $data["chapters_ret"] = [];
-            $data["chapters_act"] = [];
-            $data["chapters_average"] = [];
-            $data["core_groups_average"] = [];
-            $data["directors"] = null;
-            $data["num_chapters"] = [0, 0, 0, 0];
-            $data["note"] = $randa->getNote() ? $randa->getNote() : "Nessuna nota";
-            $data["timeslot"] = $randa->getCurrentTimeslot();
-            $data["year"] = $currentYear;
-
-            $roleCheck = [
-                Constants::ROLE_EXECUTIVE
-            ];
-            $performerData = Util::getPerformerData($this->getUser(), $region, $roleCheck, $this->userRepository, $this->directorRepository, $request->get("actAs"), $request->get("role"));
-
-            foreach ($performerData as $var => $value) {
-                $$var = $value;
-            }
-
-            $core_groups = $this->chapterRepository->findBy([
+            $randa = $this->randaRepository->findOneBy([
                 "region" => $region,
-                "currentState" => "CORE_GROUP"
+                "year" => $currentYear
             ]);
 
-            foreach ($core_groups as $core_group) {
+            if ($randa) {
+                $timeslot = $randa->getCurrentTimeslot();
 
-                $year = $core_group->getPrevLaunchChapterDate()->format("Y");
-                $initial_members = $core_group->getMembers();
-                if ($year == (int) date("Y")) {
+                if ($randa->getCurrentState() == "TODO") {
+                    $num = (int) substr($timeslot, -1);
+                    if ($num > 0) {
+                        $timeslot = "T" . ($num * 1 - 1);
+                    } else {
+                        return new JsonResponse(false);
+                    }
+                }
 
-                    $chapter_element_cg_ret = [
-                        "name" => $core_group->getName(),
-                        "data" => []
-                    ];
-                    $chapter_element_cg_new = [
-                        "name" => $core_group->getName(),
-                        "data" => []
-                    ];
-                    $chapter_element_cg_act = [
-                        "name" => $core_group->getName(),
-                        "data" => []
-                    ];
-                    $chapter_element_ret = [
-                        "name" => $core_group->getName(),
-                        "data" => []
-                    ];
-                    $chapter_element_act = [
-                        "name" => $core_group->getName(),
-                        "data" => []
-                    ];
+                $chapters = $this->chapterRepository->findBy([
+                    "currentState" => "CORE_GROUP",
+                    "region" => $region
+                ]);
 
-                    $chapter_element_new = [
-                        "name" => $core_group->getName(),
-                        "data" => []
-                    ];
+                $data["core_groups_new"] = [];
+                $data["core_groups_ret"] = [];
+                $data["core_groups_act"] = [];
+                $data["chapters_new"] = [];
+                $data["chapters_ret"] = [];
+                $data["chapters_act"] = [];
+                $data["chapters_average"] = [];
+                $data["core_groups_average"] = [];
+                $data["directors"] = null;
+                $data["num_chapters"] = [0, 0, 0, 0];
+                $data["note"] = $randa->getNote() ? $randa->getNote() : "Nessuna nota";
+                $data["timeslot"] = $timeslot;
+                $data["year"] = $currentYear;
+
+                $roleCheck = [
+                    Constants::ROLE_EXECUTIVE
+                ];
+                $performerData = Util::getPerformerData($this->getUser(), $region, $roleCheck, $this->userRepository, $this->directorRepository, $request->get("actAs"), $request->get("role"));
+
+                foreach ($performerData as $var => $value) {
+                    $$var = $value;
+                }
+
+                $core_groups = $this->chapterRepository->findBy([
+                    "region" => $region,
+                    "currentState" => "CORE_GROUP"
+                ]);
+
+                foreach ($core_groups as $core_group) {
+
+                    $year = $core_group->getPrevLaunchChapterDate()->format("Y");
+                    $initial_members = $core_group->getMembers();
+                    if ($year == (int) date("Y")) {
+
+                        $chapter_element_cg_ret = [
+                            "name" => $core_group->getName(),
+                            "data" => []
+                        ];
+                        $chapter_element_cg_new = [
+                            "name" => $core_group->getName(),
+                            "data" => []
+                        ];
+                        $chapter_element_cg_act = [
+                            "name" => $core_group->getName(),
+                            "data" => []
+                        ];
+                        $chapter_element_ret = [
+                            "name" => $core_group->getName(),
+                            "data" => []
+                        ];
+                        $chapter_element_act = [
+                            "name" => $core_group->getName(),
+                            "data" => []
+                        ];
+
+                        $chapter_element_new = [
+                            "name" => $core_group->getName(),
+                            "data" => []
+                        ];
 
 
-                    $month = $core_group->getPrevLaunchChapterDate()->format("m");
-                    $rana = $this->ranaRepository->findOneBy([
-                        "chapter" => $core_group,
-                        "randa" => $randa
-                    ]);
+                        $month = $core_group->getPrevLaunchChapterDate()->format("m");
+                        $rana = $this->ranaRepository->findOneBy([
+                            "chapter" => $core_group,
+                            "randa" => $randa
+                        ]);
 
-                    $new = $this->newMemberRepository->findOneBy([
-                        "rana" => $rana,
-                        "timeslot" => $randa->getCurrentTimeslot(),
-                        "valueType" => "APPR"
-                    ]);
-                    $ret = $this->retentionRepository->findOneBy([
-                        "rana" => $rana,
-                        "timeslot" => $randa->getCurrentTimeslot(),
-                        "valueType" => "APPR"
-                    ]);
-                    $new_members = 0;
-                    $ret_members = 0;
-                    for ($i = 1; $i <= 12; $i++) {
-                        $method = "getM$i";
-                        $new_members += $new->$method();
-                        $ret_members +=  $ret->$method();
-                        if ($i % 3 == 0) {
+                        $new = $this->newMemberRepository->findOneBy([
+                            "rana" => $rana,
+                            "timeslot" => $timeslot,
+                            "valueType" => "APPR"
+                        ]);
+                        $ret = $this->retentionRepository->findOneBy([
+                            "rana" => $rana,
+                            "timeslot" => $timeslot,
+                            "valueType" => "APPR"
+                        ]);
+                        $new_members = 0;
+                        $ret_members = 0;
+                        for ($i = 1; $i <= 12; $i++) {
+                            $method = "getM$i";
+                            $new_members += $new->$method();
+                            $ret_members +=  $ret->$method();
+                            if ($i % 3 == 0) {
 
 
-                            // è ancora un core group
-                            if ($i < $month) {
-                                $chapter_element_cg_new["data"][] = $new_members;
-                                $chapter_element_cg_ret["data"][] = $ret_members;
-                                $cg_len = sizeof($chapter_element_cg_act["data"]);
+                                // è ancora un core group
+                                if ($i < $month) {
+                                    $chapter_element_cg_new["data"][] = $new_members;
+                                    $chapter_element_cg_ret["data"][] = $ret_members;
+                                    $cg_len = sizeof($chapter_element_cg_act["data"]);
 
-                                $initial_cg_members = 0;
-                                if ($core_group->getActualLaunchCoregroupDate()->format("Y") == $currentYear - 1) {
-                                    $prev_randa = $this->randaRepository->findOneBy([
-                                        "region" => $region,
-                                        "year" => $core_group->getActualLaunchCoregroupDate()->format("Y")
-                                    ]);
-                                    if ($prev_randa) {
-                                        $prev_rana = $this->ranaRepository->findOneBy([
-                                            "randa" => $prev_randa,
-                                            "chapter" => $core_group
+                                    $initial_cg_members = 0;
+                                    if ($core_group->getActualLaunchCoregroupDate()->format("Y") == $currentYear - 1) {
+                                        $prev_randa = $this->randaRepository->findOneBy([
+                                            "region" => $region,
+                                            "year" => $core_group->getActualLaunchCoregroupDate()->format("Y")
                                         ]);
-                                        if ($prev_rana) {
-                                            $cg_ret_dec = $this->retentionRepository->findOneBy([
-                                                "rana" => $prev_rana,
-                                                "valueType" => "CONS",
-                                                "timeslot" => "T4"
+                                        if ($prev_randa) {
+                                            $prev_rana = $this->ranaRepository->findOneBy([
+                                                "randa" => $prev_randa,
+                                                "chapter" => $core_group
                                             ]);
-                                            if ($cg_ret_dec) {
-                                                $r = $cg_ret_dec->getM12();
-                                            }
-                                            $cg_new_dec = $this->newMemberRepository->findOneBy([
-                                                "rana" => $prev_rana,
-                                                "valueType" => "CONS",
-                                                "timeslot" => "T4"
-                                            ]);
-                                            if ($cg_new_dec) {
-                                                $n = $cg_new_dec->getM12();
-                                            }
-                                            if ($r && $n) {
-                                                $initial_cg_members = $core_group->getMembers() + ($n - $r);
+                                            if ($prev_rana) {
+                                                $cg_ret_dec = $this->retentionRepository->findOneBy([
+                                                    "rana" => $prev_rana,
+                                                    "valueType" => "CONS",
+                                                    "timeslot" => "T4"
+                                                ]);
+                                                if ($cg_ret_dec) {
+                                                    $r = $cg_ret_dec->getM12();
+                                                }
+                                                $cg_new_dec = $this->newMemberRepository->findOneBy([
+                                                    "rana" => $prev_rana,
+                                                    "valueType" => "CONS",
+                                                    "timeslot" => "T4"
+                                                ]);
+                                                if ($cg_new_dec) {
+                                                    $n = $cg_new_dec->getM12();
+                                                }
+                                                if ($r && $n) {
+                                                    $initial_cg_members = $core_group->getMembers() + ($n - $r);
+                                                }
                                             }
                                         }
                                     }
+
+                                    $chapter_element_cg_act["data"][] = ($cg_len ? $chapter_element_cg_act["data"][$cg_len - 1] : $initial_cg_members) + ($new_members - $ret_members);
+
+                                    $chapter_element_new["data"][] = null;
+                                    $chapter_element_ret["data"][] = null;
+                                    $chapter_element_act["data"][] = null;
+                                } else {
+                                    $chapter_element_new["data"][] = $new_members;
+                                    $chapter_element_ret["data"][] = $ret_members;
+                                    $act_len = sizeof($chapter_element_act["data"]);
+                                    $chapter_element_act["data"][] = ($act_len ? $chapter_element_act["data"][$act_len - 1] : $initial_members) + ($new_members - $ret_members);
+
+                                    $slot = ceil($i / 3) - 1;
+                                    $data["num_chapters"][$slot]++;
+
+                                    $chapter_element_cg_act["data"][] = null;
+                                    $chapter_element_cg_new["data"][] = null;
+                                    $chapter_element_cg_ret["data"][] = null;
                                 }
 
-                                $chapter_element_cg_act["data"][] = ($cg_len ? $chapter_element_cg_act["data"][$cg_len - 1] : $initial_cg_members) + ($new_members - $ret_members);
-
-                                $chapter_element_new["data"][] = null;
-                                $chapter_element_ret["data"][] = null;
-                                $chapter_element_act["data"][] = null;
-                            } else {
-                                $chapter_element_new["data"][] = $new_members;
-                                $chapter_element_ret["data"][] = $ret_members;
-                                $act_len = sizeof($chapter_element_act["data"]);
-                                $chapter_element_act["data"][] = ($act_len ? $chapter_element_act["data"][$act_len - 1] : $initial_members) + ($new_members - $ret_members);
-
-                                $slot = ceil($i / 3) - 1;
-                                $data["num_chapters"][$slot]++;
-
-                                $chapter_element_cg_act["data"][] = null;
-                                $chapter_element_cg_new["data"][] = null;
-                                $chapter_element_cg_ret["data"][] = null;
+                                $new_members = 0;
+                                $ret_members = 0;
                             }
-
-                            $new_members = 0;
-                            $ret_members = 0;
                         }
-                    }
-                    $data["core_groups_new"][] = $chapter_element_cg_new;
-                    $data["core_groups_ret"][] = $chapter_element_cg_ret;
-                    $data["core_groups_act"][] = $chapter_element_cg_act;
-                    $data["chapters_new"][] = $chapter_element_new;
-                    $data["chapters_ret"][] = $chapter_element_ret;
-                    $data["chapters_act"][] = $chapter_element_act;
-                }
-            }
-
-
-            $chapters = $this->chapterRepository->findBy([
-                "region" => $region,
-                "currentState" => "CHAPTER"
-            ]);
-
-            foreach ($chapters as $chapter) {
-                $initial_members = $chapter->getMembers();
-                $chapter_element_ret = [
-                    "name" => $chapter->getName(),
-                    "data" => []
-                ];
-                $chapter_element_act = [
-                    "name" => $chapter->getName(),
-                    "data" => []
-                ];
-
-                $chapter_element_new = [
-                    "name" => $chapter->getName(),
-                    "data" => []
-                ];
-
-                $rana = $this->ranaRepository->findOneBy([
-                    "chapter" => $chapter,
-                    "randa" => $randa
-                ]);
-
-                $new = $this->newMemberRepository->findOneBy([
-                    "rana" => $rana,
-                    "timeslot" => $randa->getCurrentTimeslot(),
-                    "valueType" => "APPR"
-                ]);
-                $ret = $this->retentionRepository->findOneBy([
-                    "rana" => $rana,
-                    "timeslot" => $randa->getCurrentTimeslot(),
-                    "valueType" => "APPR"
-                ]);
-
-                $new_members = 0;
-                $ret_members = 0;
-                for ($i = 1; $i <= 12; $i++) {
-                    $method = "getM$i";
-                    $new_members += $new->$method();
-                    $ret_members +=  $ret->$method();
-                    if ($i % 3 == 0) {
-
-                        $chapter_element_new["data"][] = $new_members;
-                        $chapter_element_ret["data"][] = $ret_members;
-                        $act_len = sizeof($chapter_element_act["data"]);
-                        $chapter_element_act["data"][] = ($act_len ? $chapter_element_act["data"][$act_len - 1] : $initial_members) + ($new_members - $ret_members);
-
-                        $slot = ceil($i / 3) - 1;
-                        $data["num_chapters"][$slot]++;
-
-                        $new_members = 0;
-                        $ret_members = 0;
+                        $data["core_groups_new"][] = $chapter_element_cg_new;
+                        $data["core_groups_ret"][] = $chapter_element_cg_ret;
+                        $data["core_groups_act"][] = $chapter_element_cg_act;
+                        $data["chapters_new"][] = $chapter_element_new;
+                        $data["chapters_ret"][] = $chapter_element_ret;
+                        $data["chapters_act"][] = $chapter_element_act;
                     }
                 }
-                $data["chapters_new"][] = $chapter_element_new;
-                $data["chapters_ret"][] = $chapter_element_ret;
-                $data["chapters_act"][] = $chapter_element_act;
-            }
 
-            $projects = $this->chapterRepository->findBy([
-                "region" => $region,
-                "currentState" => "PROJECT"
-            ]);
 
-            foreach ($projects as $project) {
-                $year = $project->getPrevLaunchChapterDate()->format("Y");
-                $initial_members = $project->getMembers();
-                if ($year == (int) date("Y")) {
+                $chapters = $this->chapterRepository->findBy([
+                    "region" => $region,
+                    "currentState" => "CHAPTER"
+                ]);
 
-                    $chapter_element_cg_ret = [
-                        "name" => $project->getName(),
-                        "data" => []
-                    ];
-                    $chapter_element_cg_new = [
-                        "name" => $project->getName(),
-                        "data" => []
-                    ];
-                    $chapter_element_cg_act = [
-                        "name" => $project->getName(),
-                        "data" => []
-                    ];
+                foreach ($chapters as $chapter) {
+                    $initial_members = $chapter->getMembers();
                     $chapter_element_ret = [
-                        "name" => $project->getName(),
+                        "name" => $chapter->getName(),
                         "data" => []
                     ];
                     $chapter_element_act = [
-                        "name" => $project->getName(),
+                        "name" => $chapter->getName(),
                         "data" => []
                     ];
 
                     $chapter_element_new = [
-                        "name" => $project->getName(),
+                        "name" => $chapter->getName(),
                         "data" => []
                     ];
 
-                    $month_chapter = $project->getPrevLaunchChapterDate()->format("m");
-                    $month_core_group = $project->getPrevLaunchCoregroupDate()->format("m");
-
                     $rana = $this->ranaRepository->findOneBy([
-                        "chapter" => $project,
+                        "chapter" => $chapter,
                         "randa" => $randa
                     ]);
 
                     $new = $this->newMemberRepository->findOneBy([
                         "rana" => $rana,
-                        "timeslot" => $randa->getCurrentTimeslot(),
+                        "timeslot" => $timeslot,
                         "valueType" => "APPR"
                     ]);
                     $ret = $this->retentionRepository->findOneBy([
                         "rana" => $rana,
-                        "timeslot" => $randa->getCurrentTimeslot(),
+                        "timeslot" => $timeslot,
                         "valueType" => "APPR"
                     ]);
+
                     $new_members = 0;
                     $ret_members = 0;
                     for ($i = 1; $i <= 12; $i++) {
@@ -1257,78 +1177,161 @@ class RandaController extends AbstractController
                         $ret_members +=  $ret->$method();
                         if ($i % 3 == 0) {
 
-                            if ($i >= $month_chapter) {
-                                $chapter_element_new["data"][] = $new_members;
-                                $chapter_element_ret["data"][] = $ret_members;
-                                $act_len = sizeof($chapter_element_act["data"]);
-                                $chapter_element_act["data"][] = ($act_len ? $chapter_element_act["data"][$act_len - 1] : $initial_members) + ($new_members - $ret_members);
+                            $chapter_element_new["data"][] = $new_members;
+                            $chapter_element_ret["data"][] = $ret_members;
+                            $act_len = sizeof($chapter_element_act["data"]);
+                            $chapter_element_act["data"][] = ($act_len ? $chapter_element_act["data"][$act_len - 1] : $initial_members) + ($new_members - $ret_members);
 
-                                $slot = ceil($i / 3) - 1;
-                                $data["num_chapters"][$slot]++;
-
-                                $chapter_element_cg_act["data"][] = null;
-                                $chapter_element_cg_new["data"][] = null;
-                                $chapter_element_cg_ret["data"][] = null;
-                            } else if ($i >= $month_core_group) {
-                                $chapter_element_cg_new["data"][] = $new_members;
-                                $chapter_element_cg_ret["data"][] = $ret_members;
-                                $cg_len = sizeof($chapter_element_cg_act["data"]);
-                                $chapter_element_cg_act["data"][] = ($cg_len ? $chapter_element_cg_act["data"][$cg_len - 1] : 0) + ($new_members - $ret_members);
-
-                                $chapter_element_new["data"][] = null;
-                                $chapter_element_ret["data"][] = null;
-                                $chapter_element_act["data"][] = null;
-                            } else {
-                                $chapter_element_new["data"][] = null;
-                                $chapter_element_ret["data"][] = null;
-                                $chapter_element_act["data"][] = null;
-                                $chapter_element_cg_act["data"][] = null;
-                                $chapter_element_cg_new["data"][] = null;
-                                $chapter_element_cg_ret["data"][] = null;
-                            }
+                            $slot = ceil($i / 3) - 1;
+                            $data["num_chapters"][$slot]++;
 
                             $new_members = 0;
                             $ret_members = 0;
                         }
                     }
-                    $data["core_groups_new"][] = $chapter_element_cg_new;
-                    $data["core_groups_ret"][] = $chapter_element_cg_ret;
-                    $data["core_groups_act"][] = $chapter_element_act;
                     $data["chapters_new"][] = $chapter_element_new;
                     $data["chapters_ret"][] = $chapter_element_ret;
                     $data["chapters_act"][] = $chapter_element_act;
                 }
-            }
 
-            $cg_sums = [0, 0, 0, 0];
-            $chapter_sums = [0, 0, 0, 0];
-            foreach ($data["core_groups_act"] as $cg) {
+                $projects = $this->chapterRepository->findBy([
+                    "region" => $region,
+                    "currentState" => "PROJECT"
+                ]);
+
+                foreach ($projects as $project) {
+                    $year = $project->getPrevLaunchChapterDate()->format("Y");
+                    $initial_members = $project->getMembers();
+                    if ($year == (int) date("Y")) {
+
+                        $chapter_element_cg_ret = [
+                            "name" => $project->getName(),
+                            "data" => []
+                        ];
+                        $chapter_element_cg_new = [
+                            "name" => $project->getName(),
+                            "data" => []
+                        ];
+                        $chapter_element_cg_act = [
+                            "name" => $project->getName(),
+                            "data" => []
+                        ];
+                        $chapter_element_ret = [
+                            "name" => $project->getName(),
+                            "data" => []
+                        ];
+                        $chapter_element_act = [
+                            "name" => $project->getName(),
+                            "data" => []
+                        ];
+
+                        $chapter_element_new = [
+                            "name" => $project->getName(),
+                            "data" => []
+                        ];
+
+                        $month_chapter = $project->getPrevLaunchChapterDate()->format("m");
+                        $month_core_group = $project->getPrevLaunchCoregroupDate()->format("m");
+
+                        $rana = $this->ranaRepository->findOneBy([
+                            "chapter" => $project,
+                            "randa" => $randa
+                        ]);
+
+                        $new = $this->newMemberRepository->findOneBy([
+                            "rana" => $rana,
+                            "timeslot" => $timeslot,
+                            "valueType" => "APPR"
+                        ]);
+                        $ret = $this->retentionRepository->findOneBy([
+                            "rana" => $rana,
+                            "timeslot" => $timeslot,
+                            "valueType" => "APPR"
+                        ]);
+                        $new_members = 0;
+                        $ret_members = 0;
+                        for ($i = 1; $i <= 12; $i++) {
+                            $method = "getM$i";
+                            $new_members += $new->$method();
+                            $ret_members +=  $ret->$method();
+                            if ($i % 3 == 0) {
+
+                                if ($i >= $month_chapter) {
+                                    $chapter_element_new["data"][] = $new_members;
+                                    $chapter_element_ret["data"][] = $ret_members;
+                                    $act_len = sizeof($chapter_element_act["data"]);
+                                    $chapter_element_act["data"][] = ($act_len ? $chapter_element_act["data"][$act_len - 1] : $initial_members) + ($new_members - $ret_members);
+
+                                    $slot = ceil($i / 3) - 1;
+                                    $data["num_chapters"][$slot]++;
+
+                                    $chapter_element_cg_act["data"][] = null;
+                                    $chapter_element_cg_new["data"][] = null;
+                                    $chapter_element_cg_ret["data"][] = null;
+                                } else if ($i >= $month_core_group) {
+                                    $chapter_element_cg_new["data"][] = $new_members;
+                                    $chapter_element_cg_ret["data"][] = $ret_members;
+                                    $cg_len = sizeof($chapter_element_cg_act["data"]);
+                                    $chapter_element_cg_act["data"][] = ($cg_len ? $chapter_element_cg_act["data"][$cg_len - 1] : 0) + ($new_members - $ret_members);
+
+                                    $chapter_element_new["data"][] = null;
+                                    $chapter_element_ret["data"][] = null;
+                                    $chapter_element_act["data"][] = null;
+                                } else {
+                                    $chapter_element_new["data"][] = null;
+                                    $chapter_element_ret["data"][] = null;
+                                    $chapter_element_act["data"][] = null;
+                                    $chapter_element_cg_act["data"][] = null;
+                                    $chapter_element_cg_new["data"][] = null;
+                                    $chapter_element_cg_ret["data"][] = null;
+                                }
+
+                                $new_members = 0;
+                                $ret_members = 0;
+                            }
+                        }
+                        $data["core_groups_new"][] = $chapter_element_cg_new;
+                        $data["core_groups_ret"][] = $chapter_element_cg_ret;
+                        $data["core_groups_act"][] = $chapter_element_act;
+                        $data["chapters_new"][] = $chapter_element_new;
+                        $data["chapters_ret"][] = $chapter_element_ret;
+                        $data["chapters_act"][] = $chapter_element_act;
+                    }
+                }
+
+                $cg_sums = [0, 0, 0, 0];
+                $chapter_sums = [0, 0, 0, 0];
+                foreach ($data["core_groups_act"] as $cg) {
+                    for ($i = 0; $i < 4; $i++) {
+                        $cg_sums[$i] += $cg["data"][$i];
+                    }
+                }
+                foreach ($data["chapters_act"] as $cg) {
+                    for ($i = 0; $i < 4; $i++) {
+                        $chapter_sums[$i] += $cg["data"][$i];
+                    }
+                }
                 for ($i = 0; $i < 4; $i++) {
-                    $cg_sums[$i] += $cg["data"][$i];
+                    $data["chapters_average"][$i] = 0;
+                    if (sizeof($data["chapters_act"])) {
+                        $data["chapters_average"][$i] = round($chapter_sums[$i] / sizeof($data["chapters_act"]));
+                    }
+                    $data["core_groups_average"][$i] = 0;
+                    if (sizeof($data["core_groups_act"])) {
+                        $data["core_groups_average"][$i] = round($chapter_sums[$i] / sizeof($data["core_groups_act"]));
+                    }
                 }
-            }
-            foreach ($data["chapters_act"] as $cg) {
-                for ($i = 0; $i < 4; $i++) {
-                    $chapter_sums[$i] += $cg["data"][$i];
-                }
-            }
-            for ($i = 0; $i < 4; $i++) {
-                $data["chapters_average"][$i] = 0;
-                if (sizeof($data["chapters_act"])) {
-                    $data["chapters_average"][$i] = round($chapter_sums[$i] / sizeof($data["chapters_act"]));
-                }
-                $data["core_groups_average"][$i] = 0;
-                if (sizeof($data["core_groups_act"])) {
-                    $data["core_groups_average"][$i] = round($chapter_sums[$i] / sizeof($data["core_groups_act"]));
-                }
-            }
 
-            $directors = $randa->getDirectorsPrevisions() ? $randa->getDirectorsPrevisions() : "0,0,0,0";
-            $data["directors"] = explode(",", $directors);
-            $data["randa_state"] = $randa->getCurrentState();
+                $directors = $randa->getDirectorsPrevisions() ? $randa->getDirectorsPrevisions() : "0,0,0,0";
+                $data["directors"] = explode(",", $directors);
+                $data["randa_state"] = $randa->getCurrentState();
 
-            return new JsonResponse($data);
-        } else {
+                return new JsonResponse($data);
+            } else {
+                return new JsonResponse(false);
+            }
+        } catch (Exception $e) {
+            file_put_contents("pippo", $e->getMessage());
             return new JsonResponse(false);
         }
     }

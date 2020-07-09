@@ -1120,19 +1120,18 @@ class ChapterController extends AbstractController
                         "timeslot" => "T0"
                     ]);
 
+                    $num = (int)substr($randa->getCurrentTimeslot(), -1) * 3;
 
                     $new_members_appr = $this->newMemberRepository->findOneBy(
                         [
                             "rana" => $rana,
-                            "valueType" => "APPR"
-                        ],
-                        [
-                            'timeslot' => 'DESC'
+                            "valueType" => "APPR",
+                            'timeslot' => $randa->getCurrentTimeslot()
                         ]
                     );
 
                     $new_members_ts = [];
-                    for ($i = 1; $i <= 12; $i++) {
+                    for ($i = 1; $i <= $num; $i++) {
                         $method = "getM$i";
                         $val = 0;
                         if ($new_members_cons) {
@@ -1155,15 +1154,13 @@ class ChapterController extends AbstractController
                     $retentions_appr = $this->retentionRepository->findOneBy(
                         [
                             "rana" => $rana,
-                            "valueType" => "APPR"
-                        ],
-                        [
-                            'timeslot' => 'DESC'
+                            "valueType" => "APPR",
+                            'timeslot' => $randa->getCurrentTimeslot()
                         ]
                     );
 
                     $retentions_ts = [];
-                    for ($i = 1; $i <= 12; $i++) {
+                    for ($i = 1; $i <= $num; $i++) {
                         $method = "getM$i";
                         $val = 0;
                         if ($retentions_cons) {
@@ -1177,7 +1174,7 @@ class ChapterController extends AbstractController
 
 
                     $members = $chapter->getMembers();
-                    for ($i = 0; $i < 12; $i++) {
+                    for ($i = 0; $i < $num; $i++) {
                         $members +=  ($new_members_ts[$i] - $retentions_ts[$i]);
                     }
                 }

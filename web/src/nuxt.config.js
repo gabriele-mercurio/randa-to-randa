@@ -2,6 +2,7 @@ import colors from "vuetify/es5/util/colors";
 
 export default {
   mode: "spa",
+
   /*
    ** Headers of the page
    */
@@ -37,7 +38,9 @@ export default {
   /*
    ** Plugins to load before mounting the App
    */
-  plugins: [{ src: "~/plugins/vuex-persist", ssr: false, mode: "client" }],
+  plugins: [
+    { src: "~/plugins/vuex-persist", ssr: false, mode: "client" }
+  ],
   /*
    ** Nuxt.js dev-modules
    */
@@ -106,6 +109,5 @@ export default {
     //base_url: "http://api.randa2randa.test",
     client_id: "Randa2RandaAppClient",
     client_secret: "FwPMFRlCa78GPQrO9zRWVRbjPCoPmaBQP254nx3g"
-
   }
 };

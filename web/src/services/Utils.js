@@ -41,35 +41,46 @@ class Utils {
     if (!timeslot) timeslot = 1;
     return (timeslot - 1) * 3 + 1;
   }
-  
+
   static getNextTimeslot(timeslot) {
-    return "T" + ((timeslot.substr(1, 1) * 1) + 1);
+    return "T" + (timeslot.substr(1, 1) * 1 + 1);
   }
 
   static getState(state) {
-    switch(state) {
-      case "TODO": return "Da compilare";
-      case "APPR": return "Approvato";
-      case "PROP": return "Proposto";
+    switch (state) {
+      case "TODO":
+        return "Da compilare";
+      case "APPR":
+        return "Approvato";
+      case "PROP":
+        return "Proposto";
     }
   }
 
   static getChapterState(state) {
-    switch(state) {
-      case "CORE_GROUP": return "Core group";
-      case "CHAPTER": return "Capitolo";
-      case "PROJECT": return "Progetto";
-      case "CLOSED": return "Chiuso";
+    switch (state) {
+      case "CORE_GROUP":
+        return "Core group";
+      case "CHAPTER":
+        return "Capitolo";
+      case "PROJECT":
+        return "Progetto";
+      case "CLOSED":
+        return "Chiuso";
     }
   }
 
   static getRandaState(state) {
-    switch(state) {
-      case "APPR": return "Approvato";
-      case "TODO": return "Compilazione in corso";
-      case "REFUSED": return "Rifiutato";
+    switch (state) {
+      case "APPR":
+        return "Approvato";
+      case "TODO":
+        return "Compilazione in corso";
+      case "REFUSED":
+        return "Rifiutato";
     }
   }
 }
+
 
 export default Utils;

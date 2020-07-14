@@ -100,8 +100,9 @@ export default {
       let response = await ApiServer.login(this.email, this.password);
       if (response["token"] && response["user"]) {
         if (
-          true || 
+          true ||
           response["user"].id === "0fa8da5c-eebc-4502-b6bc-bae5826f9acd" ||
+          response["user"].id === "30618bc8-e2f4-462b-a393-1756077903c8" ||
           response["user"].id === "d6bdb0db-bdfd-42bc-a1a0-235e9ea2c7a0" ||
           response["user"].id === "fbf43313-81e7-4b81-a5e6-b50bd9013f92" ||
           response["user"].id === "2af76638-9670-4a58-a1f7-d2e62ffa27f6" ||

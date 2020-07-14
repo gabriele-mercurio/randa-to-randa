@@ -3,8 +3,9 @@
     <v-data-table
       disable-pagination
       hide-default-footer
-      class="elevation-2 mx-6 mb-8 "
+      class="elevation-2 mb-8"
       v-if="chapters"
+      :id="id ? id : ''"
     >
       <template v-slot:body>
         <thead>
@@ -13,23 +14,38 @@
               <h2>{{ getRandaType() }}</h2>
             </th>
             <th></th>
+            <th class="text-center" v-if="initial">Iniziali</th>
             <th class="text-center">T1</th>
             <th class="text-center">T2</th>
             <th class="text-center">T3</th>
             <th class="text-center">T4</th>
-            <th class="text-center total">Totale</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="chapter in chapters" :key="chapter.name">
             <td>{{ chapter.name }}</td>
             <td></td>
+            <th class="text-center" v-if="initial">{{ chapter.initial }}</th>
             <td class="text-center">{{ chapter.data[0] }}</td>
             <td class="text-center">{{ chapter.data[1] }}</td>
             <td class="text-center">{{ chapter.data[2] }}</td>
             <td class="text-center">{{ chapter.data[3] }}</td>
-            <td class="text-center total">{{ getTotal(chapter) }}</td>
           </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <th class="text-center" v-if="initial">{{ totalInitialMembers }}</th>
+            <td class="text-center">{{ totals[0] }}</td>
+            <td class="text-center">{{ totals[1] }}</td>
+            <td class="text-center">{{ totals[2] }}</td>
+            <td class="text-center">{{ totals[3] }}</td>
+          </tr>
+
+          <!-- <tr>
+            <td v-for="i in (0, 4)" :key="i" class="text-center">
+              {{ evaluateTotal(i) }}
+            </td>
+          </tr> -->
         </tbody>
       </template>
     </v-data-table>
@@ -37,7 +53,7 @@
     <v-data-table
       disable-pagination
       hide-default-footer
-      class="elevation-2  mx-6 mb-8"
+      class="elevation-2 mb-8"
       v-if="plainData"
     >
       <template v-slot:body>
@@ -51,7 +67,6 @@
             <th class="text-center">T2</th>
             <th class="text-center">T3</th>
             <th class="text-center">T4</th>
-            <th class="text-center total">Totale</th>
           </tr>
         </thead>
         <tbody>
@@ -62,7 +77,6 @@
             <td class="text-center width-100">{{ plainData[1] }}</td>
             <td class="text-center width-100">{{ plainData[2] }}</td>
             <td class="text-center width-100">{{ plainData[3] }}</td>
-            <td class="text-center width-100 total">{{ getPlainTotal(plainData) }}</td>
           </tr>
         </tbody>
       </template>
@@ -71,7 +85,7 @@
     <v-data-table
       disable-pagination
       hide-default-footer
-      class="elevation-2  mx-6 mb-8"
+      class="elevation-2 mb-8"
       v-if="singleValue"
     >
       <template v-slot:body>
@@ -89,7 +103,6 @@
         </tbody>
       </template>
     </v-data-table>
-
   </div>
 </template>
 <script>
@@ -99,13 +112,21 @@ export default {
     plainData: {},
     randaType: {},
     singleValue: {},
+    initial: {
+      default: false
+    },
     plainArray: {
       default: false
+    },
+    id: {
+      default: ''
     }
   },
   data() {
     return {
-      printableData: null
+      printableData: null,
+      totals: [0, 0, 0, 0],
+      totalInitialMembers: 0
     };
   },
   methods: {
@@ -114,7 +135,7 @@ export default {
         case "chapters_act":
           return "Attivi";
         case "chapters_new":
-          return "Nuovi memberi";
+          return "Nuovi membri";
         case "chapters_ret":
           return "Uscite";
         case "chapters_average":
@@ -131,7 +152,6 @@ export default {
           return "Numero capitoli";
         case "note":
           return "Nota";
-
       }
     },
     getTotal(chapter) {
@@ -148,6 +168,23 @@ export default {
       }
       return sum;
     }
+  },
+  watch: {
+    chapters: {
+      handler: function(newVal, oldVal) {
+        if (newVal) {
+          for (let chapter of Object.keys(newVal)) {
+            let c = newVal[chapter];
+            for (let i = 0; i < 4; i++) {
+              this.totals[i] += c.data[i];
+            }
+            this.totalInitialMembers += c.initial;
+          }
+        }
+      },
+      deep: true,
+      immediate: true
+    }
   }
 };
 </script>
@@ -161,11 +198,11 @@ export default {
   thead {
     th {
       background-color: lighten($lightred, 35%);
-      font-weight: bold!important;
+      font-weight: bold !important;
     }
   }
   .width-100 {
-      width: 100px;
+    width: 100px;
   }
 }
 </style>

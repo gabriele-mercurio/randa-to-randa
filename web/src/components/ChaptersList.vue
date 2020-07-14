@@ -31,7 +31,7 @@
                 v-if="isPrev(item.coreGroupLaunch)"
                 >Previsional
 
-                <v-tooltip right v-if="item.warning == 'COREGROUP'">
+                <v-tooltip right v-if="isExpired(item.coreGroupLaunch)">
                   <template v-slot:activator="{ on }">
                     <v-icon v-on="on" small class="primary--text"
                       >mdi-alert</v-icon
@@ -57,7 +57,7 @@
                 class="font-italic font-weight-light"
                 v-if="isPrev(item.chapterLaunch)"
                 >Previsional
-                <v-tooltip right v-if="item.warning == 'CHAPTER'">
+                <v-tooltip right v-if="isExpired(item.chapterLaunch)">
                   <template v-slot:activator="{ on }">
                     <v-icon v-on="on" small class="primary--text"
                       >mdi-alert</v-icon
@@ -105,7 +105,7 @@
                     item.currentState == 'PROJECT' ||
                       item.currentState == 'CORE_GROUP'
                   "
-                  @click="launch(item, item.currentState)"
+                  @click="confirmLaunch(item, item.currentState)"
                   :class="{
                     disabled:
                       item.currentState === 'SUSPENDED' ||
@@ -117,25 +117,19 @@
                     Lancia {{ getStateToLaunch(item) }}
                   </v-list-item-title>
                 </v-list-item>
-                <v-list-item
-                  @click="suspend(item)"
-                  v-if="canSuspend(item)"
-                >
+                <v-list-item @click="suspend(item)" v-if="canSuspend(item)">
                   <v-icon class="mr-1">mdi-stop-circle-outline</v-icon>
                   <v-list-item-title
                     >Sospendi {{ getStateToLaunch(item) }}</v-list-item-title
                   >
                 </v-list-item>
-                <v-list-item
-                  v-if="canClose(item)"
-                  @click="resume(item)"
-                >
+                <v-list-item v-if="canClose(item)" @click="resume(item)">
                   <v-icon class="mr-1">mdi-play-circle-outline</v-icon>
                   <v-list-item-title>Riprendi capitolo</v-list-item-title>
                 </v-list-item>
 
                 <v-list-item
-                  @click="close(item)"
+                  @click="confirmClose(item)"
                   :class="{ disabled: item.currentStatus == 'CLOSED' }"
                 >
                   <v-icon class="mr-1">mdi-close</v-icon>
@@ -149,6 +143,18 @@
         </tr>
       </template>
     </v-data-table>
+    <Confirm
+      :message="confirmMessage"
+      :show.sync="showConfirmLaunch"
+      v-on:dialogResponse="launch"
+    />
+
+    <Confirm
+      :message="confirmMessage"
+      :show.sync="showConfirmClose"
+      v-on:dialogResponse="close"
+    />
+
     <Snackbar
       :showSnackbar.sync="showSnackbar"
       :state.sync="snackbarState"
@@ -168,11 +174,13 @@
 import ApiServer from "../services/ApiServer";
 import Utils from "../services/Utils";
 import Snackbar from "../components/Snackbar";
+import Confirm from "../components/Confirm";
 import ChapterSuspend from "../components/ChapterSuspend";
 export default {
   components: {
     Snackbar,
-    ChapterSuspend
+    ChapterSuspend,
+    Confirm
   },
   data() {
     return {
@@ -194,7 +202,12 @@ export default {
       suspendDialog: false,
       prevResumeDate: null,
       currentChapter: null,
-      role: null
+      showConfirmLaunch: false,
+      showConfirmClose: false,
+      confirmMessage: null,
+      role: null,
+      currentItem: null,
+      currentType: null
     };
   },
   props: {
@@ -222,11 +235,30 @@ export default {
     }
   },
   methods: {
+    close() {
+
+    },
+    isExpired(item) {
+      let today = new Date();
+      today = today.getFullYear() + "-" + (today.getMonth() + 1);
+      return item.prev && new Date(item.prev) < new Date(today);
+    },
     canSuspend(item) {
-      return item.currentState == 'CHAPTER' && (this.role == "ADMIN" || this.role == "EXECUTIVE");
+      return (
+        item.currentState == "CHAPTER" &&
+        (this.role == "ADMIN" || this.role == "EXECUTIVE")
+      );
     },
     canClose(item) {
-      return item.currentState == 'SUSPENDED' && (this.role == "ADMIN" || this.role == "EXECUTIVE");
+      return (
+        item.currentState == "SUSPENDED" &&
+        (this.role == "ADMIN" || this.role == "EXECUTIVE")
+      );
+    },
+    confirmClose(item) {
+      this.showConfirmClose = true;
+      this.confirmMessage = "Si sta per chiudere il capitolo. Proseguire?";
+      this.currentItem = item;
     },
     getMenuLabel(item) {
       this.role = this.$store.getters["getRegion"].role;
@@ -240,6 +272,7 @@ export default {
             return "Vai a rana...";
           }
         case "TODO":
+        case "REFUSED":
           if (this.role === "ADMIN" || this.role === "EXECUTIVE") {
             return "Approva rana...";
           } else {
@@ -257,7 +290,6 @@ export default {
     },
 
     getItemState(item) {
-      debugger;
       return Utils.getState(item.state);
     },
 
@@ -308,21 +340,40 @@ export default {
       }
     },
 
-    async launch(item, type) {
-      let action = type === "CORE_GROUP" ? "launch" : "launch-coregroup";
-      let response = await ApiServer.put("chapter/" + item.id + "/" + action);
-      this.showSnackbar = true;
-      if (!response.error) {
-        this.snackbarState = "success";
-        this.snackbarMessageLabel =
-          type === "PROJECT" ? "core_group_launched" : "chapter_launched";
-        item.currentState = type === "PROJECT" ? "CORE_GROUP" : "CHAPTER";
-      } else {
-        this.snackbarState = "error";
-        this.snackbarMessageLabel =
-          type === "PROJECT"
-            ? "core_group_launch_error"
-            : "chapter_launch_error";
+    confirmLaunch(item, type) {
+      debugger;
+      this.showConfirmLaunch = true;
+      let label = type === "CORE_GROUP" ? "core group" : "capitolo";
+      this.confirmMessage = "Si sta per lanciare il " + label + ". Proseguire?";
+      this.currentItem = item;
+      this.currentType = type;
+    },
+
+    async launch(result) {
+      debugger;
+      this.showConfirmLaunch = false;
+      if (result) {
+        let action =
+          this.currentType === "CORE_GROUP" ? "launch" : "launch-coregroup";
+        let response = await ApiServer.put(
+          "chapter/" + this.currentItem.id + "/" + action
+        );
+        this.showSnackbar = true;
+        if (!response.error) {
+          this.snackbarState = "success";
+          this.snackbarMessageLabel =
+            this.currentType === "PROJECT"
+              ? "core_group_launched"
+              : "chapter_launched";
+          this.currentItem.currentState =
+            type === "PROJECT" ? "CORE_GROUP" : "CHAPTER";
+        } else {
+          this.snackbarState = "error";
+          this.snackbarMessageLabel =
+            this.currentType === "PROJECT"
+              ? "core_group_launch_error"
+              : "chapter_launch_error";
+        }
       }
     },
 
@@ -360,9 +411,7 @@ export default {
 
   watch: {
     chapters: {
-      handler: function(old, n) {
-        
-      }
+      handler: function(old, n) {}
     }
   }
 };
@@ -387,7 +436,7 @@ export default {
   }
   tr.CLOSED {
     pointer-events: none;
-    opacity: .5;
+    opacity: 0.5;
   }
 }
 </style>

@@ -2,7 +2,12 @@
   ><div>
     <div v-if="randaRevised || (randa && randa.randa_state === 'APPR')">
       <div v-if="isNational">
-        <Randa :title="'Randa'" :randa="randa" :layout="'split'" :showTotal="false"/>
+        <Randa
+          :title="'Randa'"
+          :randa="randa"
+          :layout="'split'"
+          :showTotal="false"
+        />
         <div class="d-flex justify-end pa-4 px-10">
           <v-btn
             @click="showDisapproveRanda = true"
@@ -53,10 +58,14 @@
         </v-dialog>
       </div>
       <div v-else>
-        <Randa :title="'Randa revised'" :randa="randaRevised" :showTotal="false"/>
+        <Randa
+          :title="'Randa revised'"
+          :randa="randaRevised"
+          :showTotal="false"
+        />
         <div class="d-flex justify-end px-12 pt-6 mb-6">
           <v-btn
-          color="primary"
+            color="primary"
             v-if="!isNational"
             :disabled="
               !allRanaApproved ||
@@ -66,6 +75,7 @@
           >
             Approva randa
           </v-btn>
+          <!-- <v-btn @click="getXLSX()"> Scarica XLSX </v-btn> -->
         </div>
       </div>
 
@@ -86,6 +96,7 @@
                 class="ma-2"
                 v-for="i in (0, 4)"
                 :key="i"
+                type="number"
                 v-model="directors[i - 1]"
               />
             </div>
@@ -135,6 +146,7 @@ import Utils from "../../services/Utils";
 import ApiServer from "../../services/ApiServer";
 import Randa from "../../components/Randa";
 import NoData from "../../components/NoData";
+import XLSX from 'xlsx';
 
 export default {
   components: {
@@ -181,6 +193,8 @@ export default {
     async fetchRandaRevised() {
       let region = this.$store.getters["getRegion"].id;
       this.randaRevised = await ApiServer.get(region + "/randa-revised");
+      this.note = this.randaRevised.note;
+      this.directors = this.randaRevised.directors_previsions.split(",");
       if (!this.randaRevised) {
         this.$store.commit("snackbar/setData", {
           messageLabel: "no_randa_to_show",
@@ -190,9 +204,19 @@ export default {
         this.allRanaApproved = this.randaRevised.all_approved;
       }
     },
+    async getXLSX() {
+      let sheet = XLSX.utils.json_to_sheet(this.randaRevised.chapters);
+      const wb = { SheetNames: ["Export"], Sheets: {}, Props: {} };
+      wb.Sheets["Export"] = sheet;
+      var wbout = XLSX.write(wb, {
+        type: "file"
+      });
+    },
     async fetchOldRandas() {
       let region = this.$store.getters["getRegion"].id;
-      this.oldRandas[0] = await ApiServer.get(region + "/randa-revised?timeslot=T2");
+      this.oldRandas[0] = await ApiServer.get(
+        region + "/randa-revised?timeslot=T2"
+      );
     },
     async fetchRanda() {
       let region = this.$store.getters["getRegion"].id;

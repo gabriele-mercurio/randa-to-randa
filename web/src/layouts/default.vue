@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <nav v-if="getToken() && getRegion()">
+    <nav v-if="getToken() && getRegion()" class="d-print-none">
       <v-navigation-drawer v-model="drawer" absolute temporary right>
         <v-list nav dense>
           <v-list-item-group active-class="secondary--text text--accent-4">
@@ -167,6 +167,8 @@
 import ApiServer from "../services/ApiServer";
 import Utils from "../services/Utils";
 import Snackbar from "../components/Snackbar";
+import XLSX from "xlsx";
+
 export default {
   data() {
     return {
@@ -253,7 +255,6 @@ export default {
         this.$store.commit("setToken", null);
         this.$store.commit("setRegion", null);
         this.$store.commit("setActAs", null);
-        this.$router.push("/login");
       } catch (e) {}
     }
   },
@@ -261,7 +262,6 @@ export default {
   created() {
     setTimeout(() => {
       this.$store.commit("snackbar/setData", null);
-
       if (this.getToken()) {
         ApiServer.setToken(this.getToken());
         if (!this.getRegion()) {

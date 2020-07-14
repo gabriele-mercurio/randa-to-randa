@@ -659,11 +659,11 @@ class ChapterController extends AbstractController
 
             // Check Chapter Director
             if (!empty($chapterDirector)) {
-                $chapterDirector = $this->userRepository->find(trim($chapterDirector));
+                $chapterDirector = $this->directorRepository->find(trim($chapterDirector));
                 if (is_null($chapterDirector)) {
                     $errorFields['director'] = "invalid";
                 } else {
-                    $fields['director'] = $chapterDirector;
+                    $fields['director'] = $chapterDirector->getUser();
                 }
             }
 
@@ -768,51 +768,48 @@ class ChapterController extends AbstractController
             }
         }
 
-        if ($code == Response::HTTP_OK) {
-            foreach ($fields as $key => $value) {
-                switch ($key) {
-                    case 'name':
-                        $chapter->setName($value);
-                        break;
-                    case 'director':
-                        $d = $this->directorRepository->findOneBy([
-                            'user' => $value,
-                            'region' => $region,
-                            'role' => Constants::ROLE_ASSISTANT
-                        ]);
+        foreach ($fields as $key => $value) {
+            switch ($key) {
+                case 'name':
+                    $chapter->setName($value);
+                    break;
+                case 'director':
+                    $d = $chapterDirector;
+                    // $d = $this->directorRepository->findOneBy([
+                    //     'user' => $value,
+                    //     'region' => $region,
+                    //     'role' => Constants::ROLE_ASSISTANT
+                    // ]);
 
-                        if (is_null($d)) {
-                            $d = new Director();
-                            $d->setRegion($region);
-                            $d->setRole(Constants::ROLE_ASSISTANT);
-                            $d->setUser($value);
-                            $this->directorRepository->save($d);
-                        }
+                    if (is_null($d)) {
+                        $d = new Director();
+                        $d->setRegion($region);
+                        $d->setFreeAccount(false);
+                        $d->setRole(Constants::ROLE_ASSISTANT);
+                        $d->setUser($value);
+                        $this->directorRepository->save($d);
+                    }
 
-                        $chapter->setDirector($d);
-                        break;
-                    case 'members':
-                        $chapter->setMembers($value);
-                        break;
-                    case 'prevLaunchCoregroupDate':
-                        $chapter->setPrevLaunchCoregroupDate($value);
-                        break;
-                    case 'prevLaunchChapterDate':
-                        $chapter->setPrevLaunchChapterDate($value);
-                        break;
-                    case 'prevResumeDate':
-                        $chapter->setPrevResumeDate($value);
-                        break;
-                }
+                    $chapter->setDirector($d);
+                    break;
+                case 'members':
+                    $chapter->setMembers($value);
+                    break;
+                case 'prevLaunchCoregroupDate':
+                    $chapter->setPrevLaunchCoregroupDate($value);
+                    break;
+                case 'prevLaunchChapterDate':
+                    $chapter->setPrevLaunchChapterDate($value);
+                    break;
+                case 'prevResumeDate':
+                    $chapter->setPrevResumeDate($value);
+                    break;
             }
-
-            $this->entityManager->flush();
-
-            return new JsonResponse($this->chapterFormatter->formatFull($chapter), Response::HTTP_CREATED);
-        } else {
-            $errorFields = $code == Response::HTTP_BAD_REQUEST ? $errorFields : null;
-            return new JsonResponse($errorFields, $code);
         }
+
+        $this->entityManager->flush();
+
+        return new JsonResponse($this->chapterFormatter->formatFull($chapter), Response::HTTP_CREATED);
     }
 
 
@@ -1120,7 +1117,7 @@ class ChapterController extends AbstractController
                         "timeslot" => "T0"
                     ]);
 
-                    $num = (int)substr($randa->getCurrentTimeslot(), -1) * 3;
+                    $num = ((int)substr($randa->getCurrentTimeslot(), -1) * 3);
 
                     $new_members_appr = $this->newMemberRepository->findOneBy(
                         [
@@ -1225,7 +1222,9 @@ class ChapterController extends AbstractController
             $chapters_data["randa"] = [
                 "state" => $randa->getCurrentState(),
                 "timeslot" => $randa->getCurrentTimeslot(),
-                "year" => $currentYear
+                "year" => $currentYear,
+                "refuse_note" => $randa->getRefuseNote(),
+                "directors_previsions" => $randa->getDirectorsPrevisions()
             ];
 
 

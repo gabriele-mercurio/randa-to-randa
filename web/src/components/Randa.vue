@@ -1,6 +1,6 @@
 <template>
   <div id="randa" v-if="randa" class="px-6">
-    <div class="pt-6">
+    <div class="pt-6" v-if="layout !== 'split'">
       <h3>
         {{ title }} <small>{{ randa.timeslot }} {{ randa.year }}</small>
       </h3>
@@ -13,8 +13,10 @@
           <div class="circle background-red"></div>
           <div class="ml-1">Chapter</div>
         </div>
-         <div class="d-flex flex-row align-center">
-          <div><v-icon style="font-size:16px">mdi-diameter-variant</v-icon></div>
+        <div class="d-flex flex-row align-center">
+          <div>
+            <v-icon style="font-size:16px">mdi-diameter-variant</v-icon>
+          </div>
           <div class="ml-1">Sospeso</div>
         </div>
         <div class="d-flex flex-row align-center">
@@ -71,7 +73,7 @@
           >
             <td class="text-center bordered">{{ chapter.chapter }}</td>
             <td class="text-center bordered">{{ chapter.initialMembers }}</td>
-              <td
+            <td
               class="text-center"
               :class="chapter.chapter_history ? chapter.chapter_history[0] : ''"
             >
@@ -91,8 +93,6 @@
                   "
                   >mdi-close</v-icon
                 >
-
-
               </span>
             </td>
             <td class="text-center">
@@ -144,7 +144,6 @@
                       chapter.chapter_history[2] === 'SUSPENDED'
                   "
                   >mdi-diameter-variant</v-icon
-                  
                 >
 
                 <v-icon
@@ -193,7 +192,9 @@
               {{ chapter.retentions[3] }}
             </td>
             <td class="text-center bordered">{{ chapter.members[3] }}</td>
-            <td v-if="showTotal" class="text-center">{{ evaluateTotal(chapter) }}</td>
+            <td v-if="showTotal" class="text-center">
+              {{ evaluateTotal(chapter) }}
+            </td>
           </tr>
           <tr class="font-weight-black">
             <td>Totale</td>
@@ -262,34 +263,56 @@
       </template>
     </v-data-table>
     <template v-else>
-      <div>
+      <table id="table_wrapper" class="invisible">
+        <table class="invisible">
+          <tbody>
+            <tr>
+              <td colspan="6" class="text-cetner">
+                <span class="font-italic font-weight-bold">{{
+                  regionName
+                }}</span>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="6" class="text-cetner">
+                Randa {{ randa.year }} {{ randa.timeslot }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
         <RandaTable
           :chapters="randa.chapters_ret"
           :randaType="'chapters_ret'"
+          :id="'chapters_ret'"
         />
         <RandaTable
-          :plainData="randa.chapters_average"
+          :plainData.sync="avg"
           :randaType="'chapters_average'"
+          :id="'chapters_average'"
         />
         <RandaTable
           :plainData="randa.num_chapters"
           :randaType="'num_chapters'"
+          :id="'num_chapters'"
         />
         <RandaTable
           :chapters="randa.chapters_new"
           :randaType="'chapters_new'"
+          :id="'chapters_new'"
         />
         <RandaTable :plainData="randa.directors" :randaType="'directors'" />
         <RandaTable :singleValue="randa.note" :randaType="'note'" />
         <RandaTable
           :chapters="randa.chapters_act"
           :randaType="'chapters_act'"
+          :id="'chapters_act'"
+          :initial="true"
         />
         <RandaTable
           :chapters="randa.core_groups_act"
           :randaType="'core_groups_act'"
         />
-      </div>
+      </table>
     </template>
   </div>
 </template>
@@ -304,11 +327,13 @@ export default {
   },
   data() {
     return {
-      totals: null
+      totals: null,
+      avg: [],
+      regionName: null
     };
   },
   created() {
-    if(this.title === "Randa dream") {
+    if (this.title === "Randa dream") {
       debugger;
     }
     let totals = {
@@ -331,6 +356,43 @@ export default {
         }
       });
     }
+
+    setTimeout(() => {
+      this.regionName = this.$store.getters["getRegion"].name;
+      if (this.randa && this.randa.chapters_act) {
+        let sum = [0, 0, 0, 0];
+        let count = [0, 0, 0, 0];
+        for (let element of this.randa.chapters_act) {
+          if (element.data[0] !== null) {
+            count[0]++;
+          }
+          sum[0] += element.data[0];
+
+          if (element.data[1] !== null) {
+            count[1]++;
+          }
+          sum[1] += element.data[1];
+
+          if (element.data[2] !== null) {
+            count[2]++;
+          }
+          sum[2] += element.data[2];
+
+          if (element.data[3] !== null) {
+            count[3]++;
+          }
+          sum[3] += element.data[3];
+        }
+
+        let avg = [];
+        avg[0] = Math.round((sum[0] / count[0]) * 100) / 100;
+        avg[1] = Math.round((sum[1] / count[1]) * 100) / 100;
+        avg[2] = Math.round((sum[2] / count[2]) * 100) / 100;
+        avg[3] = Math.round((sum[3] / count[3]) * 100) / 100;
+
+        this.avg = avg;
+      }
+    }, 4000);
 
     this.totals = totals;
   },
@@ -371,6 +433,9 @@ export default {
 #randa {
   table {
     border: 1px solid lightgray;
+    td, th {
+      height: 30px;
+    }
   }
   .bordered {
     border-right: 2px solid lightgray;
@@ -461,6 +526,21 @@ export default {
     td {
       background: lighten($lightgreen, 30%);
       padding: 5px;
+    }
+  }
+  table.invisible {
+    border-style: none;
+  }
+  table.hidden {
+    display: none;
+  }
+  #table_wrapper {
+    width: 100%;
+  }
+
+  @media print {
+    td, th {
+      height: 20px;
     }
   }
 }

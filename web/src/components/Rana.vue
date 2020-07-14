@@ -3,7 +3,7 @@
     <div class="d-flex justify-space-between align-end">
       <div>
         <div>
-          Membri inizali:
+          Membri iniziali:
           <span class="font-italic font-weight-light mr-2">{{
             rana.initialMembers
           }}</span>
@@ -170,7 +170,9 @@
               }"
             >
               <!-- month labels -->
-              <div class="border-bottom background-grey pa-1">{{getMonthLabel(i)}}</div>
+              <div class="border-bottom background-grey pa-1">
+                {{ getMonthLabel(i) }}
+              </div>
 
               <!-- retentions data -->
               <v-row class="pa-0 ma-0">
@@ -190,7 +192,7 @@
                   />
                 </v-col>
                 <v-col
-                  v-if="!canCompile(9, 'month')"
+                  v-if="!canCompile(i, 'month')"
                   class="pa-0 background-green font-italic font-weight-light disabled d-flex justify-center align-center"
                   >{{ getConsumptive(i, "retentions") }}
                 </v-col>
@@ -217,7 +219,7 @@
       </template>
       <template slot="footer" v-if="canShowFooter()">
         <div class="d-flex justify-end my-4">
-          <v-btn
+          <!-- <v-btn
             type="submit"
             normal
             color="primary"
@@ -225,7 +227,7 @@
             class="mr-2"
           >
             {{ $t("reset") }}
-          </v-btn>
+          </v-btn> -->
           <v-btn
             type="submit"
             normal
@@ -243,7 +245,7 @@
             >
             <span
               v-if="
-                (role == 'ADMIN' || role == 'EXECUTIVE') && rana.state == 'TODO'
+                (role == 'ADMIN' || role == 'EXECUTIVE') && (rana.state == 'TODO' || rana.state == 'REFUSED')
               "
               >{{ $t("approve_without_proposal") }}</span
             >
@@ -252,7 +254,7 @@
             color="primary"
             @click="disapproveRana()"
             v-if="
-              (role == 'ADMIN' || role == 'EXECUTIVE') && rana.state === 'APPR'
+              (role == 'ADMIN' || role == 'EXECUTIVE') && rana.state === 'APPR' && (chapter_stats && chapter_stats.randa_state !== 'APPR')
             "
             >{{ $t("disapprove_rana") }}
           </v-btn>
@@ -260,7 +262,7 @@
       </template>
     </v-data-table>
 
-    <div v-if="rana.refuse_note" class="elevation-9 red_card">
+    <div v-if="isLast && chapter_stats && chapter_stats.randa_state === 'REFUSED' && rana.refuse_note" class="elevation-9 red_card">
       <v-icon v-on="on" small class="primary--text">mdi-alert</v-icon>
       Nota BNI:
       {{ rana.refuse_note }}
@@ -308,7 +310,11 @@ export default {
     rana: null,
     editable: false,
     prevRana: null,
-    ranaType: null
+    ranaType: null,
+    isLast: {
+      default: false
+    },
+    chapter_stats: null
   },
   computed: {
     nextTimeslot() {
@@ -382,18 +388,18 @@ export default {
     async disapproveRana() {
       let res = await ApiServer.put(this.rana.id + "/disapprove");
       if (!res.error) {
-        this.$emit("fetchRana");
+        this.$emit("fetchRanas");
       }
     },
     evaluateMembers(m) {
       let sum = this.rana.initialMembers;
-      for (let i = 0; i < m; i++) {
-        let n = this.rana.newMembers.CONS["m" + i]
+      for (let i = 1; i <= m; i++) {
+        let n = this.rana.newMembers.CONS["m" + i] !== null
           ? this.rana.newMembers.CONS["m" + i]
           : this.rana.newMembers.PREV["m" + i]
           ? this.rana.newMembers.PREV["m" + i]
           : 0;
-        let r = this.rana.retentions.CONS["m" + i]
+        let r = this.rana.retentions.CONS["m" + i] !== null
           ? this.rana.retentions.CONS["m" + i]
           : this.rana.retentions.PREV["m" + i]
           ? this.rana.retentions.PREV["m" + i]
@@ -510,10 +516,11 @@ export default {
 
     canCompile(i, valueType) {
       if (valueType === "month") {
+        debugger;
         i = Utils.getTimeslotFromMonth(i);
       }
-      let canApprove = this.canPropose(i, valueType);
-      let canPropose = this.canApprove(i, valueType);
+      let canApprove = this.canApprove(i, valueType);
+      let canPropose = this.canPropose(i, valueType);
       return canApprove || canPropose;
     },
 
@@ -626,21 +633,17 @@ export default {
       let prop;
       let appr;
 
-      this.rana.newMembers.PREV = this.prevRana
-        ? Object.keys(this.prevRana.newMembers.APPR).length
-          ? this.prevRana.newMembers.APPR
-          : this.prevRana.newMembers.PROP
-        : Object.keys(this.rana.newMembers.APPR).length
-        ? this.rana.newMembers.APPR
-        : this.rana.newMembers.PROP;
-
-      this.rana.retentions.PREV = this.prevRana
-        ? Object.keys(this.prevRana.retentions.APPR).length
-          ? this.prevRana.retentions.APPR
-          : this.prevRana.retentions.PROP
-        : Object.keys(this.rana.retentions.APPR).length
-        ? this.rana.retentions.APPR
-        : this.rana.retentions.PROP;
+      if (this.rana.state != "APPR") {
+        this.rana.newMembers.PREV = this.prevRana.newMembers[
+          this.prevRana.state
+        ];
+        this.rana.retentions.PREV = this.prevRana.retentions[
+          this.prevRana.state
+        ];
+      } else {
+        this.rana.newMembers.PREV = this.rana.newMembers[this.rana.state];
+        this.rana.retentions.PREV = this.rana.retentions[this.rana.state];
+      }
 
       if (this.prevRana) {
         this.rana.members = this.prevRana.members;

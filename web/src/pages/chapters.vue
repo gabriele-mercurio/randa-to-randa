@@ -1,26 +1,43 @@
 <template>
   <div class="ma-4 fill-height">
+    <v-btn @click="showStartRanda = true"> VAI</v-btn>
     <template>
-      <div v-if="randa_info" class="my-3">
+      <div v-if="randa_info" class="my-3 d-flex flex-column">
         <span
           ><span class="font-weight-black">Randa</span>:
           {{ randa_info.timeslot }} {{ randa_info.year }}</span
         >
-        <div v-if="randa_info.state === 'TODO' && allChaptersApproved()">
+        <div
+          v-if="
+            (randa_info.state === 'TODO' || randa_info.state === 'REFUSED') &&
+              allChaptersApproved()
+          "
+        >
           <v-btn color="primary" @click="goToRanda()">
             Apporavazione randa
           </v-btn>
         </div>
-          <div v-if="randa_info.state === 'APPR'">
-          <v-btn color="primary" @click="createNextTimeslot()">
-            Avvia compilazione randa {{getNextTimeslotLabel()}}
-          </v-btn>
-        </div>
-        <span v-else class="font-italic font-weight-light"
+        <span class="font-italic font-weight-light"
           >({{ getState(randa_info.state) }})
         </span>
+        <v-tooltip left v-if="randa_info.state === 'APPR' && !canStartNextRanda()">
+          <template v-slot:activator="{ on }">
+            <span v-on="on">
+              <v-btn disabled color="primary">
+                Avvia compilazione randa {{ getNextTimeslotLabel() }}
+              </v-btn>
+            </span>
+          </template>
+          <span>{{ cantStartNextRanaMessage }}</span>
+        </v-tooltip>
+
+        <div v-if="randa_info.state === 'APPR' && canStartNextRanda()">
+          <v-btn color="primary" @click="showStartRanda = true">
+            Avvia compilazione randa {{ getNextTimeslotLabel() }}
+          </v-btn>
+        </div>
       </div>
-      <div v-if="randa_info && randa_info.refuse_note && (role == 'ADMIN' || role == 'EXECUTIVE')">
+      <div v-if="randa_info && randa_info.state === 'REFUSED'">
         <v-icon small class="primary--text">mdi-alert</v-icon>
         Nota BNI:
         {{ randa_info.refuse_note }}
@@ -73,6 +90,12 @@
       </template>
       <span>Nuovo capitolo</span>
     </v-tooltip>
+
+    <Confirm
+      :message="'Avviare compilazione randa?'"
+      :show.sync="showStartRanda"
+      v-on:dialogResponse="createNextTimeslot"
+    />
   </div>
 </template>
 
@@ -82,6 +105,7 @@ import Utils from "../services/Utils";
 import EditChapter from "../components/EditChapter";
 import ChaptersList from "../components/ChaptersList";
 import NoData from "../components/NoData";
+import Confirm from "../components/Confirm";
 
 export default {
   data() {
@@ -94,23 +118,65 @@ export default {
       noChaptersFound: false,
       freeAccount: false,
       randa_info: null,
-      role: null
+      role: null,
+      showStartRanda: false,
+      cantStartNextRanaMessage: ""
     };
   },
   components: {
     EditChapter,
     ChaptersList,
-    NoData
+    NoData,
+    Confirm
   },
   methods: {
+    canStartNextRanda() {
+        let currentTimeslot = this.randa_info.timeslot;
+        let month, monthLabel;
+        switch (currentTimeslot) {
+          case "T1":
+            month = 3;
+            monthLabel = "Marzo";
+            break;
+          case "T2":
+            month = 6;
+            monthLabel = "Giugno";
+            break;
+          case "T3":
+            month = 9;
+            monthLabel = "Settembre";
+            break;
+          case "T4":
+            month = 12;
+            monthLabel = "Dicembre";
+            break;
+        }
+        var currentMonth = new Date().getMonth() + 1;
+        // var currentMonth = 9;
+        if (currentMonth < month) {
+          this.cantStartNextRanaMessage =
+            "Randa " +
+            this.getNextTimeslotLabel() +
+            " compilabile a partire da " +
+            monthLabel;
+          return false;
+        }
+        return true;
+      
+    },
     openEditModal(chapter) {
       this.editChapter = chapter;
       this.showEditChapter = true;
     },
 
-    async createNextTimeslot() {
-      let response = await ApiServer.put(this.regionId + "/create-next-timeslot");
-      location.reload();
+    async createNextTimeslot(response) {
+      this.showStartRanda = false;
+      if (response) {
+        let response = await ApiServer.put(
+          this.regionId + "/create-next-timeslot"
+        );
+        //location.reload();
+      }
     },
 
     getNextTimeslotLabel() {
@@ -146,7 +212,8 @@ export default {
 
     updateChapters(chapter) {
       this.showEditChapter = false;
-      this.chapters.push(chapter);
+      //this.chapters.push(chapter);
+      this.fetchChapters();
       if (this.freeAccount) {
         this.$router.push("/rana/" + chapter.id);
       }

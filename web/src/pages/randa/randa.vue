@@ -1,5 +1,9 @@
 <template>
   <div>
+    <div class="d-flex px-6 mt-3 d-print-none justify-end">
+      <v-btn icon @click="getXLSX()"> <v-icon>mdi-file-excel</v-icon></v-btn>
+      <v-btn icon @click="print()"> <v-icon>mdi-cloud-print</v-icon></v-btn>
+    </div>
     <Randa :title="'Randa'" :randa="randa" :layout="'split'" />
     <div v-if="isNational">
       <v-btn @click="showApproveRanda = true"> Approva</v-btn>
@@ -12,11 +16,13 @@ import Utils from "../../services/Utils";
 import ApiServer from "../../services/ApiServer";
 import Randa from "../../components/Randa";
 import NoData from "../../components/NoData";
+import XLSX from "xlsx";
 
 export default {
   components: {
     Randa,
-    NoData
+    NoData,
+    XLSX
   },
   data() {
     return {
@@ -42,7 +48,26 @@ export default {
       } else {
         this.noData = false;
       }
+    },
+    async getXLSX() {
+      var workbook = XLSX.utils.book_new();
+      var table = document.querySelector("#table_wrapper");
+      var sheet = XLSX.utils.table_to_sheet(table);
+      XLSX.utils.book_append_sheet(workbook, sheet, "Sheet");
+      var wbout = XLSX.writeFile(
+        workbook,
+        "RANDA_" + this.randa.year + "_" + this.randa.timeslot + ".xlsx",
+        {
+          type: "file",
+          bookType: "xlsx"
+        }
+      );
+    },
+
+    print() {
+      print();
     }
   }
 };
 </script>
+

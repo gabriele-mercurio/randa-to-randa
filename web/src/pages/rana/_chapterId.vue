@@ -8,20 +8,19 @@
       </v-col>
       <v-col cols="10 d-flex justify-center align-center">
         <h3 class="py-4">
-          Capitolo:
-          <span class="font-italic font-weight-light mr-2">{{
+          <span class="font-italic font-weight-black mr-2">{{
             chapter.name
           }}</span>
-          <span class="font-italic font-weight-light mr-2">{{
+          <span class="font-italic font-weight-light mr-2">({{
             getChapterState(chapter.currentState)
-          }}</span>
+          }})</span>
 
           <div v-if="chapter_stats">
             Approvati:
             <span class="font-italic font-weight-light mr-2">{{
               chapter_stats["approved"].length
             }}</span>
-            Proposte:
+            Da approvare:
             <span class="font-italic font-weight-light mr-2">{{
               chapter_stats["proposed"].length + chapter_stats["todo"].length
             }}</span>
@@ -39,17 +38,20 @@
         </v-btn>
       </v-col>
     </v-row>
-    <v-divider></v-divider>
     <Rana
       :rana="currentRana"
       :prevRana="prevRana"
       :ranaType="'renewedMembers'"
       :editable="true"
       v-on:updateRanas="updateRanas"
+      v-on:fetchRanas="fetchRanas"
+      :chapter_stats.sync="chapter_stats"
+      :isLast="true"
       v-if="currentRana && currentRana.randa_timeslot == currentRana.timeslot"
     />
 
-    <div v-for="(rana, index) in ranas" :key="index" class="mt-4">
+    <div v-for="(rana, index) in ranas" :key="index">
+
       <template
         v-if="
           index != 0 &&
@@ -59,9 +61,10 @@
             ranas.length > 1
         "
       >
+      <v-divider class="mt-12"></v-divider>
         <Rana
           :rana.sync="rana"
-          v-on:fetchRana="fetchRanas(null)"
+          v-on:fetchRanas="fetchRanas"
           :ranaType="'renewedMembers'"
           v-on:updateRanas="updateRanas"
           :editable="true"
@@ -204,14 +207,13 @@ export default {
       if (!chapterId) {
         chapterId = this.$route.params.chapterId || false;
       }
-      debugger;
       this.ranas = await ApiServer.get(chapterId + "/rana");
-      if (this.ranas.errorCode && this.ranas.errorCode == 404) {
-        this.ranas = await ApiServer.post(chapterId + "/rana");
-        this.fetchChaptersStatistics();
-      } else {
-        this.fetchChaptersStatistics();
-      }
+      this.fetchChaptersStatistics();
+      // if (this.ranas.errorCode && this.ranas.errorCode == 404) {
+      //   this.ranas = await ApiServer.post(chapterId + "/rana");
+      //   this.fetchChaptersStatistics();
+      // } else {
+      // }
 
       this.currentRana = this.ranas[0];
       if (this.ranas.length > 1) {

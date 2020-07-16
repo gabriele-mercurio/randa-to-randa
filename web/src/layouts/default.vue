@@ -25,6 +25,13 @@
               <v-list-item-title>{{ $t("change_region") }}</v-list-item-title>
             </v-list-item>
 
+            <v-list-item @click="changePassword()">
+              <v-list-item-icon>
+                <v-icon>mdi-lock-outline</v-icon>
+              </v-list-item-icon>
+              <v-list-item-title>Cambia password</v-list-item-title>
+            </v-list-item>
+
             <v-list-item @click="actAs()" v-if="canShowActAs()">
               <v-list-item-icon>
                 <v-icon>mdi-account-switch-outline</v-icon>
@@ -133,13 +140,7 @@
         >
       </v-toolbar>
     </nav>
-
     <nuxt />
-    <Snackbar
-      :showSnackbar.sync="showSnackbar"
-      :state.sync="snackbarState"
-      :messageLabel.sync="snackbarMessageLabel"
-    />
 
     <v-dialog v-model="promptUserChange" width="500" :scrollable="false">
       <v-card>
@@ -160,6 +161,48 @@
         </v-card-text>
       </v-card>
     </v-dialog>
+
+    <v-dialog v-model="showChangePassword" width="500" :scrollable="false">
+      <v-card>
+        <v-card-title class="headline primary white--text" primary-title>
+          Cambia password
+        </v-card-title>
+        <v-card-text class="pa-5">
+          <span class="font-italic">La password deve contenere almeno 8 caratteri, tra cui una lettera e un numero.</span>
+          <v-text-field
+            v-model="pwd1"
+            label="Password"
+            required
+            prepend-icon="mdi-lock-outline"
+            type="password"
+            :error-messages="invalidPwd1"
+            @blur="checkPwds()"
+          ></v-text-field>
+          <v-text-field
+            v-model="pwd2"
+            label="Ripeti password"
+            prepend-icon="mdi-lock-outline"
+            type="password"
+            :error-messages="invalidPwd2"
+            @blur="checkPwds()"
+          ></v-text-field>
+          <div class="d-flex justify-end">
+            <v-btn normal text  @click="showChangePassword = false">
+              Annulla</v-btn
+            >
+            <v-btn  normal text  class="ml-4" color="primary" @click="doChangePassword()" :disabled="!pwdsSyntax(pwd1) || !pwdsSyntax(pwd2) || pwd1 !== pwd2">
+              Conferma</v-btn
+            >
+          </div>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+
+    <v-snackbar v-model="showPwdSuccess" :timeout="timeout" top right>
+      <v-icon color="green">mdi-check</v-icon>
+      La password è stata correttamente modificata! Al prossimo accesso inserire la nuova password.
+    </v-snackbar>
+
   </v-app>
 </template>
 
@@ -173,14 +216,28 @@ export default {
   data() {
     return {
       drawer: false,
-      showSnackbar: false,
-      snackbarMessageLabel: null,
-      snackbarState: null,
+      timeout: 3000,
+      pwd_error: false,
+      pwd_error_message: "",
       promptUserChange: false,
       actAsDirector: null,
       regionDirectors: [],
-      message: ""
+      message: "",
+      showChangePassword: false,
+      pwd1: "",
+      pwd2: "",
+      invalidPwd1: [],
+      invalidPwd2: [],
+      pwds_errors: false,
+      showPwdSuccess: false,
+      timeout: 5000
     };
+  },
+  craeted() {
+    this.pwd1 = "";
+    this.pwd2 = "";
+    this.invalidPwd1 = [];
+    this.invalidPwd2 = [];
   },
   components: {
     Snackbar
@@ -198,6 +255,60 @@ export default {
       let actAs = this.$store.getters["getActAs"];
       let isAdmin = this.$store.getters["getOriginalUser"].isAdmin;
       return actAs && isAdmin;
+    },
+
+    checkPwds() {
+      if (this.pwd1 && this.pwd2) {
+        if (this.pwd1 !== this.pwd2) {
+          this.invalidPwd1 = ["Le password non corrispondono"];
+          this.invalidPwd2 = ["Le password non corrispondono"];
+          this.pwds_errors = true;
+        } else {
+          if (this.pwdsSyntax(this.pwd1) && this.pwdsSyntax(this.pwd2)) {
+            this.pwd_error = false;
+            this.pwds_errors = false;
+            this.invalidPwd1 = [];
+            this.invalidPwd2 = [];
+          }
+        }
+      } else {
+        if (this.pwd1 && !this.pwdsSyntax(this.pwd1)) {
+          this.invalidPwd1 = [
+            "Inserire una password che abbia almeno 8 caratteri, tra cui una lettera e un numero."
+          ];
+        }
+        if (this.pwd2 && !this.pwdsSyntax(this.pwd2)) {
+          this.invalidPwd2 = [
+            "Inserire una password che abbia almeno 8 caratteri, tra cui una lettera e un numero."
+          ];
+        }
+      }
+    },
+
+    pwdsSyntax(pwd) {
+      let regex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+      let result = pwd.match(regex);
+      return result;
+    },
+
+    changePassword() {
+      this.showChangePassword = true;
+    },
+
+    async doChangePassword() {
+      if (this.pwd1 !== this.pwd2) {
+      }
+      let result = await ApiServer.put("changePassword", {
+        pwd1: this.pwd1,
+        pwd2: this.pwd2
+      });
+
+      this.showChangePassword = false;
+
+      if (result) {
+        this.showPwdSuccess = true;
+        
+      } 
     },
 
     isNational() {
@@ -255,6 +366,7 @@ export default {
         this.$store.commit("setToken", null);
         this.$store.commit("setRegion", null);
         this.$store.commit("setActAs", null);
+        this.$router.push("/login");
       } catch (e) {}
     }
   },

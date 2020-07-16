@@ -516,7 +516,6 @@ export default {
 
     canCompile(i, valueType) {
       if (valueType === "month") {
-        debugger;
         i = Utils.getTimeslotFromMonth(i);
       }
       let canApprove = this.canApprove(i, valueType);
@@ -675,6 +674,13 @@ export default {
       },
       immediate: true,
       deep: true
+    },
+    chapter_stats: {
+      handler: function(n, v) {
+        debugger;
+      },
+      deep: true,
+      immediate: true
     }
   }
 };

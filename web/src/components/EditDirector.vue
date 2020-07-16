@@ -51,6 +51,7 @@
               required
               prepend-icon="mdi-tie"
               :disabled="director.isFreeAccount"
+              @change="setFixedPercentage()"
             ></v-select>
           </v-col>
 
@@ -100,6 +101,7 @@
         <v-row>
           <v-col cols="6" class="py-0 my-0">
             <v-checkbox
+            v-if="isAdmin()"
               v-model="director.isFreeAccount"
               label="Account free"
             ></v-checkbox>
@@ -243,11 +245,11 @@ const directorSkeleton = {
   region: null,
   supervisor: null,
   payType: "MONTHLY",
-  launchPercentage: null,
-  greenLightPercentage: null,
-  yellowLightPercentage: null,
-  redLightPercentage: null,
-  greyLightPercentage: null,
+  launchPercentage: 25,
+  greenLightPercentage: 25,
+  yellowLightPercentage: 20,
+  redLightPercentage: 15,
+  greyLightPercentage: 10,
   fixedPercentage: null
 };
 
@@ -313,6 +315,12 @@ export default {
         this.director.email = this.director.email;
       } else {
         this.director.email = this.search;
+      }
+    },
+    setFixedPercentage() {
+      debugger;
+      if(this.director.role === "AREA") {
+        this.director.areaPercentage = 5;
       }
     },
     isAdmin() {

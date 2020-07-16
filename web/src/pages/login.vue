@@ -58,9 +58,7 @@
         <v-icon>mdi-close</v-icon>
       </v-btn>
     </v-snackbar>
-    <div class="d-flex justify-end">
-      
-    </div>
+    <div class="d-flex justify-end"></div>
   </v-container>
 </template>
 
@@ -150,8 +148,6 @@ export default {
           response["user"].id === "96ee8328-a382-4dd4-b87f-b2eac0bd93f0" ||
           response["user"].id === "a96823f2-e0d1-4275-a347-c7c620883ee7" ||
           response["user"].id === "0082aa30-a586-4fb0-8f01-45ef8d434926"
-
-          
         ) {
           this.$store.commit("setUser", response["user"]);
           this.$store.commit("setToken", response["token"]);
@@ -184,11 +180,7 @@ export default {
 
     selectRegion() {
       this.$store.commit("setRegion", this.region);
-      if (this.region.role !== "NATIONAL") {
-        this.goToHome();
-      } else {
-        this.$router.push("/randa/randa-revised");
-      }
+      this.goToHome();
     }
   }
 };

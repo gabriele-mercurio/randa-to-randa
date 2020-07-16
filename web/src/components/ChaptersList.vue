@@ -23,7 +23,7 @@
             </div>
           </td>
           <td class="small-font pl-2">{{ item.director.fullName }}</td>
-          <td class="small-font pl-2">{{ item.members }}</td>
+          <td class="small-font pl-2">{{ getChapterMembers(item) }}</td>
           <td class="small-font pl-2">
             <div class="d-flex flex-column justicy-center">
               <small
@@ -235,6 +235,11 @@ export default {
     }
   },
   methods: {
+
+    getChapterMembers(item) {
+      if(item.currentState !== 'CLOSED') return item.members;
+      return 0;
+    },
     close() {
 
     },
@@ -290,7 +295,9 @@ export default {
     },
 
     getItemState(item) {
-      return Utils.getState(item.state);
+      if(item.currentState !== 'CLOSED') {
+        return Utils.getState(item.state);
+      } return "";
     },
 
     closeSuspendDialog(isSuspended) {
@@ -350,7 +357,6 @@ export default {
     },
 
     async launch(result) {
-      debugger;
       this.showConfirmLaunch = false;
       if (result) {
         let action =

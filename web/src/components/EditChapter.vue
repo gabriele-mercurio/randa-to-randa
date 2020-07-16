@@ -81,7 +81,7 @@ import Utils from "../services/Utils";
 import ApiServer from "../services/ApiServer";
 import MonthPicker from "../components/MonthPicker";
 
-const mandatoryFields = ["name", "chapterLaunch", "coreGroupLaunch"];
+const mandatoryFields = ["name"];
 
 const chapterSkeleton = {
   name: "",

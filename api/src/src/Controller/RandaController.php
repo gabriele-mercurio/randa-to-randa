@@ -6,12 +6,13 @@ use Exception;
 use App\Util\Util;
 use App\Entity\Rana;
 use App\Entity\Randa;
+use Twig\Environment;
 use App\Entity\Region;
 use App\Util\Constants;
-use Swift_Mailer;
 use App\Entity\RanaLifecycle;
 use Swagger\Annotations as SWG;
 use App\Formatter\RandaFormatter;
+use Symfony\Component\Mime\Email;
 use App\Repository\RanaRepository;
 use App\Repository\UserRepository;
 use App\Repository\RandaRepository;
@@ -20,11 +21,13 @@ use App\Repository\DirectorRepository;
 use App\Repository\NewMemberRepository;
 use App\Repository\RetentionRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use App\OldDB\Repository\RegionRepository;
+use App\Repository\RegionRepository;
 use App\Repository\RanaLifecycleRepository;
 use App\Repository\RenewedMemberRepository;
 use Nelmio\ApiDocBundle\Annotation\Security;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -51,7 +54,7 @@ class RandaController extends AbstractController
     /** @var EntityManagerInterface */
     private $entityManager;
 
-    /** @var Swift_Mailer */
+    /** @var MailerInterface */
     private $mailer;
 
     /** @var RenewedMemberRepository */
@@ -73,6 +76,9 @@ class RandaController extends AbstractController
     /** @var RegionRepository */
     private $regionRepository;
 
+    /** @var Environment */
+    private $twig;
+
 
     public function __construct(
         DirectorRepository $directorRepository,
@@ -87,7 +93,8 @@ class RandaController extends AbstractController
         RanaRepository $ranaRepository,
         EntityManagerInterface $entityManager,
         RegionRepository $regionRepository,
-        Swift_Mailer $swiftMailer
+        Environment $twig,
+        MailerInterface $mailer
     ) {
         $this->directorRepository = $directorRepository;
         $this->newMemberRepository = $newMemberRepository;
@@ -101,7 +108,8 @@ class RandaController extends AbstractController
         $this->ranaRepository = $ranaRepository;
         $this->entityManager = $entityManager;
         $this->regionRepository = $regionRepository;
-        $this->swiftMailer = $swiftMailer;
+        $this->mailer = $mailer;
+        $this->twig = $twig;
     }
 
     /**
@@ -834,41 +842,41 @@ class RandaController extends AbstractController
         }
 
 
-        $chapters = $this->chapterRepository->findBy([
-            "region" => $region
-        ]);
+        // $chapters = $this->chapterRepository->findBy([
+        //     "region" => $region
+        // ]);
 
-        foreach ($chapters as $chapter) {
+        // foreach ($chapters as $chapter) {
 
 
-            $rana = $this->ranaRepository->findOneBy([
-                "randa" => $randa,
-                "chapter" => $chapter
-            ]);
+        //     $rana = $this->ranaRepository->findOneBy([
+        //         "randa" => $randa,
+        //         "chapter" => $chapter
+        //     ]);
 
-            if (!$rana) {
-                $rana = new Rana();
-                $rana->setChapter($chapter);
-                $rana->setRanda($randa);
-                $this->ranaRepository->save($rana);
-            }
+        //     if (!$rana) {
+        //         $rana = new Rana();
+        //         $rana->setChapter($chapter);
+        //         $rana->setRanda($randa);
+        //         $this->ranaRepository->save($rana);
+        //     }
 
-            $lc = $this->ranaLifecycleRepository->findOneBy([
-                "currentTimeslot" => $nexttimeslot,
-                "rana" => $rana
-            ]);
+        //     $lc = $this->ranaLifecycleRepository->findOneBy([
+        //         "currentTimeslot" => $timeslot,
+        //         "rana" => $rana
+        //     ]);
 
-            if (!$lc) {
-                $ranaLifeCycle = new RanaLifecycle();
-                $ranaLifeCycle->setCurrentState(Constants::RANA_LIFECYCLE_STATUS_TODO);
-                $ranaLifeCycle->setCurrentTimeslot($nexttimeslot);
-                $ranaLifeCycle->setRana($rana);
-                $this->ranaLifecycleRepository->save($ranaLifeCycle);
-                $this->entityManager->refresh($rana);
-            }
-        }
+        //     if (!$lc) {
+        //         $ranaLifeCycle = new RanaLifecycle();
+        //         $ranaLifeCycle->setCurrentState(Constants::RANA_LIFECYCLE_STATUS_TODO);
+        //         $ranaLifeCycle->setCurrentTimeslot($timeslot);
+        //         $ranaLifeCycle->setRana($rana);
+        //         $this->ranaLifecycleRepository->save($ranaLifeCycle);
+        //         $this->entityManager->refresh($rana);
+        //     }
+        // }
 
-        $this->randaRepository->save($randa);
+        // $this->randaRepository->save($randa);
         return new JsonResponse(true);
     }
 
@@ -922,19 +930,16 @@ class RandaController extends AbstractController
             ]);
 
             $timeslot = $randa->getCurrentTimeslot();
-
             $slotNumber = (int) substr($timeslot, -1);
-
             $nextSlotNumber = $slotNumber + 1;
+            $nextTimeslot = "T$nextSlotNumber";
 
             if ($nextSlotNumber == 5) {
                 $randa = new Randa();
                 $randa->setRegion($region);
                 $randa->setYear($currentYear + 1);
-                $nextSlotNumber = 1;
+                $nextTimeslot = "T0";
             }
-
-            $nextTimeslot = "T$nextSlotNumber";
 
             $randa->setCurrentTimeslot($nextTimeslot);
             $randa->setCurrentState("TODO");
@@ -970,55 +975,36 @@ class RandaController extends AbstractController
                     $this->ranaLifecycleRepository->save($ranaLifeCycle);
                     $this->entityManager->refresh($rana);
                 }
+
+                $director = $chapter->getDirector();
+                $to_email = $director->getUser()->getEmail();
+                $to_name = $director->getUser()->getFullName();
+                //$temp_subject = $to_email . " ---- " . $to_name; //toremove
+
+                $title = "Inizio compilazione RANDA " . $randa->getYear() . " " . $randa->getCurrentTimeslot();
+
+                $data = [
+                    "randa_year" => $randa->getYear(),
+                    "randa_timeslot" => $randa->getCurrentTimeslot(),
+                    "randa_region" => $region->getName(),
+                    "title" => $title
+                ];
+    
+                $email = (new TemplatedEmail())
+                ->from('rosbi@studio-mercurio.it')
+                ->to($to_email)
+                ->subject($title) 
+                ->htmlTemplate('emails/next-randa-start/html.twig')
+                ->context($data);
+    
+                $this->mailer->send($email);
             }
-
-            $from_email = 'rosbi@studio-mercurio.it';
-            $from_name = "ROSBI";
-
-            try {
-                $email = $this->mailer->createMessage();
-            } catch (Exception $e) {
-                file_put_contents("pippo", $e->getMessage(), FILE_APPEND);
-            }
-
-            $directors = $this->directorRepository->findBy([
-                "role" => "EXECUTIVE"
-            ]);
-
-            return new JsonResponse(false);
-            foreach ($directors as $director) {
-
-                try {
-                    $to_email = $director->getUser()->getEmail();
-                    $to_name = $director->getUser()->getFullName();
-
-
-                    $title = "Inizio compilazionei RANDA " . $randa->getYear() . " " . $randa->getCurrentTimeslot();
-
-                    $data = [
-                        "randa_year" => $randa->getYear(),
-                        "randa_timeslot" => $randa->getCurrentTimeslot(),
-                        "randa_region" => $region->getName()
-                    ];
-
-                    $email->setFrom($from_email, $from_name)
-                        ->addTo($to_email, $to_name)
-                        ->setSubject($title)
-                        ->setBody($this->twig->render("emails/next-randa-started/html.twig", $data), "text/html")
-                        ->addPart($this->twig->render("emails/next-randa-started/txt.twig", $data), "text/plain");
-
-                    $response = $this->mailer->send($email);
-                } catch (Exception $e) {
-                    file_put_contents("pippo", $e->getMessage(), FILE_APPEND);
-                }
-            }
-
-            return new JsonResponse(true);
+            return new JsonResponse(true, Response::HTTP_OK);
         } catch (Exception $e) {
-            return new JsonResponse(false);
+            header("exception: " . $e->getMessage());
+            return new JsonResponse(false, Response::HTTP_BAD_REQUEST);
         }
     }
-
 
 
     /**
@@ -1318,6 +1304,8 @@ class RandaController extends AbstractController
                         $month_c = 13;
                     }
 
+                    file_put_contents("mail_log", $month_cg . " - - " . $month_c, FILE_APPEND);
+
                     if ($month_cg < 13) {
 
                         $initial_members = $project->getMembers();
@@ -1383,7 +1371,6 @@ class RandaController extends AbstractController
                         $ret_members = 0;
                         for ($i = 1; $i <= 12; $i++) {
 
-
                             $method = "getM$i";
                             $new_members += ($new_cons && $new_cons->$method() !== null) ? $new_cons->$method() : ($new_appr && $new_appr !== null ? $new_appr->$method() : 0);
                             $ret_members += ($ret_cons && $ret_cons->$method() !== null) ? $ret_cons->$method() : ($ret_appr && $ret_appr !== null ? $ret_appr->$method() : 0);
@@ -1402,11 +1389,12 @@ class RandaController extends AbstractController
                                     $chapter_element_cg_new["data"][] = null;
                                     $chapter_element_cg_ret["data"][] = null;
                                 } else if ($i >= $month_cg) {
+
                                     $chapter_element_cg_new["data"][] = $new_members;
                                     $chapter_element_cg_ret["data"][] = $ret_members;
                                     $cg_len = sizeof($chapter_element_cg_act["data"]);
-                                    $chapter_element_cg_act["data"][] = ($cg_len ? $chapter_element_cg_act["data"][$cg_len - 1] : $initial_members) + ($new_members - $ret_members);
-
+                                    $initial_members = $cg_len ? $chapter_element_cg_act["data"][$cg_len - 1] : $initial_members;
+                                    $chapter_element_cg_act["data"][] = $initial_members + ($new_members - $ret_members);
 
                                     $chapter_element_new["data"][] = null;
                                     $chapter_element_ret["data"][] = null;
@@ -1416,9 +1404,9 @@ class RandaController extends AbstractController
                                     $chapter_element_new["data"][] = null;
                                     $chapter_element_ret["data"][] = null;
                                     $chapter_element_act["data"][] = null;
-                                    // $chapter_element_cg_act["data"][] = null;
-                                    // $chapter_element_cg_new["data"][] = null;
-                                    // $chapter_element_cg_ret["data"][] = null;
+                                    $chapter_element_cg_act["data"][] = null;
+                                    $chapter_element_cg_new["data"][] = null;
+                                    $chapter_element_cg_ret["data"][] = null;
                                 }
 
                                 $new_members = 0;
@@ -1428,7 +1416,7 @@ class RandaController extends AbstractController
 
                         $data["core_groups_new"][] = $chapter_element_cg_new;
                         $data["core_groups_ret"][] = $chapter_element_cg_ret;
-                        $data["core_groups_act"][] = $chapter_element_act;
+                        $data["core_groups_act"][] = $chapter_element_cg_act;
                         $data["chapters_new"][] = $chapter_element_new;
                         $data["chapters_ret"][] = $chapter_element_ret;
                         $data["chapters_act"][] = $chapter_element_act;
@@ -1439,7 +1427,7 @@ class RandaController extends AbstractController
                 //calcolo membri
 
 
-                // file_put_contents("pippo", sizeof($data["core_groups_new"]), FILE_APPEND);
+                // file_put_contents("mail_log", sizeof($data["core_groups_new"]), FILE_APPEND);
                 // for ($j = 0; $j < sizeof($data["core_groups_new"]); $j++) {
                 //     $cgn = $data["core_groups_new"][$j];
                 //     $cgr =  $data["core_groups_ret"][$j];
@@ -1457,7 +1445,7 @@ class RandaController extends AbstractController
                 //     }
                 //     $cga["data"] = $d;
                 //     $data["core_groups_act"][] = $cga;
-                //     file_put_contents("pippo", "CORE GROUP: " . sizeof($data["core_groups_act"]), FILE_APPEND);
+                //     file_put_contents("mail_log", "CORE GROUP: " . sizeof($data["core_groups_act"]), FILE_APPEND);
                 // }
 
                 // for ($j = 0; $j < sizeof($data["chapters_new"]); $j++) {

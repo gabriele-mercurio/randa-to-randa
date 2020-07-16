@@ -250,6 +250,10 @@ class DirectorController extends AbstractController
         $errorFields = [];
         $performerRole = $role;
 
+        $encoded_user = json_encode($this->getUser());
+        header("role: " . $encoded_user);
+        header("code: " . $code);
+
         if ($code == Response::HTTP_OK) {
             $firstName = trim($request->get("firstName"));
             $lastName = trim($request->get("lastName"));
@@ -332,6 +336,9 @@ class DirectorController extends AbstractController
             if (!empty($errorFields)) {
                 $code = Response::HTTP_BAD_REQUEST;
             }
+        } else {
+            $errorFields = $code == Response::HTTP_BAD_REQUEST ? $errorFields : null;
+            return new JsonResponse($errorFields, $code);
         }
 
         if ($code == Response::HTTP_OK) {
@@ -367,6 +374,9 @@ class DirectorController extends AbstractController
                     $code = Response::HTTP_UNPROCESSABLE_ENTITY;
                 }
             }
+        } else {
+            $errorFields = $code == Response::HTTP_BAD_REQUEST ? $errorFields : null;
+            return new JsonResponse($errorFields, $code);
         }
 
         if ($code == Response::HTTP_OK) {

@@ -28,7 +28,7 @@ return [
             'title' => "Il tuo account Randa2Randa."
         ],
         'signatures' => [
-            'staff' => "Lo staff di Randa2Randa"
+            'staff' => "Lo staff di ROSBI"
         ]
     ]
 ];

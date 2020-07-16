@@ -1,6 +1,6 @@
 <template>
   <div class="ma-4 fill-height">
-    <v-btn @click="showStartRanda = true"> VAI</v-btn>
+    <!-- <v-btn @click="showStartRanda = true"> VAI</v-btn> -->
     <template>
       <div v-if="randa_info" class="my-3 d-flex flex-column">
         <span
@@ -50,10 +50,12 @@
         v-if="!noChaptersFound"
       />
 
+
       <div v-else>
         <NoData :message="'Nessun capitolo trovato'" />
         Nessun capitolo trovato :(
       </div>
+      <div class="mb-12"></div>
     </template>
 
     <v-dialog
@@ -175,7 +177,7 @@ export default {
         let response = await ApiServer.put(
           this.regionId + "/create-next-timeslot"
         );
-        //location.reload();
+        location.reload();
       }
     },
 

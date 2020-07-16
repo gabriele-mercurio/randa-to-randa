@@ -1132,7 +1132,7 @@ class RanaController extends AbstractController
             ]);
 
             //if lifecycle exists for this rana, update status and create a new lifecycle record with todo state for next t
-            $currentLifeCycle->setCurrentState($status);
+            $currentLifeCycle->setCurrentState($state);
             $this->entityManager->persist($currentLifeCycle);
             $this->entityManager->flush();
 
@@ -1144,7 +1144,7 @@ class RanaController extends AbstractController
                 $nextTimeslot = "T$nextSlotNumber";
             }
 
-            $status = Constants::RANA_LIFECYCLE_STATUS_TODO;
+            $state = Constants::RANA_LIFECYCLE_STATUS_TODO;
         } else {
             $nextTimeslot = $timeslot;
         }
@@ -1156,9 +1156,9 @@ class RanaController extends AbstractController
 
         // if (!$nextRanaLifeCycle) {
         //     $nextRanaLifeCycle = new RanaLifecycle();
-        //     $status = Constants::RANA_LIFECYCLE_STATUS_TODO;
+        //     $state = Constants::RANA_LIFECYCLE_STATUS_TODO;
         // }
-        // $nextRanaLifeCycle->setCurrentState($status);
+        // $nextRanaLifeCycle->setCurrentState($state);
         // $nextRanaLifeCycle->setCurrentTimeslot($nextTimeslot);
         // $nextRanaLifeCycle->setRana($rana);
 

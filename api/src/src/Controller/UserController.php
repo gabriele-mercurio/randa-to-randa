@@ -2,21 +2,22 @@
 
 namespace App\Controller;
 
-use App\Entity\Region;
-use App\Entity\User;
-use App\Formatter\UserFormatter;
-use App\Repository\DirectorRepository;
-use App\Repository\UserRepository;
-use App\Util\Constants;
+use Exception;
 use App\Util\Util;
+use App\Entity\User;
+use App\Entity\Region;
+use App\Util\Constants;
 use App\Util\Validator;
-use Nelmio\ApiDocBundle\Annotation\Security;
 use Swagger\Annotations as SWG;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
+use App\Formatter\UserFormatter;
+use App\Repository\UserRepository;
+use App\Repository\DirectorRepository;
+use Nelmio\ApiDocBundle\Annotation\Security;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 class UserController extends AbstractController
 {
@@ -280,6 +281,38 @@ class UserController extends AbstractController
             return $this->userFormatter->formatForSelectFields($user);
         }, $users));
     }
+
+
+    /**
+     * Change password
+     *
+     * @Route("changePassword", name="change_password", methods={"PUT"})
+     *
+     */
+    public function changePassword(Request $request): Response
+    {
+        $request = Util::normalizeRequest($request);
+        $pwd1 = $request->get("pwd1");
+        $pwd2 = $request->get("pwd2");
+        header("pwd1:" . $pwd1);
+        header("pwd2:" . $pwd2);
+
+
+        if($pwd1 !== $pwd2) {
+            header("differentpasswords:true");
+            return new JsonResponse("Passwords not matching", Response::HTTP_BAD_REQUEST);
+        }
+
+        $user = $this->getUser();
+        $user->securePassword($pwd1);
+        try {
+            $this->userRepository->save($user);
+        } catch (Exception $e) {
+            header("eccezione: " . $e->getMessage());
+        }
+        return new JsonResponse(true, Response::HTTP_OK);
+    }
+
 
     /**
      * Get a list of users for autocomplete

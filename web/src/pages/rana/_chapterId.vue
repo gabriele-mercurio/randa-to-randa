@@ -11,9 +11,9 @@
           <span class="font-italic font-weight-black mr-2">{{
             chapter.name
           }}</span>
-          <span class="font-italic font-weight-light mr-2">({{
-            getChapterState(chapter.currentState)
-          }})</span>
+          <span class="font-italic font-weight-light mr-2"
+            >({{ getChapterState(chapter.currentState) }})</span
+          >
 
           <div v-if="chapter_stats">
             Approvati:
@@ -24,7 +24,6 @@
             <span class="font-italic font-weight-light mr-2">{{
               chapter_stats["proposed"].length + chapter_stats["todo"].length
             }}</span>
-           
           </div>
 
           <!-- Membri
@@ -51,7 +50,6 @@
     />
 
     <div v-for="(rana, index) in ranas" :key="index">
-
       <template
         v-if="
           index != 0 &&
@@ -61,13 +59,14 @@
             ranas.length > 1
         "
       >
-      <v-divider class="mt-12"></v-divider>
+        <v-divider class="mt-12"></v-divider>
         <Rana
           :rana.sync="rana"
           v-on:fetchRanas="fetchRanas"
           :ranaType="'renewedMembers'"
           v-on:updateRanas="updateRanas"
           :editable="true"
+          :chapter_stats.sync="chapter_stats"
         />
       </template>
 
@@ -199,6 +198,7 @@ export default {
       this.chapter_stats = await ApiServer.get(
         region_id + "/chapters-statistics"
       );
+      debugger;
     },
     isPastTimeslot(timeslot) {
       return timeslot <= this.currentTimeslot;

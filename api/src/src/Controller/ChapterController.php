@@ -4,10 +4,15 @@ namespace App\Controller;
 
 use Exception;
 use App\Util\Util;
+use App\Entity\Rana;
+use App\Entity\Randa;
 use App\Entity\Region;
 use App\Entity\Chapter;
 use App\Util\Constants;
 use App\Entity\Director;
+use App\Entity\NewMember;
+use App\Entity\Retention;
+use App\Entity\RanaLifecycle;
 use Swagger\Annotations as SWG;
 use App\Repository\RanaRepository;
 use App\Repository\UserRepository;
@@ -486,13 +491,135 @@ class ChapterController extends AbstractController
             $chapter->setPrevLaunchChapterDate($prevLaunchChapterDate);
             $chapter->setPrevLaunchCoregroupDate($prevLaunchCoregroupDate);
             $chapter->setRegion($region);
+            $chapter->setMembers(0);
+
             $this->chapterRepository->save($chapter);
+
+            $currentYear = (int) date("Y");
+            $randa = $this->randaRepository->findOneBy([
+                "region" => $region,
+                "year" => $currentYear
+            ]);
+
+            if(!$randa) {
+                $randa = new Randa();
+                $randa->setYear($currentYear);
+                $timeslot = Util::getTimeslotFromCurrentMonth();
+                $randa->setCurrentTimeslot($timeslot);
+                $randa->setCurrentState("TODO");
+                $randa->setRegion($region);
+                $this->randaRepository->save($randa);
+            }
+            $randa_timeslot = $randa->getCurrentTimeslot();
+
+            $rana = new Rana();
+            $rana->setChapter($chapter);
+            $rana->setRanda($randa);
+            $this->ranaRepository->save($rana);
+
+            file_put_contents("chapter_log", "Chapter name: " . $chapter->getName() . "\n", FILE_APPEND);
+            file_put_contents("chapter_log", "RANA ID: " . $rana->getId() . "\n", FILE_APPEND);
+
+            $return_values = ChapterController::initializeRetentionsAndNewMembers($randa_timeslot, $rana);
+            $this->retentionRepository->save($return_values[0]);
+            $this->retentionRepository->save($return_values[1]);
+            $this->newMemberRepository->save($return_values[2]);
+            $this->newMemberRepository->save($return_values[3]);
+            $this->ranaLifecycleRepository->save($return_values[4]);
+
+            file_put_contents("chapter_log", "Retentions and new members initialized...\n", FILE_APPEND);
+
+            if (isset($return_values[5]) && isset($return_values[6]) && isset($return_values[7])) {
+                $this->retentionRepository->save($return_values[5]);
+                $this->newMemberRepository->save($return_values[6]);
+                $this->ranaLifecycleRepository->save($return_values[7]);
+                file_put_contents("chapter_log", "T is grater than 0, so i set the t - 1 values...\n", FILE_APPEND);
+            }
 
             return new JsonResponse($this->chapterFormatter->formatFull($chapter), Response::HTTP_CREATED);
         } else {
             $errorFields = $code == Response::HTTP_BAD_REQUEST ? $errorFields : null;
             return new JsonResponse($errorFields, $code);
         }
+    }
+
+    public static function initializeRetentionsAndNewMembers($timeslot, $rana)
+    {
+        $numeric_timeslot = (int) substr($timeslot, -1);
+
+        $retentions_cons = new Retention();
+        $retentions_cons->setRana($rana);
+        $retentions_cons->setValueType("CONS");
+        $retentions_cons->setTimeslot("T0");
+
+        $new_members_cons = new NewMember();
+        $new_members_cons->setRana($rana);
+        $new_members_cons->setValueType("CONS");
+        $new_members_cons->setTimeslot("T0");
+
+        $retentions = new Retention();
+        $retentions->setRana($rana);
+        $retentions->setValueType("TODO");
+        $retentions->setTimeslot($timeslot);
+
+        $new_members = new NewMember();
+        $new_members->setRana($rana);
+        $new_members->setValueType("TODO");
+        $new_members->setTimeslot($timeslot);
+
+        $rana_lifecycle = new RanaLifecycle();
+        $rana_lifecycle->setRana($rana);
+        $rana_lifecycle->setCurrentTimeslot($timeslot);
+        $rana_lifecycle->setCurrentState("TODO");
+
+
+        if ($numeric_timeslot > 0) {
+            $timeslot_prev = "T" . ($numeric_timeslot - 1);
+            $retentions_prev = new Retention();
+            $retentions_prev->setRana($rana);
+            $retentions_prev->setValueType("APPR");
+            $retentions_prev->setTimeslot($timeslot_prev);
+
+            $new_members_prev = new NewMember();
+            $new_members_prev->setRana($rana);
+            $new_members_prev->setValueType("APPR");
+            $new_members_prev->setTimeslot($timeslot_prev);
+
+            $rana_lifecycle_prev = new RanaLifecycle();
+            $rana_lifecycle_prev->setRana($rana);
+            $rana_lifecycle_prev->setCurrentTimeslot($timeslot_prev);
+            $rana_lifecycle_prev->setCurrentState("APPR");
+        }
+
+        $current_month = date("m");
+        for ($i = 1; $i <= 12; $i++) {
+            if ($i < $current_month) {
+                $retentions_cons->setMonth($i, 0);
+                $new_members_cons->setMonth($i, 0);
+            } else {
+                $retentions_cons->setMonth($i, null);
+                $new_members_cons->setMonth($i, null);
+            }
+            $retentions->setMonth($i, 0);
+            $new_members->setMonth($i, 0);
+
+            if ($numeric_timeslot > 0) {
+                $retentions_prev->setMonth($i, 0);
+                $new_members_prev->setMonth($i, 0);
+            }
+        }
+
+        $return_values = [
+            $retentions,
+            $retentions_cons,
+            $new_members,
+            $new_members_cons,
+            $rana_lifecycle
+        ];
+        if ($numeric_timeslot > 0) {
+            $return_values = array_merge($return_values, [$retentions_prev, $new_members_prev, $rana_lifecycle_prev]);
+        }
+        return $return_values;
     }
 
     /**
@@ -1057,8 +1184,6 @@ class ChapterController extends AbstractController
             "currentTimeslot" => "DESC"
         ]);
 
-        $timeslot = $randa->getCurrentTimeslot();
-
         if ($code == Response::HTTP_OK) {
             switch ($role) {
                 case Constants::ROLE_EXECUTIVE:
@@ -1117,25 +1242,25 @@ class ChapterController extends AbstractController
                         "timeslot" => "T0"
                     ]);
 
-                    $num = ((int)substr($randa->getCurrentTimeslot(), -1) * 3);
+                    file_put_contents("cc", $rana->getId());
 
-                    $new_members_appr = $this->newMemberRepository->findOneBy(
-                        [
-                            "rana" => $rana,
-                            "valueType" => "APPR",
-                            'timeslot' => $randa->getCurrentTimeslot()
-                        ]
-                    );
+                    $last_number_new = 0;
+                    for ($i = 1; $i <= 12; $i++) {
+                        $method = "getM$i";
+                        $cons = $new_members_cons->$method();
+                        if ($cons !== null) {
+                            $last_number_new = $i;
+                        }
+                    }
 
                     $new_members_ts = [];
-                    for ($i = 1; $i <= $num; $i++) {
+                    for ($i = 1; $i <= 12; $i++) {
                         $method = "getM$i";
                         $val = 0;
-                        if ($new_members_cons) {
+                        if ($i <= $last_number_new) {
                             $val = $new_members_cons->$method();
-                        }
-                        if (is_null($val) && $new_members_appr) {
-                            $val = $new_members_appr->$method();
+                        } else {
+                            $val = 0;
                         }
                         $new_members_ts[] = $val;
                     }
@@ -1147,36 +1272,35 @@ class ChapterController extends AbstractController
                         "timeslot" => "T0"
                     ]);
 
-
-                    $retentions_appr = $this->retentionRepository->findOneBy(
-                        [
-                            "rana" => $rana,
-                            "valueType" => "APPR",
-                            'timeslot' => $randa->getCurrentTimeslot()
-                        ]
-                    );
+                    $last_number_ret = 0;
+                    for ($i = 1; $i <= 12; $i++) {
+                        $method = "getM$i";
+                        $cons = $retentions_cons->$method();
+                        if ($cons !== null) {
+                            $last_number_ret = $i;
+                        }
+                    }
 
                     $retentions_ts = [];
-                    for ($i = 1; $i <= $num; $i++) {
+                    for ($i = 1; $i <= 12; $i++) {
                         $method = "getM$i";
                         $val = 0;
-                        if ($retentions_cons) {
+                        if ($i <= $last_number_ret) {
                             $val = $retentions_cons->$method();
-                        }
-                        if (is_null($val) && $retentions_appr) {
-                            $val = $retentions_appr->$method();
+                        } else {
+                            $val = 0;
                         }
                         $retentions_ts[] = $val;
                     }
 
 
                     $members = $chapter->getMembers();
-                    for ($i = 0; $i < $num; $i++) {
-                        $members +=  ($new_members_ts[$i] - $retentions_ts[$i]);
+                    for ($i = 0; $i < $last_number_ret; $i++) {
+                        $members += ($new_members_ts[$i] - $retentions_ts[$i]);
                     }
+                    $chapter->setMembers($members);
                 }
 
-                $chapter->setMembers($members);
             }
 
 
@@ -1219,23 +1343,16 @@ class ChapterController extends AbstractController
                 return $ret;
             }, $chapters);
 
-            $chapters_data["randa"] = [
-                "state" => $randa->getCurrentState(),
-                "timeslot" => $randa->getCurrentTimeslot(),
-                "year" => $currentYear,
-                "refuse_note" => $randa->getRefuseNote(),
-                "directors_previsions" => $randa->getDirectorsPrevisions()
-            ];
 
-
-            // foreach($chapters as $chapter) {
-            //     $rana = $this->chapterRepository->findOneBy([
-            //         "chapter" => $rana,
-            //         "randa" => $randa
-            //     ]);
-            //     $this->retent
-            // }
-
+            if ($randa) {
+                $chapters_data["randa"] = [
+                    "state" => $randa->getCurrentState(),
+                    "timeslot" => $randa->getCurrentTimeslot(),
+                    "year" => $currentYear,
+                    "refuse_note" => $randa->getRefuseNote(),
+                    "directors_previsions" => $randa->getDirectorsPrevisions()
+                ];
+            }
             return new JsonResponse($chapters_data);
         } else {
             return new JsonResponse(null, $code);

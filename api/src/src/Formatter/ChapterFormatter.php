@@ -85,10 +85,10 @@ class ChapterFormatter
      *
      * @return array
      */
-    public function formatWithStatus(Chapter $chapter, String $status): array
+    public function formatWithStatus(Chapter $chapter, String $state): array
     {
         $c = $this->formatBase($chapter);
-        $c["status"] = $status;
+        $c["state"] = $state;
         return $c;
     }
 }

@@ -36,6 +36,8 @@ export default {
   no_randa_to_show: "Nessun randa da mostrare",
   disapprove_rana: "Disapprova rana",
   region: "Region",
+  wrong_password_syntax: "La password deve contenere almeno...",
+  passwords_not_matching: "Le due password non coincidono",
   change_region: "Cambia region",
   successfuly_created: " creato correttamente",
   successfuly_edited: " modificato correttamente",

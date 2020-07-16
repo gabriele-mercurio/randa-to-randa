@@ -194,6 +194,12 @@ class Util
 
         if ($code == Response::HTTP_OK && !$isAdmin) {
             $u = is_null($actAsId) ? $user : $actAs;
+            
+            $dir = $directorRepository->findOneBy([
+                "user" => $user,
+                "region" => $region
+            ]);
+            $role = $dir->getRole();
             $checkDirectorRole = $directorRepository->checkDirectorRole($u, $region, $role);
 
             $code = static::arrayGetValue($checkDirectorRole, 'code', $code);

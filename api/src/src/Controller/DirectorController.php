@@ -240,6 +240,9 @@ class DirectorController extends AbstractController
             Constants::ROLE_AREA,
             Constants::ROLE_ASSISTANT
         ];
+
+        $name = $this->getUser()->getFirstName();
+
         $performerData = Util::getPerformerData($this->getUser(), $region, $roleCheck, $this->userRepository, $this->directorRepository, $request->get("actAs"), $request->get("role"));
 
         // Assign $actAs, $code, $director, $isAdmin and $role
@@ -248,11 +251,19 @@ class DirectorController extends AbstractController
         }
 
         $errorFields = [];
-        $performerRole = $role;
 
-        $encoded_user = json_encode($this->getUser());
-        header("role: " . $encoded_user);
-        header("code: " . $code);
+
+        $performingUser = $this->directorRepository->findOneBy([
+            "user" => $this->getUser(),
+            "region" => $region
+        ]);
+
+        if($performingUser) {
+            $performerRole = $performingUser->getRole();
+        } else {
+            $performerRole = Constants::ROLE_ASSISTANT;
+        }
+
 
         if ($code == Response::HTTP_OK) {
             $firstName = trim($request->get("firstName"));

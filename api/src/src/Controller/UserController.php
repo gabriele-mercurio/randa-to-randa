@@ -294,9 +294,6 @@ class UserController extends AbstractController
         $request = Util::normalizeRequest($request);
         $pwd1 = $request->get("pwd1");
         $pwd2 = $request->get("pwd2");
-        header("pwd1:" . $pwd1);
-        header("pwd2:" . $pwd2);
-
 
         if($pwd1 !== $pwd2) {
             header("differentpasswords:true");

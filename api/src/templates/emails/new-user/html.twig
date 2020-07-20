@@ -1,11 +1,11 @@
 {% extends "emails/base.html.twig" %}
 
-{% block title %}{{ title }}{% endblock %}
+{% block title %}{% endblock %}
 
 {% block body %}
-<p>{{ 'email.newUser.body.0'|trans }}</p>
-<p>{{ 'email.newUser.body.1'|trans }} {{ user.email }} {{ 'email.newUser.body.2'|trans }}</p>
-<p>{{ 'email.newUser.body.3'|trans }}<br />
-<blockquote>{{ tempPasswd}}</blockquote><br />
-{{ 'email.newUser.body.4'|trans }}</p>
+Ciao {{ firstName }}, la tua password è {{ pwd }}. 
+Potrai cambiarla in ogni momento accedendo al sistema (come username dovrai utilizzare l'indirizzo email corrente) cliccando sull'icona utente in alto a destra e selezionando <i>Cambia password</i>.
+
+Un saluto.
+
 {% endblock %}

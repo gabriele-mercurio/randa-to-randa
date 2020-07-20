@@ -461,9 +461,15 @@ class RandaController extends AbstractController
                         $chapter_history[$i] = "CORE_GROUP";
                     }
                 }
+            } else if ($cg_date->format("Y") < $currentYear) {
+                $chapter_history[0] = "CORE_GROUP";
+                $chapter_history[1] = "CORE_GROUP";
+                $chapter_history[2] = "CORE_GROUP";
+                $chapter_history[3] = "CORE_GROUP";
             }
         }
         if ($c_date) {
+            header("date: " . json_encode($c_date));
             if ($c_date->format("Y") == $currentYear) {
                 $m = $c_date->format("m");
                 $t2 = ceil($m / 3);
@@ -474,6 +480,11 @@ class RandaController extends AbstractController
                         $chapter_history[$i] = "CHAPTER";
                     }
                 }
+            } else if ($c_date->format("Y") < $currentYear) {
+                $chapter_history[0] = "CHAPTER";
+                $chapter_history[1] = "CHAPTER";
+                $chapter_history[2] = "CHAPTER";
+                $chapter_history[3] = "CHAPTER";
             }
         }
 
@@ -1064,9 +1075,6 @@ class RandaController extends AbstractController
                     "region" => $region,
                     "currentState" => "PROJECT"
                 ]);
-
-
-
 
                 $core_groups = $this->chapterRepository->findBy([
                     "region" => $region,

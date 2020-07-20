@@ -718,7 +718,7 @@ class RanaController extends AbstractController
             if ($role == Constants::ROLE_AREA && $chapter->getDirector()->getSupervisor() != $director) {
                 $code = Response::HTTP_FORBIDDEN;
             }
-        }
+        } 
 
         if ($code == Response::HTTP_OK) {
             $valueType = $request->get("valueType");
@@ -851,10 +851,10 @@ class RanaController extends AbstractController
                 }
             }
 
-            if ($code == Response::HTTP_OK && !empty($errorFields)) {
+            if (!empty($errorFields)) {
                 $code = Response::HTTP_BAD_REQUEST;
             }
-        }
+        } 
 
         if ($code == Response::HTTP_OK) {
             $isNewNewMember = false;
@@ -1080,11 +1080,11 @@ class RanaController extends AbstractController
             $this->newMemberRepository->save($newMember);
             $this->retentionRepository->save($retentionMember);
 
-            $status = Constants::RANA_LIFECYCLE_STATUS_TODO;
+            $state = Constants::RANA_LIFECYCLE_STATUS_TODO;
             switch ($valueType) {
                 case Constants::VALUE_TYPE_APPR:
 
-                    $status = Constants::RANA_LIFECYCLE_STATUS_APPR;
+                    $state = Constants::RANA_LIFECYCLE_STATUS_APPR;
 
                     $proposedNewMembers = $this->newMemberRepository->findOneBy([
                         'rana' => $rana,
@@ -1122,7 +1122,7 @@ class RanaController extends AbstractController
                     }
                     break;
                 case Constants::VALUE_TYPE_PROP:
-                    $status = Constants::RANA_LIFECYCLE_STATUS_PROP;
+                    $state = Constants::RANA_LIFECYCLE_STATUS_PROP;
                     break;
             }
 

@@ -4,7 +4,6 @@
 <script>
 export default {
     created() {
-        debugger;
         this.$router.push("/chapters");
     }
 }

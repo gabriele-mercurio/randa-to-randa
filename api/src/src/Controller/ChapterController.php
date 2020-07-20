@@ -376,90 +376,90 @@ class ChapterController extends AbstractController
             }
 
             // Coregroup dates
-            try {
-                if (!is_null($prevLaunchCoregroupDate)) {
-                    $prevLaunchCoregroupDate = Util::UTCDateTime($prevLaunchCoregroupDate);
-                }
-                if (!is_null($actualLaunchCoregroupDate)) {
-                    $actualLaunchCoregroupDate = Util::UTCDateTime($actualLaunchCoregroupDate);
-                }
-            } catch (Exception $ex) {
-                $errorFields['launchCoregroupDate'] = "invalid";
-            }
+            // try {
+            //     if (!is_null($prevLaunchCoregroupDate)) {
+            //         $prevLaunchCoregroupDate = Util::UTCDateTime($prevLaunchCoregroupDate);
+            //     }
+            //     if (!is_null($actualLaunchCoregroupDate)) {
+            //         $actualLaunchCoregroupDate = Util::UTCDateTime($actualLaunchCoregroupDate);
+            //     }
+            // } catch (Exception $ex) {
+            //     $errorFields['launchCoregroupDate'] = "invalid";
+            // }
 
-            if (!is_null($prevLaunchCoregroupDate) && !is_null($actualLaunchCoregroupDate)) {
-                $errorFields['launchCoregroupDate'] = "invalid";
-            } else {
-                if (!is_null($prevLaunchCoregroupDate)) {
-                    if ($prevLaunchCoregroupDate < $today) {
-                        $actualLaunchCoregroupDate = $prevLaunchCoregroupDate;
-                        $prevLaunchCoregroupDate = null;
-                        $state = Constants::CHAPTER_STATE_CORE_GROUP;
-                    } else {
-                        $state = Constants::CHAPTER_STATE_PROJECT;
-                    }
-                }
+            // if (!is_null($prevLaunchCoregroupDate) && !is_null($actualLaunchCoregroupDate)) {
+            //     $errorFields['launchCoregroupDate'] = "invalid";
+            // } else {
+            //     if (!is_null($prevLaunchCoregroupDate)) {
+            //         if ($prevLaunchCoregroupDate < $today) {
+            //             $actualLaunchCoregroupDate = $prevLaunchCoregroupDate;
+            //             $prevLaunchCoregroupDate = null;
+            //             $state = Constants::CHAPTER_STATE_CORE_GROUP;
+            //         } else {
+            //             $state = Constants::CHAPTER_STATE_PROJECT;
+            //         }
+            //     }
 
-                if (!is_null($actualLaunchCoregroupDate)) {
-                    if ($actualLaunchCoregroupDate >= $today) {
-                        $prevLaunchCoregroupDate = $actualLaunchCoregroupDate;
-                        $actualLaunchCoregroupDate = null;
-                        $state = Constants::CHAPTER_STATE_PROJECT;
-                    } else {
-                        $state = Constants::CHAPTER_STATE_CORE_GROUP;
-                    }
-                }
-            }
+            //     if (!is_null($actualLaunchCoregroupDate)) {
+            //         if ($actualLaunchCoregroupDate >= $today) {
+            //             $prevLaunchCoregroupDate = $actualLaunchCoregroupDate;
+            //             $actualLaunchCoregroupDate = null;
+            //             $state = Constants::CHAPTER_STATE_PROJECT;
+            //         } else {
+            //             $state = Constants::CHAPTER_STATE_CORE_GROUP;
+            //         }
+            //     }
+            // }
 
-            // Chapter dates
-            try {
-                if (!is_null($prevLaunchChapterDate)) {
-                    $prevLaunchChapterDate = Util::UTCDateTime($prevLaunchChapterDate);
-                }
-                if (!is_null($actualLaunchChapterDate)) {
-                    $actualLaunchChapterDate = Util::UTCDateTime($actualLaunchChapterDate);
-                }
-            } catch (Exception $ex) {
-                $errorFields['launchChapterDate'] = "invalid";
-            }
+            // // Chapter dates
+            // try {
+            //     if (!is_null($prevLaunchChapterDate)) {
+            //         $prevLaunchChapterDate = Util::UTCDateTime($prevLaunchChapterDate);
+            //     }
+            //     if (!is_null($actualLaunchChapterDate)) {
+            //         $actualLaunchChapterDate = Util::UTCDateTime($actualLaunchChapterDate);
+            //     }
+            // } catch (Exception $ex) {
+            //     $errorFields['launchChapterDate'] = "invalid";
+            // }
 
-            if (!is_null($prevLaunchChapterDate) && !is_null($actualLaunchChapterDate)) {
-                $errorFields['launchChapterDate'] = "invalid";
-            } else {
-                if (!is_null($prevLaunchChapterDate)) {
-                    if ($prevLaunchChapterDate < $today) {
-                        $actualLaunchChapterDate = $prevLaunchChapterDate;
-                        $prevLaunchChapterDate = null;
-                        $previuosState = $state;
-                        $state = Constants::CHAPTER_STATE_CHAPTER;
-                    }
-                }
+            // if (!is_null($prevLaunchChapterDate) && !is_null($actualLaunchChapterDate)) {
+            //     $errorFields['launchChapterDate'] = "invalid";
+            // } else {
+            //     if (!is_null($prevLaunchChapterDate)) {
+            //         if ($prevLaunchChapterDate < $today) {
+            //             $actualLaunchChapterDate = $prevLaunchChapterDate;
+            //             $prevLaunchChapterDate = null;
+            //             $previuosState = $state;
+            //             $state = Constants::CHAPTER_STATE_CHAPTER;
+            //         }
+            //     }
 
 
-                if (!is_null($actualLaunchChapterDate)) {
-                    if ($actualLaunchChapterDate >= $today) {
-                        $prevLaunchChapterDate = $actualLaunchChapterDate;
-                        $actualLaunchChapterDate = null;
-                    } else {
-                        $state = is_null($previuosState) ? $state : $previuosState;
-                    }
-                }
-            }
+            //     if (!is_null($actualLaunchChapterDate)) {
+            //         if ($actualLaunchChapterDate >= $today) {
+            //             $prevLaunchChapterDate = $actualLaunchChapterDate;
+            //             $actualLaunchChapterDate = null;
+            //         } else {
+            //             $state = is_null($previuosState) ? $state : $previuosState;
+            //         }
+            //     }
+            // }
 
-            // Date constraints
+            // // Date constraints
             $coregroupDate = $prevLaunchCoregroupDate ? $prevLaunchCoregroupDate : $actualLaunchCoregroupDate;
             $chapterDate = $prevLaunchChapterDate ? $prevLaunchChapterDate : $actualLaunchChapterDate;
-            if (!is_null($coregroupDate) && !is_null($chapterDate) && $chapterDate < $coregroupDate) {
-                $errorFields['launchChapterDate'] = "invalid";
-                $errorFields['launchCoregroupDate'] = "invalid";
-            }
+            // if (!is_null($coregroupDate) && !is_null($chapterDate) && $chapterDate < $coregroupDate) {
+            //     $errorFields['launchChapterDate'] = "invalid";
+            //     $errorFields['launchCoregroupDate'] = "invalid";
+            // }
 
-            if (in_array($state, [
-                Constants::CHAPTER_STATE_PROJECT,
-                Constants::CHAPTER_STATE_CORE_GROUP
-            ]) && is_null($prevLaunchChapterDate)) {
-                $errorFields['launchChapterDate'] = "required";
-            }
+            // if (in_array($state, [
+            //     Constants::CHAPTER_STATE_PROJECT,
+            //     Constants::CHAPTER_STATE_CORE_GROUP
+            // ]) && is_null($prevLaunchChapterDate)) {
+            //     $errorFields['launchChapterDate'] = "required";
+            // }
 
             if (!empty($errorFields)) {
                 $code = Response::HTTP_BAD_REQUEST;
@@ -482,6 +482,31 @@ class ChapterController extends AbstractController
                 $this->directorRepository->save($d);
             }
 
+
+            $actualLaunchChapterDate = $actualLaunchChapterDate ? Util::UTCDateTime($actualLaunchChapterDate) : null;
+            $actualLaunchCoregroupDate = $actualLaunchCoregroupDate ? Util::UTCDateTime($actualLaunchCoregroupDate) : null;
+            $prevLaunchChapterDate = $prevLaunchChapterDate ? Util::UTCDateTime($prevLaunchChapterDate) : null;
+            $prevLaunchCoregroupDate = $prevLaunchCoregroupDate ? Util::UTCDateTime($prevLaunchCoregroupDate) : null;
+
+            $coreGroupLaunch = $actualLaunchCoregroupDate ?? $prevLaunchCoregroupDate;
+            $chapterLaunch = $actualLaunchChapterDate ?? $prevLaunchChapterDate;
+
+            $state = "PROJECT";
+            $today =  Util::UTCDateTime();
+
+            if ($coreGroupLaunch) {
+                if ($coreGroupLaunch < $today) {
+                    $state = "CORE_GROUP";
+                }
+            }
+
+
+            if ($chapterLaunch) {
+                if ($chapterLaunch < $today) {
+                    $state = "CHAPTER";
+                }
+            }
+
             $chapter = new Chapter();
             $chapter->setActualLaunchChapterDate($actualLaunchChapterDate);
             $chapter->setActualLaunchCoregroupDate($actualLaunchCoregroupDate);
@@ -501,7 +526,7 @@ class ChapterController extends AbstractController
                 "year" => $currentYear
             ]);
 
-            if(!$randa) {
+            if (!$randa) {
                 $randa = new Randa();
                 $randa->setYear($currentYear);
                 $timeslot = Util::getTimeslotFromCurrentMonth();
@@ -760,10 +785,15 @@ class ChapterController extends AbstractController
 
         if ($code == Response::HTTP_OK) {
             $name = $request->get("name");
-            $chapterDirector = $request->get("director");
+            $chapterUser = $request->get("director");
             $members = $request->get("members");
+
             $prevLaunchCoregroupDate = $request->get("prevLaunchCoregroupDate");
+            $actualLaunchCoregroupDate = $request->get("actualLaunchCoregroupDate");
             $prevLaunchChapterDate = $request->get("prevLaunchChapterDate");
+            $actualLaunchChapterDate = $request->get("actualLaunchChapterDate");
+
+
             $prevResumeDate = $request->get("prevResumeDate");
 
             $errorFields = $fields = [];
@@ -785,8 +815,11 @@ class ChapterController extends AbstractController
             }
 
             // Check Chapter Director
-            if (!empty($chapterDirector)) {
-                $chapterDirector = $this->directorRepository->find(trim($chapterDirector));
+            if (!empty($chapterUser)) {
+
+                $chapterDirector = $this->directorRepository->findOneBy([
+                    "user" => $chapterUser
+                ]);
                 if (is_null($chapterDirector)) {
                     $errorFields['director'] = "invalid";
                 } else {
@@ -804,80 +837,112 @@ class ChapterController extends AbstractController
                 }
             }
 
-            $state = $chapter->getCurrentState();
             // Check Coregroup and chapter dates
-            switch ($chapter->getCurrentState()) {
-                case Constants::CHAPTER_STATE_PROJECT:
-                    if (!empty($prevLaunchCoregroupDate)) {
-                        $prevLaunchCoregroupDate = trim($prevLaunchCoregroupDate);
-                        if (!empty($prevLaunchCoregroupDate)) {
-                            try {
-                                $prevLaunchCoregroupDate = Util::UTCDateTime($prevLaunchCoregroupDate);
-                            } catch (Exception $ex) {
-                                $errorFields['prevLaunchCoregroupDate'] = "invalid";
-                            }
+            // switch ($chapter->getCurrentState()) {
+            //     case Constants::CHAPTER_STATE_PROJECT:
+            //         if (!empty($prevLaunchCoregroupDate)) {
+            //             $prevLaunchCoregroupDate = trim($prevLaunchCoregroupDate);
+            //             if (!empty($prevLaunchCoregroupDate)) {
+            //                 try {
+            //                     $prevLaunchCoregroupDate = Util::UTCDateTime($prevLaunchCoregroupDate);
+            //                 } catch (Exception $ex) {
+            //                     $errorFields['prevLaunchCoregroupDate'] = "invalid";
+            //                 }
 
-                            if (!array_key_exists('prevLaunchCoregroupDate', $errorFields)) {
-                                if ($prevLaunchCoregroupDate <= $today) {
-                                    $errorFields['prevLaunchCoregroupDate'] = "invalid";
-                                } else {
-                                    $fields['prevLaunchCoregroupDate'] = $prevLaunchCoregroupDate;
-                                }
-                            }
-                        }
-                    }
-                case Constants::CHAPTER_STATE_CORE_GROUP:
-                    if (!empty($prevLaunchChapterDate)) {
-                        $prevLaunchChapterDate = trim($prevLaunchChapterDate);
-                        if (!empty($prevLaunchChapterDate)) {
-                            try {
-                                $prevLaunchChapterDate = Util::UTCDateTime($prevLaunchChapterDate);
-                            } catch (Exception $ex) {
-                                $errorFields['prevLaunchChapterDate'] = "invalid";
-                            }
+            //                 if (!array_key_exists('prevLaunchCoregroupDate', $errorFields)) {
+            //                     if ($prevLaunchCoregroupDate <= $today) {
+            //                         $errorFields['prevLaunchCoregroupDate'] = "invalid";
+            //                     } else {
+            //                         $fields['prevLaunchCoregroupDate'] = $prevLaunchCoregroupDate;
+            //                     }
+            //                 }
+            //             }
+            //         }
+            //     case Constants::CHAPTER_STATE_CORE_GROUP:
+            //         if (!empty($prevLaunchChapterDate)) {
+            //             $prevLaunchChapterDate = trim($prevLaunchChapterDate);
+            //             if (!empty($prevLaunchChapterDate)) {
+            //                 try {
+            //                     $prevLaunchChapterDate = Util::UTCDateTime($prevLaunchChapterDate);
+            //                 } catch (Exception $ex) {
+            //                     $errorFields['prevLaunchChapterDate'] = "invalid";
+            //                 }
 
-                            if (!array_key_exists('prevLaunchChapterDate', $errorFields)) {
-                                if ($prevLaunchChapterDate <= $today) {
-                                    $errorFields['prevLaunchChapterDate'] = "invalid";
-                                } else {
-                                    $fields['prevLaunchChapterDate'] = $prevLaunchChapterDate;
-                                }
-                            }
-                        }
-                    }
-            }
+            //                 if (!array_key_exists('prevLaunchChapterDate', $errorFields)) {
+            //                     if ($prevLaunchChapterDate <= $today) {
+            //                         $errorFields['prevLaunchChapterDate'] = "invalid";
+            //                     } else {
+            //                         $fields['prevLaunchChapterDate'] = $prevLaunchChapterDate;
+            //                     }
+            //                 }
+            //             }
+            //         }
+            // }
 
             // Resume date
-            if (!empty($prevResumeDate)) {
-                $prevResumeDate = trim($prevResumeDate);
-                if (!empty($prevResumeDate)) {
-                    try {
-                        $prevResumeDate = Util::UTCDateTime($prevResumeDate);
-                    } catch (Exception $ex) {
-                        $errorFields['resumeDate'] = "invalid";
-                    }
+            // if (!empty($prevResumeDate)) {
+            //     $prevResumeDate = trim($prevResumeDate);
+            //     if (!empty($prevResumeDate)) {
+            //         try {
+            //             $prevResumeDate = Util::UTCDateTime($prevResumeDate);
+            //         } catch (Exception $ex) {
+            //             $errorFields['resumeDate'] = "invalid";
+            //         }
 
-                    if (!array_key_exists('resumeDate', $errorFields)) {
-                        if ($prevResumeDate <= $today) {
-                            $errorFields['prevResumeDate'] = "invalid";
-                        } else {
-                            $fields['prevResumeDate'] = $prevResumeDate;
-                        }
-                    }
-                }
-            }
+            //         if (!array_key_exists('resumeDate', $errorFields)) {
+            //             if ($prevResumeDate <= $today) {
+            //                 $errorFields['prevResumeDate'] = "invalid";
+            //             } else {
+            //                 $fields['prevResumeDate'] = $prevResumeDate;
+            //             }
+            //         }
+            //     }
+            // }
 
-            if (in_array($state, [
-                Constants::CHAPTER_STATE_PROJECT,
-                Constants::CHAPTER_STATE_CORE_GROUP
-            ]) && is_null($prevLaunchChapterDate)) {
-                $errorFields['launchChapterDate'] = "empty";
-            }
+            // if (in_array($state, [
+            //     Constants::CHAPTER_STATE_PROJECT,
+            //     Constants::CHAPTER_STATE_CORE_GROUP
+            // ]) && is_null($prevLaunchChapterDate)) {
+            //     $errorFields['launchChapterDate'] = "empty";
+            // }
 
-            if (!empty($errorFields)) {
-                $code = Response::HTTP_BAD_REQUEST;
+            // if (!empty($errorFields)) {
+            //     $code = Response::HTTP_BAD_REQUEST;
+            // }
+        }
+
+        $actualLaunchChapterDate = $actualLaunchChapterDate ? Util::UTCDateTime($actualLaunchChapterDate) : null;
+        $actualLaunchCoregroupDate = $actualLaunchCoregroupDate ? Util::UTCDateTime($actualLaunchCoregroupDate) : null;
+        $prevLaunchChapterDate = $prevLaunchChapterDate ? Util::UTCDateTime($prevLaunchChapterDate) : null;
+        $prevLaunchCoregroupDate = $prevLaunchCoregroupDate ? Util::UTCDateTime($prevLaunchCoregroupDate) : null;
+
+        $coreGroupLaunch = $actualLaunchCoregroupDate ?? $prevLaunchCoregroupDate;
+        $chapterLaunch = $actualLaunchChapterDate ?? $prevLaunchChapterDate;
+
+        if ($coreGroupLaunch) {
+            if ($coreGroupLaunch < $today) {
+                $state = "CORE_GROUP";
             }
         }
+        if ($chapterLaunch) {
+            if ($chapterLaunch < $today) {
+                $state = "CHAPTER";
+            }
+        }
+        if ($prevLaunchChapterDate) {
+            $chapter->setActualLaunchChapterDate($chapterLaunch);
+        }
+        if ($actualLaunchChapterDate) {
+            $chapter->setActualLaunchChapterDate($chapterLaunch);
+        }
+        if ($prevLaunchCoregroupDate) {
+            $chapter->setPrevLaunchCoregroupDate($coreGroupLaunch);
+        }
+        if ($actualLaunchCoregroupDate) {
+            $chapter->setPrevLaunchCoregroupDate($coreGroupLaunch);
+        }
+
+        $chapter->setCurrentState($state);
 
         if ($code == Response::HTTP_OK) {
             $keys = array_keys($fields);
@@ -1163,6 +1228,7 @@ class ChapterController extends AbstractController
      */
     public function getChapters(Region $region, Request $request): Response
     {
+
         $roleCheck = [
             Constants::ROLE_EXECUTIVE,
             Constants::ROLE_AREA,
@@ -1183,6 +1249,7 @@ class ChapterController extends AbstractController
         ], [
             "currentTimeslot" => "DESC"
         ]);
+
 
         if ($code == Response::HTTP_OK) {
             switch ($role) {
@@ -1222,6 +1289,7 @@ class ChapterController extends AbstractController
                         'director' => $director,
                         'region' => $region
                     ]);
+
                     break;
             }
             usort($chapters, function ($c1, $c2) {
@@ -1300,7 +1368,6 @@ class ChapterController extends AbstractController
                     }
                     $chapter->setMembers($members);
                 }
-
             }
 
 

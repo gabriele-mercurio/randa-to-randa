@@ -76,7 +76,7 @@ class ImportersController extends AbstractController
      */
     public function importChaptersFromCSV(): Response
     {
-        $chapters_names_map = [];
+        // $chapters_names_map = [];
 
         // mapping nomi capitoli
         // $row = 1;
@@ -121,7 +121,7 @@ class ImportersController extends AbstractController
         // }
 
         // old chapters
-        if (($handle = fopen("../resources/old_chapters.csv", "r")) !== FALSE) {
+        // if (($handle = fopen("../resources/old_chapters.csv", "r")) !== FALSE) {
             // $row = 0;
             // while (($data = fgetcsv($handle, 1000)) !== FALSE) {
             // if($row > 0) {
@@ -196,87 +196,87 @@ class ImportersController extends AbstractController
             // $row++;
             // }
             // fclose($handle);
-        }
+        // }
 
 
 
         //set new members and retentions cosumptive
-        $row = 1;
-        $current_year = 2020;
-        $current_timeslot = "T2";
-        if (($handle = fopen("../resources/chapters_members.csv", "r")) !== FALSE) {
-            while (($data = fgetcsv($handle, 1000)) !== FALSE) {
-                if ($row > 2) {
-                    $chapter_name = $data[1];
+        // $row = 1;
+        // $current_year = 2020;
+        // $current_timeslot = "T2";
+        // if (($handle = fopen("../resources/chapters_members.csv", "r")) !== FALSE) {
+        //     while (($data = fgetcsv($handle, 1000)) !== FALSE) {
+        //         if ($row > 2) {
+        //             $chapter_name = $data[1];
 
-                    $c = $this->chapterRepository->findOneBy([
-                        "name" => $chapter_name
-                    ]);
-                    if ($c) {
-                        $rana = $this->ranaRepository->findOneBy([
-                            "chapter" => $c
-                        ]);
-                        if ($rana) {
-                            echo $rana->getId() . "\n";
-                        }
-                        if (!$rana) {
-                            $rana = new Rana();
-                            $region = $this->regionRepository->find($c->getRegion());
-                            $randa = $this->randaRepository->findOneBy([
-                                "region" => $region
-                            ]);
-                            if (!$randa) {
-                                $randa = new Randa();
-                                $randa->setRegion($region);
-                                $randa->setYear($current_year);
-                                $randa->setCurrentTimeslot($current_timeslot);
-                                $this->entityManager->persist($randa);
-                                $this->entityManager->flush();
-                            }
-                            $rana->setRanda($randa);
-                            $rana->setChapter($c);
-                            $this->entityManager->persist($rana);
-                            $this->entityManager->flush();
-                        }
-                    }
-                    $data = array_slice($data, 3, sizeof($data));
-                    $new_members_1 = ($data[1] ? $data[1] : 0) * 1;
-                    $retentions_1 = ($data[2] ? $data[2] : 0) * 1;
-                    $new_members_2 = ($data[6] ? $data[6] : 0) * 1;
-                    $retentions_2 = ($data[7] ? $data[7] : 0) * 1;
-                    $new_members_3 = ($data[11] ? $data[11] : 0) * 1;
-                    $retentions_3 = ($data[12] ? $data[12] : 0) * 1;
-                    $new_members_4 = ($data[16] ? $data[16] : 0) * 1;
-                    $retentions_4 = ($data[17] ? $data[17] : 0) * 1;
-                    $new_members_5 = ($data[21] ? $data[21] : 0) * 1;
-                    $retentions_5 = ($data[22] ? $data[22] : 0) * 1;
-                    $newMembers = new NewMember();
-                    $retentions = new Retention();
-                    $newMembers->setRana($rana);
-                    $newMembers->setValueType("CONS");
-                    $newMembers->setTimeslot($current_timeslot);
-                    $newMembers->setM1($new_members_1);
-                    $newMembers->setM2($new_members_2);
-                    $newMembers->setM3($new_members_3);
-                    $newMembers->setM4($new_members_4);
-                    $newMembers->setM5($new_members_5);
+        //             $c = $this->chapterRepository->findOneBy([
+        //                 "name" => $chapter_name
+        //             ]);
+        //             if ($c) {
+        //                 $rana = $this->ranaRepository->findOneBy([
+        //                     "chapter" => $c
+        //                 ]);
+        //                 if ($rana) {
+        //                     echo $rana->getId() . "\n";
+        //                 }
+        //                 if (!$rana) {
+        //                     $rana = new Rana();
+        //                     $region = $this->regionRepository->find($c->getRegion());
+        //                     $randa = $this->randaRepository->findOneBy([
+        //                         "region" => $region
+        //                     ]);
+        //                     if (!$randa) {
+        //                         $randa = new Randa();
+        //                         $randa->setRegion($region);
+        //                         $randa->setYear($current_year);
+        //                         $randa->setCurrentTimeslot($current_timeslot);
+        //                         $this->entityManager->persist($randa);
+        //                         $this->entityManager->flush();
+        //                     }
+        //                     $rana->setRanda($randa);
+        //                     $rana->setChapter($c);
+        //                     $this->entityManager->persist($rana);
+        //                     $this->entityManager->flush();
+        //                 }
+        //             }
+        //             $data = array_slice($data, 3, sizeof($data));
+        //             $new_members_1 = ($data[1] ? $data[1] : 0) * 1;
+        //             $retentions_1 = ($data[2] ? $data[2] : 0) * 1;
+        //             $new_members_2 = ($data[6] ? $data[6] : 0) * 1;
+        //             $retentions_2 = ($data[7] ? $data[7] : 0) * 1;
+        //             $new_members_3 = ($data[11] ? $data[11] : 0) * 1;
+        //             $retentions_3 = ($data[12] ? $data[12] : 0) * 1;
+        //             $new_members_4 = ($data[16] ? $data[16] : 0) * 1;
+        //             $retentions_4 = ($data[17] ? $data[17] : 0) * 1;
+        //             $new_members_5 = ($data[21] ? $data[21] : 0) * 1;
+        //             $retentions_5 = ($data[22] ? $data[22] : 0) * 1;
+        //             $newMembers = new NewMember();
+        //             $retentions = new Retention();
+        //             $newMembers->setRana($rana);
+        //             $newMembers->setValueType("CONS");
+        //             $newMembers->setTimeslot($current_timeslot);
+        //             $newMembers->setM1($new_members_1);
+        //             $newMembers->setM2($new_members_2);
+        //             $newMembers->setM3($new_members_3);
+        //             $newMembers->setM4($new_members_4);
+        //             $newMembers->setM5($new_members_5);
 
-                    $retentions->setRana($rana);
-                    $retentions->setValueType("CONS");
-                    $retentions->setTimeslot($current_timeslot);
-                    $retentions->setM1($retentions_1);
-                    $retentions->setM2($retentions_2);
-                    $retentions->setM3($retentions_3);
-                    $retentions->setM4($retentions_4);
-                    $retentions->setM5($retentions_5);
+        //             $retentions->setRana($rana);
+        //             $retentions->setValueType("CONS");
+        //             $retentions->setTimeslot($current_timeslot);
+        //             $retentions->setM1($retentions_1);
+        //             $retentions->setM2($retentions_2);
+        //             $retentions->setM3($retentions_3);
+        //             $retentions->setM4($retentions_4);
+        //             $retentions->setM5($retentions_5);
 
-                    $this->entityManager->persist($newMembers);
-                    $this->entityManager->persist($retentions);
-                }
-                $this->entityManager->flush();
-                $row++;
-            }
-        }
+        //             $this->entityManager->persist($newMembers);
+        //             $this->entityManager->persist($retentions);
+        //         }
+        //         $this->entityManager->flush();
+        //         $row++;
+        //     }
+        // }
 
         return new JsonResponse();
     }
@@ -291,28 +291,40 @@ class ImportersController extends AbstractController
      */
     public function utils(): Response
     {
-        $approved_randas = $this->randaRepository->findBy([
-            "currentState" => "APPR"
-        ]);
-        $i = 0;
-        foreach($approved_randas as $approved_randa) {
-            $ranas = $this->ranaRepository->findBy([
-                "randa" => $approved_randa
-            ]);
-            foreach($ranas as $rana) {
-                $lifecycles = $this->ranaLifecycleRepository->findBy([
-                    "rana" => $rana,
-                    "currentTimeslot" => $approved_randa->getCurrentTimeslot()
-                    ]);
-                    foreach($lifecycles as $lifecycle) {
-                        if($lifecycle->getCurrentState() !== "APPR") {
-                            echo $approved_randa->getRegion()->getName() . " --- ";
-                            echo $rana->getChapter()->getName() . ": ";
-                        echo $lifecycle->getCurrentState() . "<br>";
-                    }
-                }
-            }
+
+        $chapters = $this->chapterRepository->findAll();
+        foreach($chapters as $chapter) {
+            $region1 = $chapter->getRegion();
+            $region2 = $chapter->getDirector()->getRegion();
+
+            echo "Region1: " . $region1->getName() . "\t" . $region1->getId() . "\n";
+            echo "Region2: " . $region2->getName() . "\t" . $region2->getId() . "\n";
+            echo "-------\n";
+            echo ($region1->getId() === $region2->getId() ? "OK" : "DIVERSE") . "\n\n\n";
+
         }
-        return new JsonResponse($i);
+        // $approved_randas = $this->randaRepository->findBy([
+        //     "currentState" => "APPR"
+        // ]);
+        // $i = 0;
+        // foreach($approved_randas as $approved_randa) {
+        //     $ranas = $this->ranaRepository->findBy([
+        //         "randa" => $approved_randa
+        //     ]);
+        //     foreach($ranas as $rana) {
+        //         $lifecycles = $this->ranaLifecycleRepository->findBy([
+        //             "rana" => $rana,
+        //             "currentTimeslot" => $approved_randa->getCurrentTimeslot()
+        //             ]);
+        //             foreach($lifecycles as $lifecycle) {
+        //                 if($lifecycle->getCurrentState() !== "APPR") {
+        //                     echo $approved_randa->getRegion()->getName() . " --- ";
+        //                     echo $rana->getChapter()->getName() . ": ";
+        //                 echo $lifecycle->getCurrentState() . "<br>";
+        //             }
+        //         }
+        //     }
+        // }
+        return new JsonResponse("");
     }
 }

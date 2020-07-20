@@ -16,10 +16,14 @@ use App\Repository\UserRepository;
 use App\Util\Constants;
 use App\Util\Util;
 use App\Util\Validator;
+use Twig\Environment;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Nelmio\ApiDocBundle\Annotation\Security;
 use Swagger\Annotations as SWG;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
+use Symfony\Component\Mime\Email;
+use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -30,6 +34,9 @@ class DirectorController extends AbstractController
 {
     /** @var DirectorFormatter */
     private $directorFormatter;
+
+    /** @var MailerInterface */
+    private $mailer;
 
     /** @var DirectorRepository */
     private $directorRepository;
@@ -43,18 +50,25 @@ class DirectorController extends AbstractController
     /** @var UserRepository */
     private $userRepository;
 
+    /** @var Environment */
+    private $twig;
+
     public function __construct(
         DirectorFormatter $directorFormatter,
         DirectorRepository $directorRepository,
         EntityManagerInterface $entityManager,
         RegionRepository $regionRepository,
-        UserRepository $userRepository
+        UserRepository $userRepository,
+        Environment $twig,
+        MailerInterface $mailer
     ) {
         $this->directorFormatter = $directorFormatter;
         $this->directorRepository = $directorRepository;
         $this->entityManager = $entityManager;
         $this->regionRepository = $regionRepository;
         $this->userRepository = $userRepository;
+        $this->mailer = $mailer;
+        $this->twig = $twig;
     }
 
     /**
@@ -371,6 +385,31 @@ class DirectorController extends AbstractController
                 $newUser->setLastName($lastName);
                 $newUser->securePassword($tempPasswd);
                 $this->userRepository->save($newUser);
+
+                try {
+                    $creator_email = $this->getUser()->getEmail();
+                    $to_name = $firstName;
+    
+                    $title = "Benvenuto!";
+                    $data = [
+                        "pwd" => $tempPasswd,
+                        "email" => $email,
+                        "firstName" => $firstName
+                    ];
+        
+                    $sending_email = (new TemplatedEmail())
+                    ->from('rosbi@studio-mercurio.it')
+                    ->to($email)
+                    ->cc($creator_email)
+                    ->subject($title) 
+                    ->htmlTemplate('emails/new-user/html.twig')
+                    ->context($data);
+
+                    $this->mailer->send($sending_email);
+                } catch (Exception $e) {
+                    header("error: " . $e->getMessage());
+                }
+
             }
 
             // Check for the director existance
@@ -391,6 +430,7 @@ class DirectorController extends AbstractController
         }
 
         if ($code == Response::HTTP_OK) {
+
             $areaPercentage = empty($areaPercentage) ? 0 : $areaPercentage / 100;
             $fixedPercentage = empty($fixedPercentage) ? 0 : $fixedPercentage / 100;
             $greenLigthPercentage = empty($greenLigthPercentage) ? 0 : $greenLigthPercentage / 100;
@@ -404,9 +444,6 @@ class DirectorController extends AbstractController
             $director->setFixedPercentage($fixedPercentage);
             $director->setFreeAccount($isFreeAccount);
 
-            if($isFreeAccount) {
-                file_put_contents("region", $region->getName());
-            }
             $director->setGreenLightPercentage($greenLigthPercentage);
             $director->setGreyLightPercentage($greyLigthPercentage);
             $director->setLaunchPercentage($launchPercentage);
@@ -420,13 +457,6 @@ class DirectorController extends AbstractController
             $this->directorRepository->save($director);
 
             try {
-                if ($isNewUser) {
-                    $send = $this->userRepository->sendNewUserEmail($newUser, $tempPasswd);
-                    if (!$send) {
-                        throw new Exception("email_not_sent", 500);
-                    }
-                }
-
                 $send = $this->directorRepository->sendDirectorAssignmentEmail($director);
                 if (!$send) {
                     throw new Exception("email_not_sent", 500);
@@ -590,6 +620,10 @@ class DirectorController extends AbstractController
 
         $region = $director->getRegion();
 
+
+        $dir_backup = $director;
+
+
         $roleCheck = [
             Constants::ROLE_EXECUTIVE,
             Constants::ROLE_NATIONAL
@@ -599,6 +633,24 @@ class DirectorController extends AbstractController
         // Assign $actAs, $code, $director, $isAdmin and $role
         foreach ($performerData as $var => $value) {
             $$var = $value;
+        }
+
+        if(!$director) {
+            $director = $dir_backup;
+        }
+
+        $performingUser = $this->directorRepository->findOneBy([
+            "user" => $this->getUser(),
+            "region" => $region
+        ]);
+
+        header("director: " . $director->getId());
+
+
+        if($performingUser) {
+            $performerRole = $performingUser->getRole();
+        } else {
+            $performerRole = Constants::ROLE_ASSISTANT;
         }
 
         $errorFields = [];
@@ -631,6 +683,9 @@ class DirectorController extends AbstractController
 
             if (!empty($role) && !in_array($role, $availableRoles)) {
                 $errorFields['role'] = "invalid";
+
+                header("invalid: " . $role);
+
             } elseif (!empty($role)) {
                 $fields['role'] = $role;
             }
@@ -711,9 +766,7 @@ class DirectorController extends AbstractController
                     }
 
                     if ($role == Constants::ROLE_ASSISTANT) {
-                        if (empty($supervisor)) {
-                            $errorFields['supervisor'] = "required";
-                        } else {
+                        if (!empty($supervisor)) {
                             $supervisor = $this->directorRepository->findOneBy([
                                 'id' => $supervisor,
                                 'region' => $region,

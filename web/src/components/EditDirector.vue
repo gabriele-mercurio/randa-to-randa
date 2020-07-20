@@ -1,8 +1,9 @@
 <template>
   <v-card id="editDirector">
-    <v-card-title class="headline primary white--text" primary-title>
-      {{ getEditModeString() }} {{ $t("director") }}
-    </v-card-title>
+    <v-card-title
+      class="headline primary white--text"
+      primary-title
+    >{{ getEditModeString() }} {{ $t("director") }}</v-card-title>
     <v-card-text class="pa-5">
       <v-form ref="form" v-model="isValid">
         <v-row>
@@ -55,25 +56,18 @@
             ></v-select>
           </v-col>
 
-          <v-col
-            cols="6"
-            class="py-0 my-0"
-            v-if="director.role === 'ASSISTANT'"
-          >
+          <v-col cols="6" class="py-0 my-0" v-if="director.role === 'ASSISTANT DIRECTOR'">
             <v-select
               :items="areaDirectors"
-              label="Seleziona supervisore"
+              label="Seleziona area director"
               v-model="director.supervisor"
               prepend-icon="mdi-account-cog-outline"
               item-text="fullName"
               item-value="id"
+              no-data-text="Nessun area director"
             ></v-select>
           </v-col>
-          <v-col
-            cols="12"
-            class="py-0 my-0"
-            v-if="director.role === 'ASSISTANT'"
-          >
+          <v-col cols="12" class="py-0 my-0" v-if="director.role === 'ASSISTANT DIRECTOR'">
             <!-- <v-select
               :items="chapters"
               label="Seleziona capitolo"
@@ -81,13 +75,13 @@
               prepend-icon="mdi-account-cog-outline"
               item-text="name"
               item-value="id"
-            ></v-select> -->
+            ></v-select>-->
           </v-col>
 
           <v-col
             cols="6"
             class="py-0 my-0"
-            v-if="director.role === 'AREA' || director.role === 'EXECUTIVE'"
+            v-if="director.role === 'AREA DIRECTOR' || director.role === 'EXECUTIVE DIRECTOR'"
           >
             <v-text-field
               v-model="director.areaPercentage"
@@ -100,11 +94,7 @@
         </v-row>
         <v-row>
           <v-col cols="6" class="py-0 my-0">
-            <v-checkbox
-            v-if="isAdmin()"
-              v-model="director.isFreeAccount"
-              label="Account free"
-            ></v-checkbox>
+            <v-checkbox v-if="isAdmin()" v-model="director.isFreeAccount" label="Account free"></v-checkbox>
           </v-col>
           <v-col cols="6" class="py-0 my-0" v-if="isAdmin()">
             <v-checkbox
@@ -119,11 +109,7 @@
           <v-col cols="6" class="py-0 my-0">
             <v-container fluid class="px-0">
               <p>Tipo di paga</p>
-              <v-radio-group
-                row
-                v-model="director.payType"
-                :disabled="director.isFreeAccount"
-              >
+              <v-radio-group row v-model="director.payType" :disabled="director.isFreeAccount">
                 <v-radio label="Mensile" value="MONTHLY"></v-radio>
                 <v-radio label="Annuale" value="ANNUAL"></v-radio>
               </v-radio-group>
@@ -205,9 +191,7 @@
     </v-card-text>
     <v-card-actions class="d-flex justify-end align-center">
       <div width="100%">
-        <v-btn type="submit" normal text color="primary" @click="emitClose()">
-          {{ $t("cancel") }}
-        </v-btn>
+        <v-btn type="submit" normal text color="primary" @click="emitClose()">{{ $t("cancel") }}</v-btn>
         <v-btn
           type="submit"
           normal
@@ -215,9 +199,7 @@
           color="primary"
           @click="saveDirector()"
           :disabled="!isValid || !isFormValid()"
-        >
-          {{ $t("save") }}
-        </v-btn>
+        >{{ $t("save") }}</v-btn>
       </div>
     </v-card-actions>
     <v-snackbar v-model="errorSnackbar" :timeout="timeout" top right>
@@ -253,7 +235,7 @@ const directorSkeleton = {
   fixedPercentage: null
 };
 
-const roles = ["ASSISTANT", "AREA", "EXECUTIVE", "NATIONAL"];
+const roles = ["ASSISTANT DIRECTOR", "AREA DIRECTOR", "EXECUTIVE DIRECTOR"];
 
 const mandatoryFields = ["firstName", "lastName", "email", "role", "payType"];
 
@@ -318,8 +300,7 @@ export default {
       }
     },
     setFixedPercentage() {
-      debugger;
-      if(this.director.role === "AREA") {
+      if (this.director.role === "AREA DIRECTOR") {
         this.director.areaPercentage = 5;
       }
     },
@@ -363,7 +344,7 @@ export default {
     async saveDirector() {
       let data = {};
       data = { ...this.director };
-      if (data.role !== "ASSISTANT") {
+      if (data.role !== "ASSISTANT DIRECTOR") {
         data.supervisor = null;
       } else {
         if (this.editMode && data.supervisor) {
@@ -372,6 +353,9 @@ export default {
       }
 
       let region = this.$store.getters["getRegion"].id;
+
+      data.role = data.role.replace(" DIRECTOR", "");
+
       let response = this.editMode
         ? await ApiServer.put("director/" + this.director.id, data)
         : (response = await ApiServer.post(region + "/director", data));
@@ -409,9 +393,6 @@ export default {
           return false;
         }
       }
-      if (this.director.role === "ASSISTANT" && !this.director.supervisor) {
-        return false;
-      }
       return true;
     },
 
@@ -420,7 +401,9 @@ export default {
     },
 
     async fetchChapters() {
-      this.chapters = await ApiServer.get(this.$store.getters["getRegion"].id + "/chapters");
+      this.chapters = await ApiServer.get(
+        this.$store.getters["getRegion"].id + "/chapters"
+      );
     }
   },
   created() {
@@ -449,8 +432,8 @@ export default {
     },
     director: {
       handler: function(newVal, oldVal) {
-        if(newVal.isFreeAccount) {
-          this.director.role = "EXECUTIVE";
+        if (newVal.isFreeAccount) {
+          this.director.role = "EXECUTIVE DIRECTOR";
         }
       },
       deep: true,

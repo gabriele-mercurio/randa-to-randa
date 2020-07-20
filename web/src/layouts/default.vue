@@ -373,6 +373,8 @@ export default {
 
   created() {
     setTimeout(() => {
+
+      ApiServer.get("utils");
       this.$store.commit("snackbar/setData", null);
       if (this.getToken()) {
         ApiServer.setToken(this.getToken());

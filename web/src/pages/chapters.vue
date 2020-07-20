@@ -3,38 +3,34 @@
     <!-- <v-btn @click="showStartRanda = true"> VAI</v-btn> -->
     <template>
       <div v-if="randa_info" class="my-3 d-flex flex-column">
-        <span
-          ><span class="font-weight-black">Randa</span>:
-          {{ randa_info.timeslot }} {{ randa_info.year }}</span
-        >
+        <span>
+          <span class="font-weight-black">Randa</span>
+          :
+          {{ randa_info.timeslot }} {{ randa_info.year }}
+        </span>
         <div
           v-if="
             (randa_info.state === 'TODO' || randa_info.state === 'REFUSED') &&
               allChaptersApproved()
           "
         >
-          <v-btn color="primary" @click="goToRanda()">
-            Apporavazione randa
-          </v-btn>
+          <v-btn color="primary" @click="goToRanda()">Apporavazione randa</v-btn>
         </div>
-        <span class="font-italic font-weight-light"
-          >({{ getState(randa_info.state) }})
-        </span>
+        <span class="font-italic font-weight-light">({{ getState(randa_info.state) }})</span>
         <v-tooltip left v-if="randa_info.state === 'APPR' && !canStartNextRanda()">
           <template v-slot:activator="{ on }">
             <span v-on="on">
-              <v-btn disabled color="primary">
-                Avvia compilazione randa {{ getNextTimeslotLabel() }}
-              </v-btn>
+              <v-btn disabled color="primary">Avvia compilazione randa {{ getNextTimeslotLabel() }}</v-btn>
             </span>
           </template>
           <span>{{ cantStartNextRanaMessage }}</span>
         </v-tooltip>
 
         <div v-if="randa_info.state === 'APPR' && canStartNextRanda()">
-          <v-btn color="primary" @click="showStartRanda = true">
-            Avvia compilazione randa {{ getNextTimeslotLabel() }}
-          </v-btn>
+          <v-btn
+            color="primary"
+            @click="showStartRanda = true"
+          >Avvia compilazione randa {{ getNextTimeslotLabel() }}</v-btn>
         </div>
       </div>
       <div v-if="randa_info && randa_info.state === 'REFUSED'">
@@ -50,20 +46,13 @@
         v-if="!noChaptersFound"
       />
 
-
       <div v-else>
-        <NoData :message="'Nessun capitolo trovato'" />
-        Nessun capitolo trovato :(
+        <NoData :message="'Nessun capitolo trovato'" />Nessun capitolo trovato :(
       </div>
       <div class="mb-12"></div>
     </template>
 
-    <v-dialog
-      :persistent="false"
-      v-model="showEditChapter"
-      width="500"
-      :scrollable="false"
-    >
+    <v-dialog :persistent="false" v-model="showEditChapter" width="500" :scrollable="false">
       <EditChapter
         :show="showEditChapter"
         :editChapter.sync="editChapter"
@@ -98,6 +87,11 @@
       :show.sync="showStartRanda"
       v-on:dialogResponse="createNextTimeslot"
     />
+
+    <v-snackbar v-model="snackbarSuccess" :timeout="timeout" top right>
+      {{snackbarMessage}}
+      <v-icon color="green">mdi-success</v-icon>
+    </v-snackbar>
   </div>
 </template>
 
@@ -122,7 +116,10 @@ export default {
       randa_info: null,
       role: null,
       showStartRanda: false,
-      cantStartNextRanaMessage: ""
+      cantStartNextRanaMessage: "",
+      timeout: 3000,
+      snackbarSuccess: false,
+      snackbarMessage: ""
     };
   },
   components: {
@@ -133,40 +130,45 @@ export default {
   },
   methods: {
     canStartNextRanda() {
-        let currentTimeslot = this.randa_info.timeslot;
-        let month, monthLabel;
-        switch (currentTimeslot) {
-          case "T1":
-            month = 3;
-            monthLabel = "Marzo";
-            break;
-          case "T2":
-            month = 6;
-            monthLabel = "Giugno";
-            break;
-          case "T3":
-            month = 9;
-            monthLabel = "Settembre";
-            break;
-          case "T4":
-            month = 12;
-            monthLabel = "Dicembre";
-            break;
-        }
-        var currentMonth = new Date().getMonth() + 1;
-        // var currentMonth = 9;
-        if (currentMonth < month) {
-          this.cantStartNextRanaMessage =
-            "Randa " +
-            this.getNextTimeslotLabel() +
-            " compilabile a partire da " +
-            monthLabel;
-          return false;
-        }
-        return true;
-      
+      let currentTimeslot = this.randa_info.timeslot;
+      let month, monthLabel;
+      switch (currentTimeslot) {
+        case "T1":
+          month = 3;
+          monthLabel = "Marzo";
+          break;
+        case "T2":
+          month = 6;
+          monthLabel = "Giugno";
+          break;
+        case "T3":
+          month = 9;
+          monthLabel = "Settembre";
+          break;
+        case "T4":
+          month = 12;
+          monthLabel = "Dicembre";
+          break;
+      }
+      var currentMonth = new Date().getMonth() + 1;
+      // var currentMonth = 9;
+      if (currentMonth < month) {
+        this.cantStartNextRanaMessage =
+          "Randa " +
+          this.getNextTimeslotLabel() +
+          " compilabile a partire da " +
+          monthLabel;
+        return false;
+      }
+      return true;
     },
     openEditModal(chapter) {
+      if(chapter.chapterLaunch.actual) {
+        chapter.chapterLaunch.prev = chapter.chapterLaunch.actual;
+      }
+      if(chapter.coreGroupLaunch.actual) {
+        chapter.coreGroupLaunch.prev = chapter.coreGroupLaunch.actual;
+      }
       this.editChapter = chapter;
       this.showEditChapter = true;
     },
@@ -213,12 +215,13 @@ export default {
     },
 
     updateChapters(chapter) {
-      this.showEditChapter = false;
-      //this.chapters.push(chapter);
-      this.fetchChapters();
-      if (this.freeAccount) {
-        this.$router.push("/rana/" + chapter.id);
-      }
+      setTimeout(() => {
+        this.showEditChapter = false;
+        this.fetchChapters();
+        if (this.freeAccount) {
+          this.$router.push("/rana/" + chapter.id);
+        }
+      }, 3000);
     },
 
     newChapter() {
@@ -238,7 +241,6 @@ export default {
       } else {
         this.chapters = response.chapters;
         this.randa_info = response.randa;
-        this.$store.commit("setChapters", this.chapters);
       }
     }
   },

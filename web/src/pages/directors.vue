@@ -113,6 +113,7 @@ export default {
     },
     saveDirector(response) {
       this.successSnackbar = true;
+      this.fetchDirectors();
       this.snackbarMessage = response.edtiMode
         ? this.$t("director_edited")
         : this.$t("director_created");

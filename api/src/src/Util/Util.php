@@ -368,7 +368,6 @@ class Util
     public static function getTimeslotFromCurrentMonth() {
         $month = date("m");
         $numeric_timeslot = floor($month / 3);
-        header("timeslot: " . $month . "-" . $numeric_timeslot);
         return "T" . $numeric_timeslot;
     }
 }

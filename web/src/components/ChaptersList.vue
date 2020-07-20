@@ -348,7 +348,6 @@ export default {
     },
 
     confirmLaunch(item, type) {
-      debugger;
       this.showConfirmLaunch = true;
       let label = type === "CORE_GROUP" ? "core group" : "capitolo";
       this.confirmMessage = "Si sta per lanciare il " + label + ". Proseguire?";
@@ -394,7 +393,18 @@ export default {
     },
 
     isPrev(item) {
-      return item.prev && !item.actual;
+      if(item.prev) {
+        if(new Date(item.prev) > new Date()) {
+          return true;
+        } 
+        return false;
+      }
+      if(item.actual) {
+        if(new Date(item.actual) > new Date()) {
+          return true;
+        } 
+        return false;
+      }
     },
 
     getStateToLaunch(item) {

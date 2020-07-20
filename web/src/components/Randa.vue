@@ -334,7 +334,6 @@ export default {
   },
   created() {
     if (this.title === "Randa dream") {
-      debugger;
     }
     let totals = {
       initial: 0,

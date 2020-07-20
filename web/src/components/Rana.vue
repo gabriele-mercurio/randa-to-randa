@@ -4,13 +4,13 @@
       <div>
         <div>
           Membri iniziali:
-          <span class="font-italic font-weight-light mr-2">{{
+          <span class="font-italic font-weight-light mr-2">
+            {{
             rana.initialMembers
-          }}</span>
+            }}
+          </span>
         </div>
-        <span class="font-weight-bold"
-          >{{ getTimeslotLabel(rana.timeslot) }}:
-        </span>
+        <span class="font-weight-bold">{{ getTimeslotLabel(rana.timeslot) }}:</span>
         <span v-if="rana">{{ getRanaState(rana.state) }}</span>
       </div>
       <div v-if="editable">
@@ -64,12 +64,13 @@
                 <v-col
                   v-if="!canCompile(i, 'timeslot')"
                   class="pa-0 background-green font-italic font-weight-light disabled d-flex justify-center align-center"
-                  >{{
-                    timeslotAggregations.newMembers.CONS[i] !== null
-                      ? timeslotAggregations.newMembers.CONS[i]
-                      : ""
-                  }}</v-col
                 >
+                  {{
+                  timeslotAggregations.newMembers.CONS[i] !== null
+                  ? timeslotAggregations.newMembers.CONS[i]
+                  : ""
+                  }}
+                </v-col>
               </v-row>
             </td>
           </tr>
@@ -85,9 +86,7 @@
               }"
             >
               <!-- month labels -->
-              <div class="border-bottom background-grey pa-1">
-                {{ getMonthLabel(i) }}
-              </div>
+              <div class="border-bottom background-grey pa-1">{{ getMonthLabel(i) }}</div>
 
               <!-- new members data -->
               <v-row class="pa-0 ma-0">
@@ -109,8 +108,7 @@
                 <v-col
                   v-if="!canCompile(i, 'month')"
                   class="pa-0 background-green font-italic font-weight-light disabled d-flex justify-center align-center"
-                  >{{ getConsumptive(i, "newMembers") }}
-                </v-col>
+                >{{ getConsumptive(i, "newMembers") }}</v-col>
               </v-row>
             </td>
           </tr>
@@ -148,12 +146,13 @@
                 <v-col
                   v-if="!canCompile(i, 'timeslot')"
                   class="pa-0 background-green font-italic font-weight-light disabled d-flex justify-center align-center"
-                  >{{
-                    timeslotAggregations.retentions.CONS[i] !== null
-                      ? timeslotAggregations.retentions.CONS[i]
-                      : ""
-                  }}</v-col
                 >
+                  {{
+                  timeslotAggregations.retentions.CONS[i] !== null
+                  ? timeslotAggregations.retentions.CONS[i]
+                  : ""
+                  }}
+                </v-col>
               </v-row>
             </td>
           </tr>
@@ -170,9 +169,7 @@
               }"
             >
               <!-- month labels -->
-              <div class="border-bottom background-grey pa-1">
-                {{ getMonthLabel(i) }}
-              </div>
+              <div class="border-bottom background-grey pa-1">{{ getMonthLabel(i) }}</div>
 
               <!-- retentions data -->
               <v-row class="pa-0 ma-0">
@@ -194,8 +191,7 @@
                 <v-col
                   v-if="!canCompile(i, 'month')"
                   class="pa-0 background-green font-italic font-weight-light disabled d-flex justify-center align-center"
-                  >{{ getConsumptive(i, "retentions") }}
-                </v-col>
+                >{{ getConsumptive(i, "retentions") }}</v-col>
               </v-row>
             </td>
           </tr>
@@ -208,9 +204,7 @@
               :key="i"
               class="text-center pa-0 background-red"
               :class="{ 'border-right-bold': i % 3 == 0 }"
-            >
-              {{ evaluateMembers(i) }}
-            </td>
+            >{{ evaluateMembers(i) }}</td>
           </tr>
         </tbody>
       </template>
@@ -227,7 +221,7 @@
             class="mr-2"
           >
             {{ $t("reset") }}
-          </v-btn> -->
+          </v-btn>-->
           <v-btn
             type="submit"
             normal
@@ -241,14 +235,12 @@
               v-if="
                 (role == 'ADMIN' || role == 'EXECUTIVE') && rana.state == 'PROP'
               "
-              >{{ $t("approve_proposal") }}</span
-            >
+            >{{ $t("approve_proposal") }}</span>
             <span
               v-if="
                 (role == 'ADMIN' || role == 'EXECUTIVE') && (rana.state == 'TODO' || rana.state == 'REFUSED')
               "
-              >{{ $t("approve_without_proposal") }}</span
-            >
+            >{{ $t("approve_without_proposal") }}</span>
           </v-btn>
           <v-btn
             color="primary"
@@ -256,13 +248,15 @@
             v-if="
               (role == 'ADMIN' || role == 'EXECUTIVE') && rana.state === 'APPR' && (chapter_stats && chapter_stats.randa_state !== 'APPR')
             "
-            >{{ $t("disapprove_rana") }}
-          </v-btn>
+          >{{ $t("disapprove_rana") }}</v-btn>
         </div>
       </template>
     </v-data-table>
 
-    <div v-if="isLast && chapter_stats && chapter_stats.randa_state === 'REFUSED' && rana.refuse_note" class="elevation-9 red_card">
+    <div
+      v-if="isLast && chapter_stats && chapter_stats.randa_state === 'REFUSED' && rana.refuse_note"
+      class="elevation-9 red_card"
+    >
       <v-icon v-on="on" small class="primary--text">mdi-alert</v-icon>
       Nota BNI:
       {{ rana.refuse_note }}
@@ -394,16 +388,18 @@ export default {
     evaluateMembers(m) {
       let sum = this.rana.initialMembers;
       for (let i = 1; i <= m; i++) {
-        let n = this.rana.newMembers.CONS["m" + i] !== null
-          ? this.rana.newMembers.CONS["m" + i]
-          : this.rana.newMembers.PREV["m" + i]
-          ? this.rana.newMembers.PREV["m" + i]
-          : 0;
-        let r = this.rana.retentions.CONS["m" + i] !== null
-          ? this.rana.retentions.CONS["m" + i]
-          : this.rana.retentions.PREV["m" + i]
-          ? this.rana.retentions.PREV["m" + i]
-          : 0;
+        let n =
+          this.rana.newMembers.CONS["m" + i] !== null
+            ? this.rana.newMembers.CONS["m" + i]
+            : this.rana.newMembers.PREV["m" + i]
+            ? this.rana.newMembers.PREV["m" + i]
+            : 0;
+        let r =
+          this.rana.retentions.CONS["m" + i] !== null
+            ? this.rana.retentions.CONS["m" + i]
+            : this.rana.retentions.PREV["m" + i]
+            ? this.rana.retentions.PREV["m" + i]
+            : 0;
         sum += n - r;
       }
       return sum;
@@ -629,16 +625,26 @@ export default {
 
     //if i'm assistant i see proposed values, if i'm executive, area, national or admin i see approved values
     setPrevisionsByRole() {
+      
       let prop;
       let appr;
 
       if (this.rana.state != "APPR") {
-        this.rana.newMembers.PREV = this.prevRana.newMembers[
-          this.prevRana.state
-        ];
-        this.rana.retentions.PREV = this.prevRana.retentions[
-          this.prevRana.state
-        ];
+        if (this.rana.state === "TODO") {
+          this.rana.newMembers.PREV = this.prevRana.newMembers[
+            this.prevRana.state
+          ];
+          this.rana.retentions.PREV = this.prevRana.retentions[
+            this.prevRana.state
+          ];
+        } else if(this.rana.state === "PROP") {
+           this.rana.newMembers.PREV = this.rana.newMembers[
+            this.rana.state
+          ];
+          this.rana.retentions.PREV = this.rana.retentions[
+            this.rana.state
+          ];
+        }
       } else {
         this.rana.newMembers.PREV = this.rana.newMembers[this.rana.state];
         this.rana.retentions.PREV = this.rana.retentions[this.rana.state];
@@ -677,7 +683,6 @@ export default {
     },
     chapter_stats: {
       handler: function(n, v) {
-        debugger;
       },
       deep: true,
       immediate: true

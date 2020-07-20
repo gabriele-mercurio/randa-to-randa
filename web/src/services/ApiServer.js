@@ -59,9 +59,9 @@ class ApiServer {
         process.env.base_url + "/" + endpoint + params,
         config
       );
-      return ApiServer.parseResponse(response);
+      //return ApiServer.parseResponse(response);
     } catch (e) {
-      return ApiServer.parseError(e);
+      //return ApiServer.parseError(e);
     }
   }
 

@@ -109,7 +109,8 @@ export default {
       ranas: null,
       currentRana: null,
       prevRana: null,
-      chapter_stats: null
+      chapter_stats: null,
+      chapters: []
     };
   },
   created() {
@@ -125,6 +126,7 @@ export default {
     setTimeout(() => {
       let chapterId = this.$route.params.chapterId || false;
 
+      this.fetchChapters();
       this.fetchChapter(chapterId);
       this.fetchRanas(chapterId);
     });
@@ -136,6 +138,13 @@ export default {
       this.currentRana = this.ranas[0];
       if (this.ranas.length > 1) {
         this.prevRana = this.ranas[1];
+      }
+    },
+
+    async fetchChapters() {
+      let res = ApiServer.get(this.$store.getters["getRegion"].id + "/chapters");
+      if(!res.error) {
+        this.chapter = res;
       }
     },
 
@@ -169,20 +178,20 @@ export default {
 
     goToNextChapter() {
       let index = 0;
-      for (let i = 0; i < this.$store.getters["getChapters"].length; i++) {
-        if (this.$store.getters["getChapters"][i].id == this.chapter.id) {
-          if (i < this.$store.getters["getChapters"].length + 1) {
-            this.$router.push(this.$store.getters["getChapters"][i + 1].id);
+      for (let i = 0; i < this.chapters.length; i++) {
+        if (this.chapters[i].id == this.chapter.id) {
+          if (i < this.chapters.length + 1) {
+            this.$router.push(this.chapters[i + 1].id);
           }
         }
       }
     },
     goToPrevChapter() {
       let index = 0;
-      for (let i = 0; i < this.$store.getters["getChapters"].length; i++) {
-        if (this.$store.getters["getChapters"][i].id == this.chapter.id) {
+      for (let i = 0; i < this.chapters.length; i++) {
+        if (this.chapters[i].id == this.chapter.id) {
           if (i >= 0) {
-            this.$router.push(this.$store.getters["getChapters"][i - 1].id);
+            this.$router.push(this.chapters[i - 1].id);
           }
         }
       }
@@ -198,7 +207,6 @@ export default {
       this.chapter_stats = await ApiServer.get(
         region_id + "/chapters-statistics"
       );
-      debugger;
     },
     isPastTimeslot(timeslot) {
       return timeslot <= this.currentTimeslot;

@@ -1,23 +1,16 @@
 <template>
   <v-card id="editChapter">
-    <v-card-title class="headline primary white--text" primary-title>
-      {{ getEditMode() }} Capitolo
-    </v-card-title>
+    <v-card-title class="headline primary white--text" primary-title>{{ getEditMode() }} Capitolo</v-card-title>
     <v-card-text class="pa-5">
       <form>
-        <v-text-field
-          v-model="chapter.name"
-          label="Nome capitolo"
-          required
-          prepend-icon="mdi-tag"
-        ></v-text-field>
+        <v-text-field v-model="chapter.name" label="Nome capitolo" required prepend-icon="mdi-tag"></v-text-field>
         <!-- <v-select
           :items="states"
           label="Stato"
           v-model="chapter.currentState"
           required
           prepend-icon="mdi-progress-check"
-        ></v-select> -->
+        ></v-select>-->
         <MonthPicker
           :defLabel="getCoreGroupLabel(chapter)"
           :defDate.sync="chapter.coreGroupLaunch"
@@ -51,9 +44,7 @@
     </v-card-text>
     <v-card-actions class="d-flex justify-end align-center">
       <div width="100%">
-        <v-btn type="submit" normal text color="primary" @click="emitClose()">
-          {{ $t("cancel") }}
-        </v-btn>
+        <v-btn type="submit" normal text color="primary" @click="emitClose()">{{ $t("cancel") }}</v-btn>
         <v-btn
           type="submit"
           normal
@@ -61,19 +52,22 @@
           color="primary"
           @click="saveChapter()"
           :disabled="!isFormValid()"
-        >
-          {{ $t("save") }}
-        </v-btn>
+        >{{ $t("save") }}</v-btn>
       </div>
     </v-card-actions>
 
     <v-snackbar v-model="error" :timeout="timeout" top right>
-      <v-icon color="primary">mdi-alert</v-icon>
-      Errore nel salvataggio del capitolo
+      <v-icon color="primary">mdi-alert</v-icon>Errore nel salvataggio del capitolo
       <v-btn color="white" icon @click="error = false">
         <v-icon>mdi-close</v-icon>
       </v-btn>
     </v-snackbar>
+
+    <v-snackbar v-model="snackbarSuccess" :timeout="timeout" top right>
+      <v-icon color="green">mdi-check</v-icon>
+      {{snackbarMessage}}
+    </v-snackbar>
+
   </v-card>
 </template>
 <script>
@@ -110,7 +104,9 @@ export default {
       coreGroupMessage: "",
       chapterMessage: "",
       error: false,
-      timeout: 3000
+      timeout: 3000,
+      snackbarMessage: "",
+      snackbarSuccess: false
     };
   },
   props: {
@@ -184,26 +180,38 @@ export default {
     async saveChapter() {
       let data = {};
       data["name"] = this.chapter["name"];
-      if(!this.freeAccount) {
+      if (!this.freeAccount) {
         data["director"] = this.chapter["director"].id;
       } else {
-        data["director"] = this.$store.getters["getUser"].id
+        data["director"] = JSON.parse(JSON.stringify(this.$store.getters["getUser"].id));
       }
-      if (this.chapter.coreGroupLaunchType === "actual") {
-        data["actualLaunchCoregroupDate"] = this.addDay(
-          this.chapter.coreGroupLaunch
-        );
+
+      if (this.chapter.coreGroupLaunch) {
+        if (this.chapter.coreGroupLaunchType === "actual") {
+          data["actualLaunchCoregroupDate"] = this.addDay(
+            this.chapter.coreGroupLaunch
+          );
+        } else {
+          data["prevLaunchCoregroupDate"] = this.addDay(
+            this.chapter.coreGroupLaunch
+          );
+        }
       } else {
-        data["prevLaunchCoregroupDate"] = this.addDay(
-          this.chapter.coreGroupLaunch
-        );
+        data["prevLaunchCoregroupDate"] = null;
       }
-      if (this.chapter["chapterLaunchType"] === "actual") {
-        data["actualLaunchChapterDate"] = this.addDay(
-          this.chapter.chapterLaunch
-        );
+
+      if (this.chapter.chapterLaunch) {
+        if (this.chapter["chapterLaunchType"] === "actual") {
+          data["actualLaunchChapterDate"] = this.addDay(
+            this.chapter.chapterLaunch
+          );
+        } else {
+          data["prevLaunchChapterDate"] = this.addDay(
+            this.chapter.chapterLaunch
+          );
+        }
       } else {
-        data["prevLaunchChapterDate"] = this.addDay(this.chapter.chapterLaunch);
+        data["prevLaunchChapterDate"] = null;
       }
       try {
         let result;
@@ -241,11 +249,13 @@ export default {
         updatedChapter.coreGroupLaunch = cgLaunch;
         updatedChapter.chapterLaunch = cLaunch;
 
-        if(!result.error) {
+        if (!result.error) {
           updatedChapter.id = result.id;
+          let label = this.editMode ? "modificato" : "creato";
+          this.snackbarMessage = "Capitolo " + label + " correttamente";
+          this.snackbarSuccess = true;
           this.$emit("saveChapter", updatedChapter);
         }
-
       } catch (e) {
         this.error = true;
       }

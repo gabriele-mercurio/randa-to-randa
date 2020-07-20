@@ -34,7 +34,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
-class NationalController extends AbstractController
+class DashboardController extends AbstractController
 {
     /** @var DirectorRepository */
     private $directorRepository;
@@ -215,9 +215,39 @@ class NationalController extends AbstractController
             $data["regions"] = $d;
             return new JsonResponse($data, Response::HTTP_OK);
         } catch (Exception $e) {
-            header("pippo: test");
             header("exception: " . $e->getMessage());
             return new JsonResponse($e->getMessage(), Response::HTTP_OK);
         }
     }
+
+
+      /**
+     * Get dashboard
+     *
+     * @Route(path="{id}/standardDashboard", name="get_standard_dashboard", methods={"GET"})
+     *
+     * **/
+    public function getStandardDashboard(Request $request, Region $region): Response
+    {
+        $data = [];
+        $data["chapters_compositions"] = [
+            "CHAPTER" => 0,
+            "CORE_GROUP" => 0,
+            "PROJECT" => 0,
+            "CLOSED" => 0,
+            "SUSPENDED" => 0
+        ];
+        
+        $request = Util::normalizeRequest($request);
+        $chapters = $this->chapterRepository->findBy([
+            "region" => $region
+        ]);
+        foreach($chapters as $chapter) {
+            $current_state = $chapter->getCurrentState();
+            $data["chapters_compositions"][$current_state] ++;
+        }
+
+        return new JsonResponse($data, Response::HTTP_OK);
+    }
+
 }

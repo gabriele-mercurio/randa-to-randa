@@ -1,6 +1,6 @@
 <template
   ><div>
-    <div v-if="randaRevised || (randa && randa.randa_state === 'APPR')">
+    <div v-if="randaRevised || (randa && (randa.randa_state === 'APPR' || randa.randa_state === 'REFUSED'))">
       <div v-if="isNational">
         <Randa
           :title="'Randa'"
@@ -8,7 +8,7 @@
           :layout="'split'"
           :showTotal="false"
         />
-        <div class="d-flex justify-end pa-4 px-10">
+         <div v-if="isNational" class="d-flex justify-end pa-4 pt-0 px-10">
           <v-btn
             @click="showDisapproveRanda = true"
             :disabled="randa.randa_state == 'REFUSED'"
@@ -169,17 +169,14 @@ export default {
   },
   created() {
     setTimeout(() => {
-      this.isNational =
-        this.$store.getters["getRegion"].role &&
-        this.$store.getters["getRegion"].role === "NATIONAL";
-
+      this.isNational = this.$store.getters["getIsNational"];
       if (this.isNational) {
         this.fetchRanda();
       } else {
         this.fetchRandaRevised();
         this.fetchOldRandas();
       }
-    });
+    }, 200);
   },
   methods: {
     async refuseRanda() {

@@ -4,7 +4,8 @@ export const state = () => ({
   role: null,
   token: null,
   region: null,
-  actAs: null
+  actAs: null,
+  isNational: null
 });
 
 export const mutations = {
@@ -25,6 +26,9 @@ export const mutations = {
   },
   setUserRole(state, role) {
     state.region.role = role;
+  },
+  setIsNational(state, isNational) {
+    state.isNational = isNational;
   }
 };
 
@@ -52,5 +56,8 @@ export const getters = {
     if(state.region) {
       return state.region.isFreeAccount;
     }
+  },
+  getIsNational(state) {
+    return state.isNational;
   }
 };

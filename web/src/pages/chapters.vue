@@ -163,13 +163,14 @@ export default {
       return true;
     },
     openEditModal(chapter) {
-      if(chapter.chapterLaunch.actual) {
-        chapter.chapterLaunch.prev = chapter.chapterLaunch.actual;
-      }
-      if(chapter.coreGroupLaunch.actual) {
-        chapter.coreGroupLaunch.prev = chapter.coreGroupLaunch.actual;
-      }
-      this.editChapter = chapter;
+      // if(chapter.chapterLaunch.actual) {
+      //   chapter.chapterLaunch.prev = chapter.chapterLaunch.actual;
+      // }
+      // if(chapter.coreGroupLaunch.actual) {
+      //   chapter.coreGroupLaunch.prev = chapter.coreGroupLaunch.actual;
+      // }
+      this.editChapter = null;
+      this.editChapter = { ...chapter };
       this.showEditChapter = true;
     },
 
@@ -225,7 +226,7 @@ export default {
     },
 
     newChapter() {
-      this.editChapter = null;
+      this.editChapter = false;
       this.showEditChapter = true;
     },
 

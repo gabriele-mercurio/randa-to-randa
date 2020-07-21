@@ -21,6 +21,7 @@ class ApiServer {
 
     try {
       let data = await axios.post(process.env.base_url + "/token", loginData);
+      debugger;
       ApiServer.setToken(data.data.access_token);
       let me = await ApiServer.get("me");
       return {
@@ -33,6 +34,7 @@ class ApiServer {
   }
 
   static async logout() {
+    debugger;
     try {
       await ApiServer.post("revoke");
       ApiServer.revokeToken();
@@ -59,9 +61,9 @@ class ApiServer {
         process.env.base_url + "/" + endpoint + params,
         config
       );
-      //return ApiServer.parseResponse(response);
+      return ApiServer.parseResponse(response);
     } catch (e) {
-      //return ApiServer.parseError(e);
+      return ApiServer.parseError(e);
     }
   }
 
@@ -134,7 +136,9 @@ class ApiServer {
     };
 
     switch (status) {
+      
       case 401:
+        debugger;
         store.commit("setToken", null);
         store.commit("setRegion", null);
         window.location = window.location.origin + "/login";

@@ -142,9 +142,9 @@ export default {
     },
 
     async fetchChapters() {
-      let res = ApiServer.get(this.$store.getters["getRegion"].id + "/chapters");
+      let res = await ApiServer.get(this.$store.getters["getRegion"].id + "/chapters");
       if(!res.error) {
-        this.chapter = res;
+        this.chapters = res.chapters;
       }
     },
 
@@ -174,8 +174,6 @@ export default {
     isFreeAccount() {
       return false;
     },
-    goToPrevchapter() {},
-
     goToNextChapter() {
       let index = 0;
       for (let i = 0; i < this.chapters.length; i++) {

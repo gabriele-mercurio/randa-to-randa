@@ -930,7 +930,7 @@ class ChapterController extends AbstractController
             }
         }
         if ($prevLaunchChapterDate) {
-            $chapter->setActualLaunchChapterDate($chapterLaunch);
+            $chapter->setPrevLaunchChapterDate($chapterLaunch);
         }
         if ($actualLaunchChapterDate) {
             $chapter->setActualLaunchChapterDate($chapterLaunch);
@@ -939,7 +939,7 @@ class ChapterController extends AbstractController
             $chapter->setPrevLaunchCoregroupDate($coreGroupLaunch);
         }
         if ($actualLaunchCoregroupDate) {
-            $chapter->setPrevLaunchCoregroupDate($coreGroupLaunch);
+            $chapter->setActualLaunchCoregroupDate($coreGroupLaunch);
         }
 
         $chapter->setCurrentState($state);
@@ -1251,9 +1251,12 @@ class ChapterController extends AbstractController
         ]);
 
 
+        header("role: ". $role);
+
         if ($code == Response::HTTP_OK) {
             switch ($role) {
                 case Constants::ROLE_EXECUTIVE:
+
                     $chapters = $this->chapterRepository->findBy([
                         'region' => $region
                     ]);
@@ -1304,68 +1307,73 @@ class ChapterController extends AbstractController
                     "randa" => $randa
                 ]);
                 if ($rana) {
+
+                    $members = $chapter->getMembers();
+
+
                     $new_members_cons = $this->newMemberRepository->findOneBy([
                         "rana" => $rana,
                         "valueType" => "CONS",
                         "timeslot" => "T0"
                     ]);
-
-                    file_put_contents("cc", $rana->getId());
-
-                    $last_number_new = 0;
-                    for ($i = 1; $i <= 12; $i++) {
-                        $method = "getM$i";
-                        $cons = $new_members_cons->$method();
-                        if ($cons !== null) {
-                            $last_number_new = $i;
-                        }
-                    }
-
-                    $new_members_ts = [];
-                    for ($i = 1; $i <= 12; $i++) {
-                        $method = "getM$i";
-                        $val = 0;
-                        if ($i <= $last_number_new) {
-                            $val = $new_members_cons->$method();
-                        } else {
-                            $val = 0;
-                        }
-                        $new_members_ts[] = $val;
-                    }
-
-
                     $retentions_cons = $this->retentionRepository->findOneBy([
                         "rana" => $rana,
                         "valueType" => "CONS",
                         "timeslot" => "T0"
                     ]);
 
-                    $last_number_ret = 0;
-                    for ($i = 1; $i <= 12; $i++) {
-                        $method = "getM$i";
-                        $cons = $retentions_cons->$method();
-                        if ($cons !== null) {
-                            $last_number_ret = $i;
+                    if($new_members_cons && $retentions_cons) {
+                        $last_number_new = 0;
+                        for ($i = 1; $i <= 12; $i++) {
+                            $method = "getM$i";
+                            $cons = $new_members_cons->$method();
+                            if ($cons !== null) {
+                                $last_number_new = $i;
+                            }
                         }
-                    }
-
-                    $retentions_ts = [];
-                    for ($i = 1; $i <= 12; $i++) {
-                        $method = "getM$i";
-                        $val = 0;
-                        if ($i <= $last_number_ret) {
-                            $val = $retentions_cons->$method();
-                        } else {
+    
+                        $new_members_ts = [];
+                        for ($i = 1; $i <= 12; $i++) {
+                            $method = "getM$i";
                             $val = 0;
+                            if ($i <= $last_number_new) {
+                                $val = $new_members_cons->$method();
+                            } else {
+                                $val = 0;
+                            }
+                            $new_members_ts[] = $val;
                         }
-                        $retentions_ts[] = $val;
+    
+    
+                      
+    
+                        $last_number_ret = 0;
+                        for ($i = 1; $i <= 12; $i++) {
+                            $method = "getM$i";
+                            $cons = $retentions_cons->$method();
+                            if ($cons !== null) {
+                                $last_number_ret = $i;
+                            }
+                        }
+    
+                        $retentions_ts = [];
+                        for ($i = 1; $i <= 12; $i++) {
+                            $method = "getM$i";
+                            $val = 0;
+                            if ($i <= $last_number_ret) {
+                                $val = $retentions_cons->$method();
+                            } else {
+                                $val = 0;
+                            }
+                            $retentions_ts[] = $val;
+                        }
+    
+    
+                        for ($i = 0; $i < $last_number_ret; $i++) {
+                            $members += ($new_members_ts[$i] - $retentions_ts[$i]);
+                        }
                     }
-
-
-                    $members = $chapter->getMembers();
-                    for ($i = 0; $i < $last_number_ret; $i++) {
-                        $members += ($new_members_ts[$i] - $retentions_ts[$i]);
-                    }
+                    
                     $chapter->setMembers($members);
                 }
             }

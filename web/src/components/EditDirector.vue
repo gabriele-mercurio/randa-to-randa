@@ -330,7 +330,7 @@ export default {
       }
     },
     getEditModeString() {
-      return this.editChapter ? this.$t("edit") : this.$t("create");
+      return this.editMode ? this.$t("edit") : this.$t("create");
     },
     fetchUsers() {
       let region = this.$state.getters["getRegion"];
@@ -346,12 +346,7 @@ export default {
       data = { ...this.director };
       if (data.role !== "ASSISTANT DIRECTOR") {
         data.supervisor = null;
-      } else {
-        if (this.editMode && data.supervisor) {
-          data.supervisor = data.supervisor.id;
-        }
       }
-
       let region = this.$store.getters["getRegion"].id;
 
       data.role = data.role.replace(" DIRECTOR", "");
@@ -415,7 +410,6 @@ export default {
         if (this.editDirector) {
           this.editMode = true;
           this.director = { ...this.editDirector };
-          this.director.firstName = this.director.fullName;
         } else {
           this.editMode = false;
         }

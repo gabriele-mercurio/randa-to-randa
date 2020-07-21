@@ -245,7 +245,7 @@ export default {
     },
     isExpired(item) {
       let today = new Date();
-      today = today.getFullYear() + "-" + (today.getMonth() + 1);
+      today = today.getFullYear() + "-" + (today.getMonth() + 1).toString().padStart(2,"0");
       return item.prev && new Date(item.prev) < new Date(today);
     },
     canSuspend(item) {
@@ -393,18 +393,7 @@ export default {
     },
 
     isPrev(item) {
-      if(item.prev) {
-        if(new Date(item.prev) > new Date()) {
-          return true;
-        } 
-        return false;
-      }
-      if(item.actual) {
-        if(new Date(item.actual) > new Date()) {
-          return true;
-        } 
-        return false;
-      }
+      return item.prev && (!item.actual);
     },
 
     getStateToLaunch(item) {

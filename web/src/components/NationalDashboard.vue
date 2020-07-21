@@ -20,6 +20,7 @@
           nationalDashboard.regions.current_t_approved.length
       "
       :data="nationalDashboard.regions.current_t_approved"
+      :link="true"
     />
     <DashboardTable
       v-if="

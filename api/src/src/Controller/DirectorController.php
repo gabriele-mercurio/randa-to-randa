@@ -337,9 +337,8 @@ class DirectorController extends AbstractController
             }
 
             if ($role == Constants::ROLE_ASSISTANT) {
-                if (empty($supervisor)) {
-                    $errorFields['supervisor'] = "required";
-                } else {
+                if (!empty($supervisor)) {
+                    header("supervisor:" . $supervisor);
                     $supervisor = $this->directorRepository->findOneBy([
                         'id' => $supervisor,
                         'region' => $region,
@@ -614,14 +613,11 @@ class DirectorController extends AbstractController
      *
      * @return Response
      */
-    public function editDirector(Director $director, Request $request): Response
+    public function editDirector(Director $directorToChange, Request $request): Response
     {
         $request = Util::normalizeRequest($request);
 
-        $region = $director->getRegion();
-
-
-        $dir_backup = $director;
+        $region = $directorToChange->getRegion();
 
 
         $roleCheck = [
@@ -633,10 +629,6 @@ class DirectorController extends AbstractController
         // Assign $actAs, $code, $director, $isAdmin and $role
         foreach ($performerData as $var => $value) {
             $$var = $value;
-        }
-
-        if(!$director) {
-            $director = $dir_backup;
         }
 
         $performingUser = $this->directorRepository->findOneBy([
@@ -657,6 +649,8 @@ class DirectorController extends AbstractController
 
         if ($code == Response::HTTP_OK) {
             $role = strtoupper(trim($request->get("role")));
+            $firstName = $request->get("firstName");
+            $lastName = $request->get("lastName");
             $isFreeAccount = $request->get("isFreeAccount");
             $newRegion = $request->get("region");
             $supervisor = $request->get("supervisor");
@@ -688,6 +682,13 @@ class DirectorController extends AbstractController
 
             } elseif (!empty($role)) {
                 $fields['role'] = $role;
+            }
+
+            if (!empty($firstName)) {
+                $fields['firstName'] = $firstName;
+            }
+            if (!empty($lastName)) {
+                $fields['lastName'] = $lastName;
             }
 
             if (!empty($newRegion)) {
@@ -767,10 +768,10 @@ class DirectorController extends AbstractController
 
                     if ($role == Constants::ROLE_ASSISTANT) {
                         if (!empty($supervisor)) {
+                            header("supervisor: " . $supervisor);
                             $supervisor = $this->directorRepository->findOneBy([
                                 'id' => $supervisor,
-                                'region' => $region,
-                                'role' => Constants::ROLE_AREA
+                                'region' => $region
                             ]);
 
                             if (is_null($supervisor)) {
@@ -791,47 +792,53 @@ class DirectorController extends AbstractController
             foreach ($fields as $key => $value) {
                 switch ($key) {
                     case 'role':
-                        $director->setRole($value);
+                        $directorToChange->setRole($value);
                     break;
                     case 'isFreeAccount':
-                        $director->setFreeAccount($value);
+                        $directorToChange->setFreeAccount($value);
                     break;
                     case 'region':
-                        $director->setRegion($value);
+                        $directorToChange->setRegion($value);
                     break;
                     case 'supervisor':
-                        $director->setSupervisor($value);
+                        $directorToChange->setSupervisor($value);
                     break;
                     case 'payType':
-                        $director->setPayType($value);
+                        $directorToChange->setPayType($value);
                     break;
                     case 'launchPercentage':
-                        $director->setLaunchPercentage(((int) $value) / 100);
+                        $directorToChange->setLaunchPercentage(((int) $value) / 100);
                     break;
                     case 'greenLigthPercentage':
-                        $director->setGreenLightPercentage(((int) $value) / 100);
+                        $directorToChange->setGreenLightPercentage(((int) $value) / 100);
                     break;
                     case 'yellowLigthPercentage':
-                        $director->setYellowLightPercentage(((int) $value) / 100);
+                        $directorToChange->setYellowLightPercentage(((int) $value) / 100);
                     break;
                     case 'redLigthPercentage':
-                        $director->setRedLightPercentage(((int) $value) / 100);
+                        $directorToChange->setRedLightPercentage(((int) $value) / 100);
                     break;
                     case 'greyLigthPercentage':
-                        $director->setGreyLightPercentage(((int) $value) / 100);
+                        $directorToChange->setGreyLightPercentage(((int) $value) / 100);
                     break;
                     case 'areaPercentage':
-                        $director->setAreaPercentage(((int) $value) / 100);
+                        $directorToChange->setAreaPercentage(((int) $value) / 100);
                     break;
                     case 'fixedPercentage':
-                        $director->setFixedPercentage(((int) $value) / 100);
+                        $directorToChange->setFixedPercentage(((int) $value) / 100);
+                    break;
+                    case 'firstName':
+                        $directorToChange->getUser()->setFirstName($value);
+                    break;
+                    case 'lastName':
+                        $directorToChange->getUser()->setLastName($value);
                     break;
                 }
             }
 
             $this->entityManager->flush();
 
-            return new JsonResponse($this->directorFormatter->formatFull($director));
+            return new JsonResponse($this->directorFormatter->formatFull($directorToChange));
         } else {
             $errorFields = empty($errorFields) ? null : $errorFields;
             return new JsonResponse($errorFields, $code);
@@ -929,11 +936,13 @@ class DirectorController extends AbstractController
                 'region' => $region
             ];
 
+            $directors = $this->directorRepository->findBy($criteria);
             if ($onlyArea) {
-                $criteria['role'] = Constants::ROLE_AREA;
+                $directors = array_filter($directors, function($director) {
+                    return $director->getRole() === "AREA" || $director->getRole() === "EXECUTIVE";
+                });
             }
 
-            $directors = $this->directorRepository->findBy($criteria);
             usort($directors, function ($d1, $d2) {
                 $fn1 = $d1->getUser()->getFullName();
                 $fn2 = $d2->getUser()->getFullName();

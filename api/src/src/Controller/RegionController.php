@@ -76,6 +76,8 @@ class RegionController extends AbstractController
             $regions = $this->regionRepository->findAll();
         } else {
             foreach ($this->directorRepository->findByUser($user) as $director) {
+                header("director: " . $director->getRole());
+                header("region: " . $director->getRegion()->getName());
                 $directorId = $director->getId();
                 if (!array_key_exists($directorId, $directors)) {
                     $directors[$directorId] = $director;

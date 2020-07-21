@@ -222,6 +222,7 @@
           >
             {{ $t("reset") }}
           </v-btn>-->
+
           <v-btn
             type="submit"
             normal
@@ -230,7 +231,7 @@
             @click="sendProposalOrApprovation()"
             v-if="rana.state !== 'APPR'"
           >
-            <span v-if="role === 'ASSISTANT'">{{ $t("send_proposal") }}</span>
+            <span v-if="rana.state !== 'PROP' && (role === 'ASSISTANT' || role === 'AREA')">{{ $t("send_proposal") }}</span>
             <span
               v-if="
                 (role == 'ADMIN' || role == 'EXECUTIVE') && rana.state == 'PROP'
@@ -528,7 +529,7 @@ export default {
     //send rana proposal to the server
     async sendProposalOrApprovation() {
       let data = { ...this.rana };
-      data["valueType"] = this.role === "ASSISTANT" ? "PROP" : "APPR";
+      data["valueType"] = (this.role === "EXECUTIVE" || this.role === "ADMIN") ? "APPR" : "PROP";
       data["timeslot"] = this.rana.timeslot;
 
       let firstTimeslotMonth = Utils.getFirstTimeslotMonth(this.rana.timeslot);
@@ -537,10 +538,10 @@ export default {
         if (index >= firstTimeslotMonth) {
           data["n_" + k] = data.newMembers.PREV[k]
             ? data.newMembers.PREV[k]
-            : null;
+            : 0;
           data["r_" + k] = data.retentions.PREV[k]
             ? data.retentions.PREV[k]
-            : null;
+            : 0;
         }
       }
       // send only future data

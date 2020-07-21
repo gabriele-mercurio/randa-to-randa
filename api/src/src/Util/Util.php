@@ -197,8 +197,32 @@ class Util
             
             $dir = $directorRepository->findOneBy([
                 "user" => $user,
-                "region" => $region
+                "region" => $region,
+                "role" => Constants::ROLE_EXECUTIVE
             ]);
+
+            if(!$dir) {
+                $dir = $directorRepository->findOneBy([
+                    "user" => $user,
+                    "region" => $region,
+                    "role" => Constants::ROLE_AREA
+                ]);
+            }
+
+            if(!$dir) {
+                $dir = $directorRepository->findOneBy([
+                    "user" => $user,
+                    "region" => $region,
+                    "role" => Constants::ROLE_ASSISTANT
+                ]);
+            }
+            if(!$dir) {
+                $dir = $directorRepository->findOneBy([
+                    "user" => $user,
+                    "role" => Constants::ROLE_NATIONAL
+                ]);
+            }
+            
             $role = $dir->getRole();
             $checkDirectorRole = $directorRepository->checkDirectorRole($u, $region, $role);
 

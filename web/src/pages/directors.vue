@@ -3,7 +3,7 @@
     <DirectorsList
       v-on:edit="openEditModal"
       :directors.sync="directors"
-      v-if="!noDirectorsFound && canSeeDirectors()"
+      v-if="!noDirectorsFound"
     />
 
     <NoData v-else :message="'Nessun director da mostrare'" />
@@ -72,7 +72,7 @@ export default {
   },
   methods: {
     canSeeDirectors() {
-      return this.$store.getters["getRegion"].role === "ADMIN" || this.$store.getters["getRegion"].role === "EXECUTIVE";
+      return this.$store.getters["getRegion"] && (this.$store.getters["getRegion"].role === "ADMIN" || this.$store.getters["getRegion"].role === "EXECUTIVE");
     },
     openEditModal(director) {
       this.editDirector = director;

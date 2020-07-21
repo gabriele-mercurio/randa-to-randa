@@ -394,6 +394,7 @@ class RandaController extends AbstractController
                 $data["timeslot"] = $timeslot;
                 $data["all_approved"] = $all_approved;
                 $data["randa_state"] = $randa->getCurrentState();
+                $data["region"] = $randa->getRegion()->getName();
                 $data["note"] = $randa->getNote();
                 $data["directors_previsions"] = $randa->getDirectorsPrevisions();
             }
@@ -1000,14 +1001,14 @@ class RandaController extends AbstractController
                     "randa_region" => $region->getName(),
                     "title" => $title
                 ];
-    
+
                 $email = (new TemplatedEmail())
-                ->from('rosbi@studio-mercurio.it')
-                ->to($to_email)
-                ->subject($title) 
-                ->htmlTemplate('emails/next-randa-start/html.twig')
-                ->context($data);
-    
+                    ->from('rosbi@studio-mercurio.it')
+                    ->to($to_email)
+                    ->subject($title)
+                    ->htmlTemplate('emails/next-randa-start/html.twig')
+                    ->context($data);
+
                 $this->mailer->send($email);
             }
             return new JsonResponse(true, Response::HTTP_OK);
@@ -1312,8 +1313,6 @@ class RandaController extends AbstractController
                         $month_c = 13;
                     }
 
-                    file_put_contents("mail_log", $month_cg . " - - " . $month_c, FILE_APPEND);
-
                     if ($month_cg < 13) {
 
                         $initial_members = $project->getMembers();
@@ -1431,6 +1430,104 @@ class RandaController extends AbstractController
                     }
                 }
 
+                $closed = $this->chapterRepository->findBy([
+                    "region" => $region,
+                    "currentState" => "CLOSED"
+                ]);
+
+                foreach ($closed as $clo) {
+                    if ($clo->getClosureDate()) {
+                        $y_c = $clo->getClosureDate()->format("Y");
+                        if ($y_c == (int) date("Y")) {
+                            $month = $clo->getClosureDate()->format("m");
+
+                            if ($month > 3) {
+
+                                $initial_members = $clo->getMembers();
+
+                                $chapter_element_ret = [
+                                    "name" => $clo->getName(),
+                                    "data" => [],
+                                    "initial" => $clo->getMembers()
+                                ];
+                                    $chapter_element_act = [
+                                        "name" => $clo->getName(),
+                                        "data" => [],
+                                        "initial" => $clo->getMembers()
+                                    ];
+                                
+
+                                $chapter_element_new = [
+                                    "name" => $clo->getName(),
+                                    "data" => [],
+                                    "initial" => $clo->getMembers()
+                                ];
+
+                                $rana = $this->ranaRepository->findOneBy([
+                                    "chapter" => $clo,
+                                    "randa" => $randa
+                                ]);
+
+                                $new_cons = $this->newMemberRepository->findOneBy([
+                                    "rana" => $rana,
+                                    "timeslot" => $timeslot,
+                                    "valueType" => "CONS"
+                                ]);
+                                $new_appr = $this->newMemberRepository->findOneBy([
+                                    "rana" => $rana,
+                                    "timeslot" => $timeslot,
+                                    "valueType" => "APPR"
+                                ]);
+                                $ret_cons = $this->retentionRepository->findOneBy([
+                                    "rana" => $rana,
+                                    "timeslot" => $timeslot,
+                                    "valueType" => "CONS"
+                                ]);
+                                $ret_appr = $this->retentionRepository->findOneBy([
+                                    "rana" => $rana,
+                                    "timeslot" => $timeslot,
+                                    "valueType" => "APPR"
+                                ]);
+                                $new_members = 0;
+                                $ret_members = 0;
+                                for ($i = 1; $i <= 12; $i++) {
+
+                                    $method = "getM$i";
+                                    $new_members += ($new_cons && $new_cons->$method() !== null) ? $new_cons->$method() : ($new_appr && $new_appr !== null ? $new_appr->$method() : 0);
+                                    $ret_members += ($ret_cons && $ret_cons->$method() !== null) ? $ret_cons->$method() : ($ret_appr && $ret_appr !== null ? $ret_appr->$method() : 0);
+                                    if ($i % 3 == 0) {
+
+                                        if ($i < $month) {
+                                            $chapter_element_new["data"][] = $new_members;
+                                            $chapter_element_ret["data"][] = $ret_members;
+                                            $act_len = sizeof($chapter_element_act["data"]);
+                                            $chapter_element_act["data"][] = ($act_len ? $chapter_element_act["data"][$act_len - 1] : $initial_members) + ($new_members - $ret_members);
+
+                                            $slot = ceil($i / 3) - 1;
+                                            $data["num_chapters"][$slot]++;
+                                        } else {
+                                            $chapter_element_new["data"][] = null;
+                                            $chapter_element_ret["data"][] = null;
+                                            $chapter_element_act["data"][] = null;
+
+                                        }
+
+                                        $new_members = 0;
+                                        $ret_members = 0;
+                                    }
+                                }
+
+                                $data["chapters_new"][] = $chapter_element_new;
+                                $data["chapters_ret"][] = $chapter_element_ret;
+                                $data["chapters_act"][] = $chapter_element_act;
+                            }
+                        }
+                    }
+                }
+
+
+
+
 
                 //calcolo membri
 
@@ -1509,6 +1606,7 @@ class RandaController extends AbstractController
                 $directors = $randa->getDirectorsPrevisions() ? $randa->getDirectorsPrevisions() : "0,0,0,0";
                 $data["directors"] = explode(",", $directors);
                 $data["randa_state"] = $randa->getCurrentState();
+                $data["region"] = $randa->getRegion()->getName();
 
 
 
@@ -1517,7 +1615,7 @@ class RandaController extends AbstractController
                 return new JsonResponse(false);
             }
         } catch (Exception $e) {
-            return new JsonResponse($e->getMessage());
+            return new JsonResponse($e->getMessage() . $e->getLine());
         }
     }
 }

@@ -24,6 +24,11 @@
             <v-btn type="submit" normal text color="primary">Accedi</v-btn>
           </v-row>
         </v-card-actions>
+        <!-- <v-row
+          justify="center"
+          class="font-italic font-weight-light pb-3"
+          @click="showPromptEmail = true"
+        >Password dimenticata?</v-row> -->
       </v-card>
     </v-form>
     <v-form v-else @submit.prevent="selectRegion()">
@@ -50,6 +55,25 @@
     </v-snackbar>
     <div class="d-flex justify-end"></div>
   </v-container>
+  <!-- <v-dialog v-model="showPromptEmail" width="500" :scrollable="false">
+      <v-card>
+        <v-card-title class="headline primary white--text" primary-title>
+          Seleziona director
+        </v-card-title>
+        <v-card-text class="pa-5">
+          <v-select
+            :items="regionDirectors"
+            label="Seleziona director"
+            v-model="actAsDirector"
+            item-text="fullName"
+            return-object
+            required
+            prepend-icon="mdi-account"
+            @change="setActAs()"
+          ></v-select>
+        </v-card-text>
+      </v-card>
+  </v-dialog>-->
 </template>
 
 <script>
@@ -90,9 +114,22 @@ export default {
         this.$store.commit("setUser", response["user"]);
         this.$store.commit("setToken", response["token"]);
         await this.fetchRegions();
-        if(this.regions.length === 1) {
-          this.region = this.regions[0];
-          this.selectRegion();
+        let isNational = false;
+        for (let region of this.regions) {
+          if (region.role === "NATIONAL") {
+            isNational = true;
+            this.$store.commit("setRegion", region);
+          }
+        }
+        if (isNational) {
+          this.$store.commit("setIsNational", true);
+          this.$router.push("/home");
+        } else {
+          this.$store.commit("setIsNational", null);
+          if (this.regions.length === 1) {
+            this.region = this.regions[0];
+            this.selectRegion();
+          }
         }
         this.isLogged = true;
       } else {

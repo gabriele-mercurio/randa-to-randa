@@ -77,7 +77,7 @@
         >
           Approva randa
         </v-btn>
-        <v-menu offset-y v-if="!freeAccount && !isNational()">
+        <v-menu offset-y v-if="!isNational() && role != 'ASSISTANT'">
           <template v-slot:activator="{ on }">
             <v-btn class="white--text" text v-on="on">
               {{ $t("randa") }}
@@ -102,7 +102,7 @@
             </v-list-item>
           </v-list>
         </v-menu>
-        <v-menu offset-y v-if="!freeAccount && !isNational()">
+        <v-menu offset-y v-if="!freeAccount && !isNational()&& role != 'ASSISTANT' ">
           <template v-slot:activator="{ on }">
             <v-btn class="white--text" text v-on="on">
               {{ $t("directors") }}
@@ -122,7 +122,7 @@
           class="white--text"
           text
           to="/economics"
-          v-if="!freeAccount && !isNational()"
+          v-if="!freeAccount && !isNational() && role != 'ASSISTANT'"
         >
           Economics
         </v-btn>
@@ -132,10 +132,11 @@
             {{ getUser() }}
             <small class="font-italic font-weight-light mr-2" v-if="freeAccount"
               >Account gratuito</small
-            ><small>({{ getRegion().name }})</small>
+            ><small v-if="!isNational()">({{ getRegion().name }})</small>
           </div>
           <v-btn icon @click="drawer = true" class="white--text">
-            <v-icon>mdi-account</v-icon></v-btn
+            <v-icon>mdi-account</v-icon>
+            </v-btn
           ></v-toolbar-title
         >
       </v-toolbar>
@@ -230,7 +231,8 @@ export default {
       invalidPwd2: [],
       pwds_errors: false,
       showPwdSuccess: false,
-      timeout: 5000
+      timeout: 5000,
+      role: null
     };
   },
   craeted() {
@@ -312,7 +314,7 @@ export default {
     },
 
     isNational() {
-      return this.$store.getters["getRegion"].role === "NATIONAL";
+      return this.$store.getters["getIsNational"];
     },
     getUser() {
       return this.$store.getters["getUser"]
@@ -358,9 +360,11 @@ export default {
     },
     getRegion() {
       let region = this.$store.getters["getRegion"];
+      console.log(region);
       return region;
     },
     async doLogout() {
+      debugger;
       try {
         let response = await ApiServer.logout();
         this.$store.commit("setToken", null);
@@ -373,18 +377,18 @@ export default {
 
   created() {
     setTimeout(() => {
-
-      ApiServer.get("utils");
+      debugger;
       this.$store.commit("snackbar/setData", null);
       if (this.getToken()) {
         ApiServer.setToken(this.getToken());
         if (!this.getRegion()) {
           this.$router.push("/login");
         }
+        //this.role = this.$store.getters["getRegion"].role;
       } else {
         this.$router.push("/login");
       }
-    });
+    }, 300);
   },
 
   watch: {

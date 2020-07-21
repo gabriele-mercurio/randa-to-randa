@@ -148,34 +148,117 @@ class DashboardController extends AbstractController
                 $n_core_groups = 0;
                 $n_chapters = 0;
                 $n_projects = 0;
+                $n_members_per_chapters = 0;
+                $n_members_per_core_groups = 0;
+                $n_members_per_projects = 0;
+                $n_members_total = 0;
 
                 $all_chapters = $this->chapterRepository->findBy([
                     "region" => $region
                 ]);
                 foreach ($all_chapters as $chapter) {
+
+                    $rana = $this->ranaRepository->findOneBy([
+                        "chapter" => $chapter,
+                        "randa" => $randa
+                    ]);
+
+                    if ($rana) {
+                        $members = $chapter->getMembers();
+                        $new_members_cons = $this->newMemberRepository->findOneBy([
+                            "rana" => $rana,
+                            "valueType" => "CONS",
+                            "timeslot" => "T0"
+                        ]);
+                        $retentions_cons = $this->retentionRepository->findOneBy([
+                            "rana" => $rana,
+                            "valueType" => "CONS",
+                            "timeslot" => "T0"
+                        ]);
+
+                        if ($new_members_cons && $retentions_cons) {
+                            $last_number_new = 0;
+                            for ($i = 1; $i <= 12; $i++) {
+                                $method = "getM$i";
+                                $cons = $new_members_cons->$method();
+                                if ($cons !== null) {
+                                    $last_number_new = $i;
+                                }
+                            }
+
+                            $new_members_ts = [];
+                            for ($i = 1; $i <= 12; $i++) {
+                                $method = "getM$i";
+                                $val = 0;
+                                if ($i <= $last_number_new) {
+                                    $val = $new_members_cons->$method();
+                                } else {
+                                    $val = 0;
+                                }
+                                $new_members_ts[] = $val;
+                            }
+
+                            $last_number_ret = 0;
+                            for ($i = 1; $i <= 12; $i++) {
+                                $method = "getM$i";
+                                $cons = $retentions_cons->$method();
+                                if ($cons !== null) {
+                                    $last_number_ret = $i;
+                                }
+                            }
+
+                            $retentions_ts = [];
+                            for ($i = 1; $i <= 12; $i++) {
+                                $method = "getM$i";
+                                $val = 0;
+                                if ($i <= $last_number_ret) {
+                                    $val = $retentions_cons->$method();
+                                } else {
+                                    $val = 0;
+                                }
+                                $retentions_ts[] = $val;
+                            }
+
+                            for ($i = 0; $i < $last_number_ret; $i++) {
+                                $members += ($new_members_ts[$i] - $retentions_ts[$i]);
+                            }
+                        }
+                    }
                     switch ($chapter->getCurrentState()) {
                         case "CHAPTER":
                             $n_chapters++;
+                            $n_all_chapters++;
+                            $n_members_per_chapters += $members;
+                            $n_members_total += $members;
                             break;
                         case "CORE_GROUP":
                             $n_core_groups++;
+                            $n_all_chapters++;
+                            $n_members_per_core_groups += $members;
+                            $n_members_total += $members;
                             break;
                         case "PROJECT":
                             $n_projects++;
+                            $n_all_chapters++;
+                            $n_members_per_projects += $members;
                             break;
                     }
-                    $n_all_chapters++;
                 }
                 $region_data = [
                     "name" => $region->getName(),
+                    "id" => $region->getId(),
                     "n_all_chapters" => $n_all_chapters,
                     "n_chapters" => $n_chapters,
                     "n_core_groups" => $n_core_groups,
                     "n_projects" => $n_projects,
                     "randa_timeslot" => $randa_timeslot,
-                    "randa_state" => $randa_state
+                    "randa_state" => $randa_state,
+                    "n_members_per_chapters" => $n_members_per_chapters,
+                    "n_members_per_core_groups" => $n_members_per_core_groups,
+                    "n_members_per_projects" => $n_members_per_projects,
+                    "n_members_total" => $n_members_total
                 ];
-                
+
                 switch ($randa_timeslot) {
                     case $current_timeslot:
                         switch ($randa_state) {
@@ -202,7 +285,7 @@ class DashboardController extends AbstractController
                     default:
                         $others[] = $region_data;
                 }
-                    
+
                 $data_regions[] = $region_data;
             }
 
@@ -221,7 +304,7 @@ class DashboardController extends AbstractController
     }
 
 
-      /**
+    /**
      * Get dashboard
      *
      * @Route(path="{id}/standardDashboard", name="get_standard_dashboard", methods={"GET"})
@@ -237,17 +320,17 @@ class DashboardController extends AbstractController
             "CLOSED" => 0,
             "SUSPENDED" => 0
         ];
-        
+
+
         $request = Util::normalizeRequest($request);
         $chapters = $this->chapterRepository->findBy([
             "region" => $region
         ]);
-        foreach($chapters as $chapter) {
+        foreach ($chapters as $chapter) {
             $current_state = $chapter->getCurrentState();
-            $data["chapters_compositions"][$current_state] ++;
+            $data["chapters_compositions"][$current_state]++;
         }
 
         return new JsonResponse($data, Response::HTTP_OK);
     }
-
 }

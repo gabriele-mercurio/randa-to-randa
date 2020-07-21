@@ -1,8 +1,9 @@
 <template>
-  <div id="randa" v-if="randa" class="px-6">
+  <div id="randa_" v-if="randa" class="px-6">
     <div class="pt-6" v-if="layout !== 'split'">
       <h3>
-        {{ title }} <small>{{ randa.timeslot }} {{ randa.year }}</small>
+        {{ title }}
+        <small>{{ randa.timeslot }} {{ randa.year }}</small>
       </h3>
       <div class="d-flex flex-column align-start my-4">
         <div class="d-flex flex-row align-center">
@@ -20,7 +21,9 @@
           <div class="ml-1">Sospeso</div>
         </div>
         <div class="d-flex flex-row align-center">
-          <div><v-icon style="font-size:16px">mdi-close</v-icon></div>
+          <div>
+            <v-icon style="font-size:16px">mdi-close</v-icon>
+          </div>
           <div class="ml-1">Chiuso</div>
         </div>
         <div class="d-flex flex-row align-center">
@@ -30,11 +33,7 @@
       </div>
     </div>
 
-    <v-data-table
-      disable-pagination
-      hide-default-footer
-      v-if="layout != 'split'"
-    >
+    <v-data-table disable-pagination hide-default-footer v-if="layout !== 'split'">
       <template v-slot:body>
         <tbody>
           <tr>
@@ -83,24 +82,18 @@
                     chapter.chapter_history &&
                       chapter.chapter_history[0] === 'SUSPENDED'
                   "
-                  >mdi-diameter-variant</v-icon
-                >
+                >mdi-diameter-variant</v-icon>
 
                 <v-icon
                   v-if="
                     chapter.chapter_history &&
                       chapter.chapter_history[0] === 'CLOSED'
                   "
-                  >mdi-close</v-icon
-                >
+                >mdi-close</v-icon>
               </span>
             </td>
-            <td class="text-center">
-              {{ chapter.newMembers[0] }}
-            </td>
-            <td class="text-center">
-              {{ chapter.retentions[0] }}
-            </td>
+            <td class="text-center">{{ chapter.newMembers[0] }}</td>
+            <td class="text-center">{{ chapter.retentions[0] }}</td>
             <td class="text-center bordered">{{ chapter.members[0] }}</td>
 
             <td
@@ -113,24 +106,18 @@
                     chapter.chapter_history &&
                       chapter.chapter_history[1] === 'SUSPENDED'
                   "
-                  >mdi-diameter-variant</v-icon
-                >
+                >mdi-diameter-variant</v-icon>
 
                 <v-icon
                   v-if="
                     chapter.chapter_history &&
                       chapter.chapter_history[1] === 'CLOSED'
                   "
-                  >mdi-close</v-icon
-                >
+                >mdi-close</v-icon>
               </span>
             </td>
-            <td class="text-center">
-              {{ chapter.newMembers[1] }}
-            </td>
-            <td class="text-center">
-              {{ chapter.retentions[1] }}
-            </td>
+            <td class="text-center">{{ chapter.newMembers[1] }}</td>
+            <td class="text-center">{{ chapter.retentions[1] }}</td>
             <td class="text-center bordered">{{ chapter.members[1] }}</td>
 
             <td
@@ -143,24 +130,18 @@
                     chapter.chapter_history &&
                       chapter.chapter_history[2] === 'SUSPENDED'
                   "
-                  >mdi-diameter-variant</v-icon
-                >
+                >mdi-diameter-variant</v-icon>
 
                 <v-icon
                   v-if="
                     chapter.chapter_history &&
                       chapter.chapter_history[1] === 'CLOSED'
                   "
-                  >mdi-close</v-icon
-                >
+                >mdi-close</v-icon>
               </span>
             </td>
-            <td class="text-center">
-              {{ chapter.newMembers[2] }}
-            </td>
-            <td class="text-center">
-              {{ chapter.retentions[2] }}
-            </td>
+            <td class="text-center">{{ chapter.newMembers[2] }}</td>
+            <td class="text-center">{{ chapter.retentions[2] }}</td>
             <td class="text-center bordered">{{ chapter.members[2] }}</td>
 
             <td
@@ -173,110 +154,79 @@
                     chapter.chapter_history &&
                       chapter.chapter_history[3] === 'SUSPENDED'
                   "
-                  >mdi-diameter-variant</v-icon
-                >
+                >mdi-diameter-variant</v-icon>
 
                 <v-icon
                   v-if="
                     chapter.chapter_history &&
                       chapter.chapter_history[3] === 'CLOSED'
                   "
-                  >mdi-close</v-icon
-                >
+                >mdi-close</v-icon>
               </span>
             </td>
-            <td class="text-center">
-              {{ chapter.newMembers[3] }}
-            </td>
-            <td class="text-center">
-              {{ chapter.retentions[3] }}
-            </td>
+            <td class="text-center">{{ chapter.newMembers[3] }}</td>
+            <td class="text-center">{{ chapter.retentions[3] }}</td>
             <td class="text-center bordered">{{ chapter.members[3] }}</td>
-            <td v-if="showTotal" class="text-center">
-              {{ evaluateTotal(chapter) }}
-            </td>
+            <td v-if="showTotal" class="text-center">{{ evaluateTotal(chapter) }}</td>
           </tr>
           <tr class="font-weight-black">
             <td>Totale</td>
             <td>{{ totals["initial"] }}</td>
             <td></td>
-            <td class="text-center">
-              {{ totals["new"][0] }}
-            </td>
-            <td class="text-center">
-              {{ totals["ret"][0] }}
-            </td>
-            <td class="text-center bordered">
-              {{ totals["act"][0] }}
-            </td>
+            <td class="text-center">{{ totals["new"][0] }}</td>
+            <td class="text-center">{{ totals["ret"][0] }}</td>
+            <td class="text-center bordered">{{ totals["act"][0] }}</td>
 
             <td></td>
-            <td class="text-center">
-              {{ totals["new"][1] }}
-            </td>
-            <td class="text-center">
-              {{ totals["ret"][1] }}
-            </td>
-            <td class="text-center bordered">
-              {{ totals["act"][1] }}
-            </td>
+            <td class="text-center">{{ totals["new"][1] }}</td>
+            <td class="text-center">{{ totals["ret"][1] }}</td>
+            <td class="text-center bordered">{{ totals["act"][1] }}</td>
 
             <td></td>
-            <td class="text-center">
-              {{ totals["new"][2] }}
-            </td>
-            <td class="text-center">
-              {{ totals["ret"][2] }}
-            </td>
-            <td class="text-center bordered">
-              {{ totals["act"][2] }}
-            </td>
+            <td class="text-center">{{ totals["new"][2] }}</td>
+            <td class="text-center">{{ totals["ret"][2] }}</td>
+            <td class="text-center bordered">{{ totals["act"][2] }}</td>
             <td></td>
-            <td class="text-center">
-              {{ totals["new"][3] }}
-            </td>
-            <td class="text-center">
-              {{ totals["ret"][3] }}
-            </td>
-            <td class="text-center bordered">
-              {{ totals["act"][3] }}
-            </td>
+            <td class="text-center">{{ totals["new"][3] }}</td>
+            <td class="text-center">{{ totals["ret"][3] }}</td>
+            <td class="text-center bordered">{{ totals["act"][3] }}</td>
 
             <td class="text-center" v-if="showTotal">
               {{
-                totals["new"][0] +
-                  totals["ret"][0] +
-                  totals["act"][0] +
-                  totals["new"][1] +
-                  totals["ret"][1] +
-                  totals["act"][1] +
-                  totals["new"][2] +
-                  totals["ret"][2] +
-                  totals["act"][2] +
-                  totals["new"][3] +
-                  totals["ret"][3] +
-                  totals["act"][3]
+              totals["new"][0] +
+              totals["ret"][0] +
+              totals["act"][0] +
+              totals["new"][1] +
+              totals["ret"][1] +
+              totals["act"][1] +
+              totals["new"][2] +
+              totals["ret"][2] +
+              totals["act"][2] +
+              totals["new"][3] +
+              totals["ret"][3] +
+              totals["act"][3]
               }}
             </td>
           </tr>
         </tbody>
       </template>
     </v-data-table>
+
     <template v-else>
       <table id="table_wrapper" class="invisible">
         <table class="invisible">
           <tbody>
             <tr>
               <td colspan="6" class="text-cetner">
-                <span class="font-italic font-weight-bold">{{
-                  regionName
-                }}</span>
+                <span class="font-italic font-weight-bold">
+                  {{
+                  randa.region
+                  }}
+                </span>
               </td>
             </tr>
             <tr>
-              <td colspan="6" class="text-cetner">
-                Randa {{ randa.year }} {{ randa.timeslot }}
-              </td>
+              <td colspan="6" class="text-cetner">Randa {{ randa.year }} {{ randa.timeslot }}</td>
             </tr>
           </tbody>
         </table>
@@ -285,11 +235,7 @@
           :randaType="'chapters_ret'"
           :id="'chapters_ret'"
         />
-        <RandaTable
-          :plainData.sync="avg"
-          :randaType="'chapters_average'"
-          :id="'chapters_average'"
-        />
+        <RandaTable :plainData.sync="avg" :randaType="'chapters_average'" :id="'chapters_average'" />
         <RandaTable
           :plainData="randa.num_chapters"
           :randaType="'num_chapters'"
@@ -308,10 +254,7 @@
           :id="'chapters_act'"
           :initial="true"
         />
-        <RandaTable
-          :chapters="randa.core_groups_act"
-          :randaType="'core_groups_act'"
-        />
+        <RandaTable :chapters="randa.core_groups_act" :randaType="'core_groups_act'" />
       </table>
     </template>
   </div>
@@ -358,39 +301,7 @@ export default {
 
     setTimeout(() => {
       this.regionName = this.$store.getters["getRegion"].name;
-      if (this.randa && this.randa.chapters_act) {
-        let sum = [0, 0, 0, 0];
-        let count = [0, 0, 0, 0];
-        for (let element of this.randa.chapters_act) {
-          if (element.data[0] !== null) {
-            count[0]++;
-          }
-          sum[0] += element.data[0];
-
-          if (element.data[1] !== null) {
-            count[1]++;
-          }
-          sum[1] += element.data[1];
-
-          if (element.data[2] !== null) {
-            count[2]++;
-          }
-          sum[2] += element.data[2];
-
-          if (element.data[3] !== null) {
-            count[3]++;
-          }
-          sum[3] += element.data[3];
-        }
-
-        let avg = [];
-        avg[0] = Math.round((sum[0] / count[0]) * 100) / 100;
-        avg[1] = Math.round((sum[1] / count[1]) * 100) / 100;
-        avg[2] = Math.round((sum[2] / count[2]) * 100) / 100;
-        avg[3] = Math.round((sum[3] / count[3]) * 100) / 100;
-
-        this.avg = avg;
-      }
+      debugger;
     }, 4000);
 
     this.totals = totals;
@@ -423,16 +334,58 @@ export default {
       }
       return sum;
     }
+  },
+  watch: {
+    randa: {
+      handler: function(newVal, oldVal) {
+        if (newVal && newVal.chapters_act) {
+          let sum = [0, 0, 0, 0];
+          let count = [0, 0, 0, 0];
+          for (let k in newVal.chapters_act) {
+            let element = newVal.chapters_act[k];
+            if (element.data[0] !== null) {
+              count[0]++;
+            }
+            sum[0] += element.data[0];
+
+            if (element.data[1] !== null) {
+              count[1]++;
+            }
+            sum[1] += element.data[1];
+
+            if (element.data[2] !== null) {
+              count[2]++;
+            }
+            sum[2] += element.data[2];
+
+            if (element.data[3] !== null) {
+              count[3]++;
+            }
+            sum[3] += element.data[3];
+          }
+          let avg = [];
+          avg[0] = Math.round((sum[0] / count[0]) * 100) / 100;
+          avg[1] = Math.round((sum[1] / count[1]) * 100) / 100;
+          avg[2] = Math.round((sum[2] / count[2]) * 100) / 100;
+          avg[3] = Math.round((sum[3] / count[3]) * 100) / 100;
+
+          this.avg = avg;
+        }
+      },
+      deep: true,
+      immediate: true
+    }
   }
 };
 </script>
 <style lang="scss">
 @import "../assets/variables.scss";
 
-#randa {
+#randa_ {
   table {
     border: 1px solid lightgray;
-    td, th {
+    td,
+    th {
       height: 30px;
     }
   }
@@ -538,7 +491,8 @@ export default {
   }
 
   @media print {
-    td, th {
+    td,
+    th {
       height: 20px;
     }
   }

@@ -4,8 +4,8 @@
       <v-btn icon @click="getXLSX()"> <v-icon>mdi-file-excel</v-icon></v-btn>
       <v-btn icon @click="print()"> <v-icon>mdi-cloud-print</v-icon></v-btn>
     </div>
-    <Randa :title="'Randa'" :randa="randa" :layout="'split'" />
-    <div v-if="isNational">
+    <Randa :title="'Randa'" :randa.sync="randa" :layout="'split'" />
+    <div v-if="!isNational" class="pr-6 pb-6 d-flex justify-end">
       <v-btn @click="showApproveRanda = true"> Approva</v-btn>
     </div>
     <NoData v-if="noData" :message="'Nessun randa'" />
@@ -36,7 +36,7 @@ export default {
   created() {
     setTimeout(() => {
       this.fetchRanda();
-      this.isNational = this.$store.getters["getRegion"].role === "NATIONAL";
+      this.isNational = this.$store.getters["getIsNational"];
     });
   },
   methods: {

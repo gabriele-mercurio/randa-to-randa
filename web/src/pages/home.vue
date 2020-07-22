@@ -26,7 +26,6 @@ export default {
   methods: {
     async isNational() {
       this.is_national = await this.$store.getters["getIsNational"];
-      debugger;
     }
   }
 };

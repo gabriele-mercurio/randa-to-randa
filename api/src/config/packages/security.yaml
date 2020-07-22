@@ -13,13 +13,14 @@ security:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
         main:
-            pattern: ^/
+            pattern: ^/api/
             anonymous: true
             #security: false 
             guard:
                 authenticators:
                     - App\Guard\TokenAuthenticator
             stateless: true
+       
     access_control:
         - { path: ^/(token|api/doc|regions/import|directors/import), roles: IS_AUTHENTICATED_ANONYMOUSLY }
         - { path: ^/, roles: ROLE_USER }

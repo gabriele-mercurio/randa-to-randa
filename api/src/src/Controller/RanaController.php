@@ -30,6 +30,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
+
+
 class RanaController extends AbstractController
 {
     /** @var DirectorRepository */
@@ -1092,8 +1094,6 @@ class RanaController extends AbstractController
 
             $this->newMemberRepository->save($newMember);
             $this->retentionRepository->save($retentionMember);
-
-            file_put_contents("log", json_encode($this->newMemberFormatter->formatBase($newMember)));
 
             $state = Constants::RANA_LIFECYCLE_STATUS_TODO;
             switch ($valueType) {

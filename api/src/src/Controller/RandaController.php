@@ -1163,12 +1163,6 @@ class RandaController extends AbstractController
                             $new_members += ($new_cons && $new_cons->$method() !== null) ? $new_cons->$method() : ($new_appr && $new_appr !== null ? $new_appr->$method() : null);
                             $ret_members += ($ret_cons && $ret_cons->$method() !== null)  ? $ret_cons->$method() : ($ret_appr && $ret_appr !== null ? $ret_appr->$method() : null);
 
-                            file_put_contents("log", "rana" . $rana->getId() . "\n", FILE_APPEND);
-                            file_put_contents("log", "timeslot: " . $timeslot . "\n", FILE_APPEND);
-
-                            file_put_contents("log", "new core_group" . $core_group->getName() . "\n", FILE_APPEND);
-                            file_put_contents("log", "ret core_group" . $core_group->getName() . "\n", FILE_APPEND);
-                            file_put_contents("log", "ret core_group" . $i . "\n", FILE_APPEND);
                             if ($i % 3 == 0) {
                                 // è ancora un core group
                                 if ($i < $month) {

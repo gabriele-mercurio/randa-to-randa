@@ -53,7 +53,8 @@
               prepend-icon="mdi-tie"
               :disabled="director.isFreeAccount"
               @change="setFixedPercentage()"
-            ></v-select>
+            >
+            </v-select>
           </v-col>
 
           <v-col cols="6" class="py-0 my-0" v-if="director.role === 'ASSISTANT DIRECTOR'">
@@ -65,7 +66,12 @@
               item-text="fullName"
               item-value="id"
               no-data-text="Nessun area director"
-            ></v-select>
+            >
+             <template v-slot:append-outer v-if="director.supervisor">
+              <v-btn icon @click="resetSupervisor()">
+                <v-icon>mdi-close</v-icon>
+              </v-btn>
+            </template></v-select>
           </v-col>
           <v-col cols="12" class="py-0 my-0" v-if="director.role === 'ASSISTANT DIRECTOR'">
             <!-- <v-select
@@ -290,6 +296,9 @@ export default {
     }
   },
   methods: {
+    resetSupervisor(event) {
+      this.director.supervisor = null;
+    },
     setData() {
       if (this.director.data) {
         this.director.firstName = this.director.data.firstName;
@@ -391,9 +400,9 @@ export default {
       return true;
     },
 
-    async fetchAreaDirectors() {
-      this.areaDirectors = await ApiServer.get("users");
-    },
+    // async fetchAreaDirectors() {
+    //   this.areaDirectors = await ApiServer.get("users");
+    // },
 
     async fetchChapters() {
       this.chapters = await ApiServer.get(
@@ -410,6 +419,7 @@ export default {
         if (this.editDirector) {
           this.editMode = true;
           this.director = { ...this.editDirector };
+          this.director.role = this.director.role + " DIRECTOR";
         } else {
           this.editMode = false;
         }

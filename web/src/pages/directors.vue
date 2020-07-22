@@ -75,7 +75,7 @@ export default {
       return this.$store.getters["getRegion"] && (this.$store.getters["getRegion"].role === "ADMIN" || this.$store.getters["getRegion"].role === "EXECUTIVE");
     },
     openEditModal(director) {
-      this.editDirector = director;
+      this.editDirector = { ...director };
       this.showEdit = true;
     },
     newDirector() {

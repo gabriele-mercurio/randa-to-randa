@@ -186,7 +186,6 @@ export default {
         data["director"] = JSON.parse(JSON.stringify(this.$store.getters["getUser"].id));
       }
 
-      debugger; 
       if (this.chapter.coreGroupLaunch) {
         if (this.chapter.coreGroupLaunchType === "actual") {
           data["actualLaunchCoregroupDate"] = this.addDay(

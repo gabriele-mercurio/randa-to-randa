@@ -356,6 +356,11 @@ export default {
       return this.getRegion() ? this.getRegion().name : "";
     },
     getToken() {
+      if(this.$store) {
+        console.log("STORE IS READU");
+      } else {
+        console.log("STORE IS not READU");
+      }
       return this.$store.getters["getToken"];
     },
     getRegion() {
@@ -364,7 +369,6 @@ export default {
       return region;
     },
     async doLogout() {
-      debugger;
       try {
         let response = await ApiServer.logout();
         this.$store.commit("setToken", null);
@@ -377,18 +381,17 @@ export default {
 
   created() {
     setTimeout(() => {
-      debugger;
       this.$store.commit("snackbar/setData", null);
       if (this.getToken()) {
         ApiServer.setToken(this.getToken());
         if (!this.getRegion()) {
           this.$router.push("/login");
         }
-        //this.role = this.$store.getters["getRegion"].role;
+        this.role = this.$store.getters["getRegion"].role;
       } else {
         this.$router.push("/login");
       }
-    }, 300);
+    });
   },
 
   watch: {

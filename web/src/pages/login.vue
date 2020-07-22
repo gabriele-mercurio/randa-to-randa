@@ -24,11 +24,11 @@
             <v-btn type="submit" normal text color="primary">Accedi</v-btn>
           </v-row>
         </v-card-actions>
-        <!-- <v-row
+        <v-row
           justify="center"
           class="font-italic font-weight-light pb-3"
-          @click="showPromptEmail = true"
-        >Password dimenticata?</v-row> -->
+          @click="promptEmail()"
+        >Password dimenticata?</v-row>
       </v-card>
     </v-form>
     <v-form v-else @submit.prevent="selectRegion()">
@@ -54,26 +54,23 @@
       </v-btn>
     </v-snackbar>
     <div class="d-flex justify-end"></div>
-  </v-container>
-  <!-- <v-dialog v-model="showPromptEmail" width="500" :scrollable="false">
+
+    <v-dialog v-model="showPromptEmail" width="500" :scrollable="false">
       <v-card>
-        <v-card-title class="headline primary white--text" primary-title>
-          Seleziona director
-        </v-card-title>
+        <v-card-title class="headline primary white--text" primary-title>Resetta password</v-card-title>
         <v-card-text class="pa-5">
-          <v-select
-            :items="regionDirectors"
-            label="Seleziona director"
-            v-model="actAsDirector"
-            item-text="fullName"
-            return-object
-            required
-            prepend-icon="mdi-account"
-            @change="setActAs()"
-          ></v-select>
+          <div class="font-weight-light font-italic pb-5">Immetti il tuo indirizzo di posta ROSBI, ti verrà inviata una password che potrai cambiare una volta loggato</div>
+          <v-text-field v-model="resetPasswordEmail" label="Indirizzo email" required prepend-icon="mdi-mail-outline"></v-text-field>
         </v-card-text>
+        <v-card-actions>
+          <v-row justify="center">
+            <v-btn normal text color="primary" @click="showPromptEmail=false">Annulla</v-btn>
+            <v-btn normal text color="primary" @click="resetPassword()">Ok</v-btn>
+          </v-row>
+        </v-card-actions>
       </v-card>
-  </v-dialog>-->
+    </v-dialog>
+  </v-container>
 </template>
 
 <script>
@@ -91,7 +88,9 @@ export default {
       timeout: 3000,
       region: null,
       isLogged: false,
-      logo: require("@/assets/images/logo_mercurio.png")
+      logo: require("@/assets/images/logo_mercurio.png"),
+      showPromptEmail: false,
+      resetPasswordEmail: ""
     };
   },
   created() {
@@ -107,6 +106,18 @@ export default {
     });
   },
   methods: {
+    promptEmail() {
+      if(this.email) {
+        this.resetPasswordEmail = this.email;
+      }
+      this.showPromptEmail = true;
+    },
+    async resetPassword() {
+      let response = await ApiServer.post("resetPassword", {
+        "email": this.resetPasswordEmail
+      });
+      debugger;
+    },
     async doLogin() {
       Utils.removeFromStorage("region");
       let response = await ApiServer.login(this.email, this.password);

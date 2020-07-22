@@ -296,7 +296,6 @@ class UserController extends AbstractController
         $pwd2 = $request->get("pwd2");
 
         if($pwd1 !== $pwd2) {
-            header("differentpasswords:true");
             return new JsonResponse("Passwords not matching", Response::HTTP_BAD_REQUEST);
         }
 
@@ -308,6 +307,54 @@ class UserController extends AbstractController
             header("eccezione: " . $e->getMessage());
         }
         return new JsonResponse(true, Response::HTTP_OK);
+    }
+
+    /**
+     * Change password
+     *
+     * @Route("resetPassword", name="reset_password", methods={"POST"})
+     *
+     */
+    public function resetPassword(Request $request): Response
+    {
+
+        file_put_contents("log", "uno\n", FILE_APPEND);
+        $request = Util::normalizeRequest($request);
+        $email = $request->get("email");
+        header("email: " . $email);
+        $user = $this->userRepository->findOneBy([
+            "email" => $email
+        ]);
+        file_put_contents("log", "due\n", FILE_APPEND);
+
+        $tempPassword = Util::generatePassword();
+        $user->securePassword($tempPassword);
+
+        header("tempPassword: " . $user->getFullName());
+        header("fullName: " . $user->getfillName);
+        file_put_contents("log", "ter\n", FILE_APPEND);
+
+        $data = [
+            "fullName" => $user->getFullName(),
+            "tempPassword" => $tempPassword
+        ];
+
+        $email = (new TemplatedEmail())
+            ->from('rosbi@studio-mercurio.it')
+            ->to($email)
+            ->subject("Recupero password")
+            ->htmlTemplate('emails/password-recovery/html.twig')
+            ->context($data);
+
+        $this->mailer->send($email);
+
+        file_put_contents("log", "quattro\n", FILE_APPEND);
+        $response = null;
+        if(!$user) {
+            $response =  new JsonResponse(["message" => "Email not found"], Response::HTTP_BAD_REQUEST);
+        }
+        $response = new JsonResponse(true, Response::HTTP_OK);
+        return $response;
     }
 
 

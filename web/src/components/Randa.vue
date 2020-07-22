@@ -301,7 +301,6 @@ export default {
 
     setTimeout(() => {
       this.regionName = this.$store.getters["getRegion"].name;
-      debugger;
     }, 4000);
 
     this.totals = totals;

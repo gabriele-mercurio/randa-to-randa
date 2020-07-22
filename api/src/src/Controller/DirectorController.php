@@ -338,16 +338,13 @@ class DirectorController extends AbstractController
 
             if ($role == Constants::ROLE_ASSISTANT) {
                 if (!empty($supervisor)) {
-                    header("supervisor:" . $supervisor);
                     $supervisor = $this->directorRepository->findOneBy([
                         'id' => $supervisor,
                         'region' => $region,
                         'role' => Constants::ROLE_AREA
                     ]);
-
-                    if (is_null($supervisor)) {
-                        $errorFields['supervisor'] = "invalid";
-                    }
+                } else {
+                    $supervisor = null;
                 }
             }
 
@@ -375,7 +372,6 @@ class DirectorController extends AbstractController
             // If the user doesn't exist, create it
             if (is_null($newUser)) {
                 $tempPasswd = Util::generatePassword();
-                file_put_contents("temp_password", $tempPasswd);
                 $isNewUser = true;
                 $newUser = new User();
                 $newUser->setEmail($email);
@@ -768,17 +764,13 @@ class DirectorController extends AbstractController
 
                     if ($role == Constants::ROLE_ASSISTANT) {
                         if (!empty($supervisor)) {
-                            header("supervisor: " . $supervisor);
                             $supervisor = $this->directorRepository->findOneBy([
                                 'id' => $supervisor,
                                 'region' => $region
                             ]);
-
-                            if (is_null($supervisor)) {
-                                $errorFields['supervisor'] = "invalid";
-                            } else {
-                                $fields['supervisor'] = $supervisor;
-                            }
+                            $fields['supervisor'] = $supervisor;
+                        } else {
+                            $fields['supervisor'] = null;
                         }
                     }
             }

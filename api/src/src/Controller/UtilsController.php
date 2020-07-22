@@ -20,7 +20,10 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
-class ImportersController extends AbstractController
+/**
+ * @Route("/api")
+ */
+class UtilsController extends AbstractController
 {
     /** @var ChapterRepository */
     private $chapterRepository;
@@ -286,7 +289,7 @@ class ImportersController extends AbstractController
     /**
      * Importer for chapters from the old DB
      *
-     * @Route(path="/utils", name="chapter_importer", methods={"GET"})
+     * @Route(path="/utils", name="utils", methods={"GET"})
      *
      */
     public function utils(): Response

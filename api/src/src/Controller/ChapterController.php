@@ -31,6 +31,11 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
+
+
+/**
+* @Route("/api")
+**/
 class ChapterController extends AbstractController
 {
     /** @var ChapterFormatter */
@@ -349,9 +354,7 @@ class ChapterController extends AbstractController
             $name = trim($request->get("name", ""));
             $chapterDirector = $request->get("director");
             $prevLaunchCoregroupDate = $request->get("prevLaunchCoregroupDate");
-            $actualLaunchCoregroupDate = $request->get("actualLaunchCoregroupDate");
             $prevLaunchChapterDate = $request->get("prevLaunchChapterDate");
-            $actualLaunchChapterDate = $request->get("actualLaunchChapterDate");
 
             $previuosState = null;
             $state = Constants::CHAPTER_STATE_PROJECT;
@@ -483,40 +486,24 @@ class ChapterController extends AbstractController
             }
 
 
-            $actualLaunchChapterDate = $actualLaunchChapterDate ? Util::UTCDateTime($actualLaunchChapterDate) : null;
-            $actualLaunchCoregroupDate = $actualLaunchCoregroupDate ? Util::UTCDateTime($actualLaunchCoregroupDate) : null;
             $prevLaunchChapterDate = $prevLaunchChapterDate ? Util::UTCDateTime($prevLaunchChapterDate) : null;
             $prevLaunchCoregroupDate = $prevLaunchCoregroupDate ? Util::UTCDateTime($prevLaunchCoregroupDate) : null;
 
-            $coreGroupLaunch = $actualLaunchCoregroupDate ?? $prevLaunchCoregroupDate;
-            $chapterLaunch = $actualLaunchChapterDate ?? $prevLaunchChapterDate;
+            // $coreGroupLaunch = $actualLaunchCoregroupDate ?? $prevLaunchCoregroupDate;
+            // $chapterLaunch = $actualLaunchChapterDate ?? $prevLaunchChapterDate;
 
             $state = "PROJECT";
             $today =  Util::UTCDateTime();
 
-            if ($coreGroupLaunch) {
-                if ($coreGroupLaunch < $today) {
-                    $state = "CORE_GROUP";
-                }
-            }
-
-
-            if ($chapterLaunch) {
-                if ($chapterLaunch < $today) {
-                    $state = "CHAPTER";
-                }
-            }
-
+          
             $chapter = new Chapter();
-            $chapter->setActualLaunchChapterDate($actualLaunchChapterDate);
-            $chapter->setActualLaunchCoregroupDate($actualLaunchCoregroupDate);
-            $chapter->setCurrentState($state);
             $chapter->setDirector($d);
             $chapter->setName($name);
             $chapter->setPrevLaunchChapterDate($prevLaunchChapterDate);
             $chapter->setPrevLaunchCoregroupDate($prevLaunchCoregroupDate);
             $chapter->setRegion($region);
             $chapter->setMembers(0);
+            $chapter->setCurrentState($state);
 
             $this->chapterRepository->save($chapter);
 
@@ -789,9 +776,9 @@ class ChapterController extends AbstractController
             $members = $request->get("members");
 
             $prevLaunchCoregroupDate = $request->get("prevLaunchCoregroupDate");
-            $actualLaunchCoregroupDate = $request->get("actualLaunchCoregroupDate");
+            //$actualLaunchCoregroupDate = $request->get("actualLaunchCoregroupDate");
             $prevLaunchChapterDate = $request->get("prevLaunchChapterDate");
-            $actualLaunchChapterDate = $request->get("actualLaunchChapterDate");
+            //$actualLaunchChapterDate = $request->get("actualLaunchChapterDate");
 
 
             $prevResumeDate = $request->get("prevResumeDate");
@@ -911,38 +898,23 @@ class ChapterController extends AbstractController
             // }
         }
 
-        $actualLaunchChapterDate = $actualLaunchChapterDate ? Util::UTCDateTime($actualLaunchChapterDate) : null;
-        $actualLaunchCoregroupDate = $actualLaunchCoregroupDate ? Util::UTCDateTime($actualLaunchCoregroupDate) : null;
+        //$actualLaunchChapterDate = $actualLaunchChapterDate ? Util::UTCDateTime($actualLaunchChapterDate) : null;
+        //$actualLaunchCoregroupDate = $actualLaunchCoregroupDate ? Util::UTCDateTime($actualLaunchCoregroupDate) : null;
         $prevLaunchChapterDate = $prevLaunchChapterDate ? Util::UTCDateTime($prevLaunchChapterDate) : null;
         $prevLaunchCoregroupDate = $prevLaunchCoregroupDate ? Util::UTCDateTime($prevLaunchCoregroupDate) : null;
 
-        $coreGroupLaunch = $actualLaunchCoregroupDate ?? $prevLaunchCoregroupDate;
-        $chapterLaunch = $actualLaunchChapterDate ?? $prevLaunchChapterDate;
-
-        if ($coreGroupLaunch) {
-            if ($coreGroupLaunch < $today) {
-                $state = "CORE_GROUP";
-            }
-        }
-        if ($chapterLaunch) {
-            if ($chapterLaunch < $today) {
-                $state = "CHAPTER";
-            }
-        }
-        if ($prevLaunchChapterDate) {
-            $chapter->setPrevLaunchChapterDate($chapterLaunch);
-        }
-        if ($actualLaunchChapterDate) {
-            $chapter->setActualLaunchChapterDate($chapterLaunch);
-        }
-        if ($prevLaunchCoregroupDate) {
-            $chapter->setPrevLaunchCoregroupDate($coreGroupLaunch);
-        }
-        if ($actualLaunchCoregroupDate) {
-            $chapter->setActualLaunchCoregroupDate($coreGroupLaunch);
-        }
-
-        $chapter->setCurrentState($state);
+        // if ($coreGroupLaunch) {
+        //     if ($coreGroupLaunch < $today) {
+        //         $state = "CORE_GROUP";
+        //     }
+        // }
+        // if ($chapterLaunch) {
+        //     if ($chapterLaunch < $today) {
+        //         $state = "CHAPTER";
+        //     }
+        // }
+        $chapter->setPrevLaunchChapterDate($prevLaunchChapterDate);
+        $chapter->setPrevLaunchCoregroupDate($prevLaunchCoregroupDate);
 
         if ($code == Response::HTTP_OK) {
             $keys = array_keys($fields);
@@ -1600,6 +1572,7 @@ class ChapterController extends AbstractController
         $request = Util::normalizeRequest($request);
 
         $region = $chapter->getRegion();
+        $date = $request->get("date");
 
         $roleCheck = [
             Constants::ROLE_EXECUTIVE,
@@ -1619,9 +1592,9 @@ class ChapterController extends AbstractController
         }
 
         if ($code == Response::HTTP_OK) {
-            $today = Util::UTCDateTime();
+            $date = Util::UTCDateTime($date);
 
-            $chapter->setActualLaunchChapterDate($today);
+            $chapter->setActualLaunchChapterDate($date);
             $chapter->setCurrentState(Constants::CHAPTER_STATE_CHAPTER);
             $this->entityManager->flush();
 
@@ -1714,6 +1687,7 @@ class ChapterController extends AbstractController
         $request = Util::normalizeRequest($request);
 
         $region = $chapter->getRegion();
+        $date = $request->get("date");
 
         $roleCheck = [
             Constants::ROLE_EXECUTIVE,
@@ -1733,9 +1707,9 @@ class ChapterController extends AbstractController
         }
 
         if ($code == Response::HTTP_OK) {
-            $today = Util::UTCDateTime();
+            $date = Util::UTCDateTime($date);
 
-            $chapter->setActualLaunchCoregroupDate($today);
+            $chapter->setActualLaunchCoregroupDate($date);
             $chapter->setCurrentState(Constants::CHAPTER_STATE_CORE_GROUP);
             $this->entityManager->flush();
 

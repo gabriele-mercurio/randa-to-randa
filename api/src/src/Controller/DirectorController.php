@@ -1,5 +1,6 @@
 <?php
 
+
 namespace App\Controller;
 
 use App\Entity\Director;
@@ -30,6 +31,10 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
+
+/**
+* @Route("/api")
+**/
 class DirectorController extends AbstractController
 {
     /** @var DirectorFormatter */
@@ -372,6 +377,7 @@ class DirectorController extends AbstractController
             // If the user doesn't exist, create it
             if (is_null($newUser)) {
                 $tempPasswd = Util::generatePassword();
+                file_put_contents("temp_password", $tempPasswd);
                 $isNewUser = true;
                 $newUser = new User();
                 $newUser->setEmail($email);

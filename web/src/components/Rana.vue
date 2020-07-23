@@ -381,7 +381,7 @@ export default {
       }
     },
     async disapproveRana() {
-      let res = await ApiServer.put(this.rana.id + "/disapprove");
+      let res = await ApiServer.put("api/" + this.rana.id + "/disapprove");
       if (!res.error) {
         this.$emit("fetchRanas");
       }
@@ -551,7 +551,7 @@ export default {
       // }
 
       this.snackbarData.show = true;
-      let result = await ApiServer.post(this.rana.id + "/rana-members", data);
+      let result = await ApiServer.post("api/" + this.rana.id + "/rana-members", data);
       if (!result.error) {
         this.$store.commit("snackbar/setData", {
           messageLabel: "proposal_sent",

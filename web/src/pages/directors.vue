@@ -93,7 +93,7 @@ export default {
     async fetchAreaDirectors() {
       try {
         let region = await this.$store.getters["getRegion"].id;
-        this.areaDirectors = await ApiServer.get(
+        this.areaDirectors = await ApiServer.get("api/" + 
           region + "/directors?onlyArea=1"
         );
       } catch (e) {
@@ -101,7 +101,7 @@ export default {
       }
     },
     async fetchDirectors() {
-      let response = await ApiServer.get(
+      let response = await ApiServer.get("api/" + 
         this.$store.getters["getRegion"].id + "/directors"
       );
       if (response.errorCode === 404) {

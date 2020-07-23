@@ -43,6 +43,7 @@
         :randa_info.sync="randa_info"
         :classSpec="'elevation-3'"
         v-on:edit="openEditModal"
+        v-on:updateChapters="fetchChapters()"
         v-if="!noChaptersFound"
       />
 
@@ -177,7 +178,7 @@ export default {
     async createNextTimeslot(response) {
       this.showStartRanda = false;
       if (response) {
-        let response = await ApiServer.put(
+        let response = await ApiServer.put("api/" + 
           this.regionId + "/create-next-timeslot"
         );
         location.reload();
@@ -222,7 +223,7 @@ export default {
         if (this.freeAccount) {
           this.$router.push("/rana/" + chapter.id);
         }
-      }, 3000);
+      }, 500);
     },
 
     newChapter() {
@@ -231,11 +232,11 @@ export default {
     },
 
     async fetchUsersPerRegion() {
-      this.users = await ApiServer.get(this.regionId + "/users");
+      this.users = await ApiServer.get("api/" + this.regionId + "/users");
     },
 
     async fetchChapters() {
-      let response = await ApiServer.get(this.regionId + "/chapters");
+      let response = await ApiServer.get("api/" + this.regionId + "/chapters");
       if (response.errorCode === 404) {
         this.noChaptersFound = true;
       } else if (response.errorCode === "403") {

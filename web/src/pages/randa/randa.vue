@@ -42,7 +42,7 @@ export default {
   methods: {
     async fetchRanda() {
       let region = this.$store.getters["getRegion"].id;
-      this.randa = await ApiServer.get(region + "/randa");
+      this.randa = await ApiServer.get("api/" + region + "/randa");
       if (!this.randa) {
         this.noData = true;
       } else {

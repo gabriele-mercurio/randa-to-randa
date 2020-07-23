@@ -23,6 +23,7 @@
             <small class="font-italic font-weight-light">{{
               getPastDateMessage()
             }}</small>
+            <v-btn @click="date = null; setDate()" icon v-if="date && !disabled"><v-icon>mdi-close</v-icon></v-btn>
           </template>
         </v-text-field>
       </template>
@@ -59,6 +60,7 @@ export default {
   methods: {
     setDate() {
       this.$refs.menu.save(this.date);
+      debugger;
       this.$emit("setdate", this.date);
       this.menu = false;
     },

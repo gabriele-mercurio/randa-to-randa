@@ -22,7 +22,7 @@ class ApiServer {
     try {
       let data = await axios.post(process.env.base_url + "/token", loginData);
       ApiServer.setToken(data.data.access_token);
-      let me = await ApiServer.get("me");
+      let me = await ApiServer.get("api/" + "me");
       return {
         token: data.data.access_token,
         user: me
@@ -34,7 +34,7 @@ class ApiServer {
 
   static async logout() {
     try {
-      await ApiServer.post("revoke");
+      await ApiServer.post("api/" + "revoke");
       ApiServer.revokeToken();
       return true;
     } catch (e) {

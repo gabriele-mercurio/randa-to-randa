@@ -29,7 +29,7 @@ export default {
   methods: {
     async fetchRandaDream() {
       let region = this.$store.getters["getRegion"].id;
-      this.randaDream = await ApiServer.get(region + "/randa-dream");
+      this.randaDream = await ApiServer.get("api/" + region + "/randa-dream");
       if (!this.randaDream) {
         this.noData = true;
       }

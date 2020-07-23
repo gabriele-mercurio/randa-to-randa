@@ -317,7 +317,7 @@ export default {
       return this.$store.getters["getUser"].isAdmin;
     },
     async doAutocomplete(term) {
-      let users = await ApiServer.get("user/search?term=" + term);
+      let users = await ApiServer.get("api/" + "user/search?term=" + term);
       if (users) {
         this.users = users.map(user => {
           this.hashedUsers[user.value] = user;
@@ -344,7 +344,7 @@ export default {
     fetchUsers() {
       let region = this.$state.getters["getRegion"];
       //todo
-      //this.users = ApiServer.get("users?region=" + region);
+      //this.users = ApiServer.get("api/" + "users?region=" + region);
     },
     emitClose() {
       this.director = { ...directorSkeleton };
@@ -361,8 +361,8 @@ export default {
       data.role = data.role.replace(" DIRECTOR", "");
 
       let response = this.editMode
-        ? await ApiServer.put("director/" + this.director.id, data)
-        : (response = await ApiServer.post(region + "/director", data));
+        ? await ApiServer.put("api/" + "director/" + this.director.id, data)
+        : (response = await ApiServer.post("api/" + region + "/director", data));
 
       if (!response.error) {
         this.successSnackbar = true;
@@ -401,11 +401,11 @@ export default {
     },
 
     // async fetchAreaDirectors() {
-    //   this.areaDirectors = await ApiServer.get("users");
+    //   this.areaDirectors = await ApiServer.get("api/" + "users");
     // },
 
     async fetchChapters() {
-      this.chapters = await ApiServer.get(
+      this.chapters = await ApiServer.get("api/" + 
         this.$store.getters["getRegion"].id + "/chapters"
       );
     }

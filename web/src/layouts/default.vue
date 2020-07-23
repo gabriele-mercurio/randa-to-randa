@@ -16,7 +16,7 @@
                 <v-icon>mdi-user-arrow-right-outline</v-icon>
               </v-list-item-icon>
               <v-list-item-title>{{ $t("account") }}</v-list-item-title>
-            </v-list-item> -->
+            </v-list-item>-->
 
             <v-list-item @click="changeRegion()">
               <v-list-item-icon>
@@ -56,27 +56,21 @@
         </v-list>
       </v-navigation-drawer>
       <v-toolbar color="primary" class="white--text">
-        <v-btn class="white--text" text link to="/home">
-          {{ $t("home") }}
-        </v-btn>
+        <v-btn class="white--text" text link to="/home">{{ $t("home") }}</v-btn>
         <v-btn
           class="white--text"
           text
           link
           to="/chapters"
           v-if="!isNational()"
-        >
-          {{ $t("chapters") }}
-        </v-btn>
+        >{{ $t("chapters") }}</v-btn>
         <v-btn
           class="white--text"
           text
           link
           v-if="isNational()"
           to="/randa/randa-revised"
-        >
-          Approva randa
-        </v-btn>
+        >Approva randa</v-btn>
         <v-menu offset-y v-if="!isNational() && role != 'ASSISTANT'">
           <template v-slot:activator="{ on }">
             <v-btn class="white--text" text v-on="on">
@@ -86,19 +80,13 @@
           </template>
           <v-list v-if="!isNational()">
             <v-list-item>
-              <v-btn text to="/randa/randa-dream">
-                {{ $t("randa_dream") }}
-              </v-btn>
+              <v-btn text to="/randa/randa-dream">{{ $t("randa_dream") }}</v-btn>
             </v-list-item>
             <v-list-item v-if="!isNational()">
-              <v-btn text to="/randa/randa-revised">
-                {{ $t("randa_revised") }}
-              </v-btn>
+              <v-btn text to="/randa/randa-revised">{{ $t("randa_revised") }}</v-btn>
             </v-list-item>
             <v-list-item v-if="!isNational()">
-              <v-btn text to="/randa/randa">
-                {{ $t("randa") }}
-              </v-btn>
+              <v-btn text to="/randa/randa">{{ $t("randa") }}</v-btn>
             </v-list-item>
           </v-list>
         </v-menu>
@@ -111,9 +99,7 @@
           </template>
           <v-list v-if="!isNational()">
             <v-list-item>
-              <v-btn text to="/directors">
-                {{ $t("management") }}
-              </v-btn>
+              <v-btn text to="/directors">{{ $t("management") }}</v-btn>
             </v-list-item>
           </v-list>
         </v-menu>
@@ -123,31 +109,28 @@
           text
           to="/economics"
           v-if="!freeAccount && !isNational() && role != 'ASSISTANT'"
-        >
-          Economics
-        </v-btn>
+        >Economics</v-btn>
         <v-spacer></v-spacer>
         <v-toolbar-title class="d-flex flex-row align-center">
           <div>
             {{ getUser() }}
-            <small class="font-italic font-weight-light mr-2" v-if="freeAccount"
-              >Account gratuito</small
-            ><small v-if="!isNational()">({{ getRegion().name }})</small>
+            <small
+              class="font-italic font-weight-light mr-2"
+              v-if="freeAccount"
+            >Account gratuito</small>
+            <small v-if="!isNational()">({{ getRegion().name }})</small>
           </div>
           <v-btn icon @click="drawer = true" class="white--text">
             <v-icon>mdi-account</v-icon>
-            </v-btn
-          ></v-toolbar-title
-        >
+          </v-btn>
+        </v-toolbar-title>
       </v-toolbar>
     </nav>
     <nuxt />
 
     <v-dialog v-model="promptUserChange" width="500" :scrollable="false">
       <v-card>
-        <v-card-title class="headline primary white--text" primary-title>
-          Seleziona director
-        </v-card-title>
+        <v-card-title class="headline primary white--text" primary-title>Seleziona director</v-card-title>
         <v-card-text class="pa-5">
           <v-select
             :items="regionDirectors"
@@ -165,11 +148,11 @@
 
     <v-dialog v-model="showChangePassword" width="500" :scrollable="false">
       <v-card>
-        <v-card-title class="headline primary white--text" primary-title>
-          Cambia password
-        </v-card-title>
+        <v-card-title class="headline primary white--text" primary-title>Cambia password</v-card-title>
         <v-card-text class="pa-5">
-          <span class="font-italic">La password deve contenere almeno 8 caratteri, tra cui una lettera e un numero.</span>
+          <span
+            class="font-italic"
+          >La password deve contenere almeno 8 caratteri, tra cui una lettera e un numero.</span>
           <v-text-field
             v-model="pwd1"
             label="Password"
@@ -177,7 +160,7 @@
             prepend-icon="mdi-lock-outline"
             type="password"
             :error-messages="invalidPwd1"
-            @blur="checkPwds()"
+            @keyup="checkPwds($event)"
           ></v-text-field>
           <v-text-field
             v-model="pwd2"
@@ -185,25 +168,26 @@
             prepend-icon="mdi-lock-outline"
             type="password"
             :error-messages="invalidPwd2"
-            @blur="checkPwds()"
+            @keyup="checkPwds($event)"
           ></v-text-field>
           <div class="d-flex justify-end">
-            <v-btn normal text  @click="showChangePassword = false">
-              Annulla</v-btn
-            >
-            <v-btn  normal text  class="ml-4" color="primary" @click="doChangePassword()" :disabled="!pwdsSyntax(pwd1) || !pwdsSyntax(pwd2) || pwd1 !== pwd2">
-              Conferma</v-btn
-            >
+            <v-btn normal text @click="showChangePassword = false">Annulla</v-btn>
+            <v-btn
+              normal
+              text
+              class="ml-4"
+              color="primary"
+              @click="doChangePassword()"
+              :disabled="(pwd1.length < 8 || pwd2.length < 8) || (invalidPwd1.length > 0 || invalidPwd2.length > 0)"
+            >Conferma</v-btn>
           </div>
         </v-card-text>
       </v-card>
     </v-dialog>
 
     <v-snackbar v-model="showPwdSuccess" :timeout="timeout" top right>
-      <v-icon color="green">mdi-check</v-icon>
-      La password è stata correttamente modificata! Al prossimo accesso inserire la nuova password.
+      <v-icon color="green">mdi-check</v-icon>La password è stata correttamente modificata! Al prossimo accesso inserire la nuova password.
     </v-snackbar>
-
   </v-app>
 </template>
 
@@ -232,7 +216,7 @@ export default {
       pwds_errors: false,
       showPwdSuccess: false,
       timeout: 5000,
-      role: null
+      role: null,
     };
   },
   craeted() {
@@ -242,7 +226,7 @@ export default {
     this.invalidPwd2 = [];
   },
   components: {
-    Snackbar
+    Snackbar,
   },
   computed: {
     snackbar() {
@@ -250,7 +234,7 @@ export default {
     },
     freeAccount() {
       return this.$store.getters["isFreeAccount"];
-    }
+    },
   },
   methods: {
     canShowBackToAdmin() {
@@ -259,58 +243,60 @@ export default {
       return actAs && isAdmin;
     },
 
-    checkPwds() {
+    checkPwds(e) {
       if (this.pwd1 && this.pwd2) {
-        if (this.pwd1 !== this.pwd2) {
-          this.invalidPwd1 = ["Le password non corrispondono"];
-          this.invalidPwd2 = ["Le password non corrispondono"];
-          this.pwds_errors = true;
-        } else {
-          if (this.pwdsSyntax(this.pwd1) && this.pwdsSyntax(this.pwd2)) {
-            this.pwd_error = false;
-            this.pwds_errors = false;
-            this.invalidPwd1 = [];
-            this.invalidPwd2 = [];
+        if (this.pwd1.length === this.pwd2.length) {
+          if (this.pwd1 === this.pwd2) {
+            if (!this.pwdsSyntax(this.pwd1)) {
+              this.invalidPwd1 = [
+                "Inserire una password che abbia almeno 8 caratteri, tra cui una lettera e un numero.",
+              ];
+            } else {
+              this.invalidPwd1 = [];
+            }
+            if (!this.pwdsSyntax(this.pwd2)) {
+              this.invalidPwd2 = [
+                "Inserire una password che abbia almeno 8 caratteri, tra cui una lettera e un numero.",
+              ];
+            } else {
+              this.invalidPwd2 = [];
+            }
+          } else {
+            this.invalidPwd1 = ["Le password non corrispondono"];
+            this.invalidPwd2 = ["Le password non corrispondono"];
           }
-        }
-      } else {
-        if (this.pwd1 && !this.pwdsSyntax(this.pwd1)) {
-          this.invalidPwd1 = [
-            "Inserire una password che abbia almeno 8 caratteri, tra cui una lettera e un numero."
-          ];
-        }
-        if (this.pwd2 && !this.pwdsSyntax(this.pwd2)) {
-          this.invalidPwd2 = [
-            "Inserire una password che abbia almeno 8 caratteri, tra cui una lettera e un numero."
-          ];
-        }
+        } 
       }
     },
 
     pwdsSyntax(pwd) {
-      let regex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
-      let result = pwd.match(regex);
-      return result;
+      if(pwd.length < 8) return false;
+      let atLeastOneNumber = /.*[0-9].*/;
+      let atLeastOneLetter = /.*[a-zA-Z].*/
+      let result1 = pwd.match(atLeastOneNumber);
+      let result2 = pwd.match(atLeastOneLetter);
+      return result1 && result2;
     },
 
     changePassword() {
+      this.pwd1 = "";
+      this.pwd2 = "";
       this.showChangePassword = true;
     },
 
     async doChangePassword() {
       if (this.pwd1 !== this.pwd2) {
       }
-      let result = await ApiServer.put("changePassword", {
+      let result = await ApiServer.put("api/" + "changePassword", {
         pwd1: this.pwd1,
-        pwd2: this.pwd2
+        pwd2: this.pwd2,
       });
 
       this.showChangePassword = false;
 
       if (result) {
         this.showPwdSuccess = true;
-        
-      } 
+      }
     },
 
     isNational() {
@@ -340,7 +326,9 @@ export default {
     },
     async fetchRegionDirectors() {
       let region = this.$store.getters["getRegion"].id;
-      this.regionDirectors = await ApiServer.get(region + "/directors");
+      this.regionDirectors = await ApiServer.get(
+        "api/" + region + "/directors"
+      );
     },
     actAs() {
       this.fetchRegionDirectors();
@@ -349,14 +337,14 @@ export default {
     changeRegion() {
       this.$store.commit("setRegion", null);
       this.$router.push({
-        path: "/login"
+        path: "/login",
       });
     },
     getRegionName() {
       return this.getRegion() ? this.getRegion().name : "";
     },
     getToken() {
-      if(this.$store) {
+      if (this.$store) {
         console.log("STORE IS READU");
       } else {
         console.log("STORE IS not READU");
@@ -376,11 +364,11 @@ export default {
         this.$store.commit("setActAs", null);
         this.$router.push("/login");
       } catch (e) {}
-    }
+    },
   },
 
   created() {
-    setTimeout(() => {
+    setTimeout(async () => {
       this.$store.commit("snackbar/setData", null);
       if (this.getToken()) {
         ApiServer.setToken(this.getToken());
@@ -396,13 +384,13 @@ export default {
 
   watch: {
     snackbar: {
-      handler: function(newVal, oldVal) {
+      handler: function (newVal, oldVal) {
         if (newVal) {
           this.snackbarData = newVal;
           this.showSnackbar = true;
         }
-      }
-    }
-  }
+      },
+    },
+  },
 };
 </script>

@@ -4,7 +4,7 @@
     <v-form v-if="!isLogged" @submit.prevent="doLogin()">
       <v-card class="mx-auto mb-12 elevation-12" max-width="374">
         <v-card-title class="secondary--text text-center">Login</v-card-title>
-        <v-card-text class="my-4">
+        <v-card-text class="pb-0">
           <!-- <v-text-field
               label="Username"
               prepend-icon="mdi-face"
@@ -24,11 +24,10 @@
             <v-btn type="submit" normal text color="primary">Accedi</v-btn>
           </v-row>
         </v-card-actions>
-        <v-row
-          justify="center"
-          class="font-italic font-weight-light pb-3"
+        <div
+          class="d-flex justify-center pb-3"
           @click="promptEmail()"
-        >Password dimenticata?</v-row>
+        ><small class="font-italic font-weight-light link">Password dimenticata?</small></div>
       </v-card>
     </v-form>
     <v-form v-else @submit.prevent="selectRegion()">
@@ -53,20 +52,42 @@
         <v-icon>mdi-close</v-icon>
       </v-btn>
     </v-snackbar>
+
+    <v-snackbar v-model="passwordRecoveredMessage" :timeout="timeout" top right>
+      <v-icon color="green">mdi-check</v-icon>Ti abbiamo inviato una mail all'indirizzo indicato!
+      <v-btn color="white" icon @click="passwordRecoveredMessage = false">
+        <v-icon>mdi-close</v-icon>
+      </v-btn>
+    </v-snackbar>
+        <v-snackbar v-model="passwordRecoveredMessageError" :timeout="timeout" top right>
+      <v-icon color="primary">mdi-alert</v-icon>L'indirizzo email inserito non è presente nel sistema...
+      <v-btn color="white" icon @click="passwordRecoveredMessageError = false">
+        <v-icon>mdi-close</v-icon>
+      </v-btn>
+    </v-snackbar>
+
     <div class="d-flex justify-end"></div>
 
     <v-dialog v-model="showPromptEmail" width="500" :scrollable="false">
       <v-card>
         <v-card-title class="headline primary white--text" primary-title>Resetta password</v-card-title>
         <v-card-text class="pa-5">
-          <div class="font-weight-light font-italic pb-5">Immetti il tuo indirizzo di posta ROSBI, ti verrà inviata una password che potrai cambiare una volta loggato</div>
-          <v-text-field v-model="resetPasswordEmail" label="Indirizzo email" required prepend-icon="mdi-mail-outline"></v-text-field>
+          <div
+            class="font-weight-light font-italic pb-10"
+          >Immetti il tuo indirizzo di posta ROSBI, ti verrà inviata una password che potrai cambiare una volta loggato.</div>
+          <v-text-field
+            v-model="resetPasswordEmail"
+            label="Indirizzo email"
+            required
+            prepend-icon="mdi-email-outline"
+            class="pa-0"
+          ></v-text-field>
         </v-card-text>
-        <v-card-actions>
-          <v-row justify="center">
-            <v-btn normal text color="primary" @click="showPromptEmail=false">Annulla</v-btn>
-            <v-btn normal text color="primary" @click="resetPassword()">Ok</v-btn>
-          </v-row>
+        <v-card-actions class="d-flex pa-5">
+          <div class="full-width d-flex justify-end align-end">
+            <v-btn normal @click="showPromptEmail=false">Annulla</v-btn>
+            <v-btn class="ml-3" normal color="primary" @click="resetPassword()">Ok</v-btn>
+          </div>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -90,7 +111,9 @@ export default {
       isLogged: false,
       logo: require("@/assets/images/logo_mercurio.png"),
       showPromptEmail: false,
-      resetPasswordEmail: ""
+      resetPasswordEmail: "",
+      passwordRecoveredMessage: false,
+      passwordRecoveredMessageError: false
     };
   },
   created() {
@@ -107,16 +130,21 @@ export default {
   },
   methods: {
     promptEmail() {
-      if(this.email) {
+      if (this.email) {
         this.resetPasswordEmail = this.email;
       }
       this.showPromptEmail = true;
     },
     async resetPassword() {
       let response = await ApiServer.post("resetPassword", {
-        "email": this.resetPasswordEmail
+        email: this.resetPasswordEmail,
       });
-      debugger;
+      if (!response.error) {
+        this.passwordRecoveredMessage = true;
+        this.showPromptEmail = false;
+      } else {
+        this.passwordRecoveredMessageError = true;
+      }
     },
     async doLogin() {
       Utils.removeFromStorage("region");
@@ -157,25 +185,29 @@ export default {
 
     goToHome() {
       this.$router.push({
-        path: "/chapters"
+        path: "/chapters",
       });
     },
 
     async fetchRegions() {
-      this.regions = await ApiServer.get("regions");
+      this.regions = await ApiServer.get("api/" + "regions");
     },
 
     selectRegion() {
       this.$store.commit("setRegion", this.region);
       this.goToHome();
-    }
-  }
+    },
+  },
 };
 </script>
-<style scoped>
+<style lang="scss">
 #container {
   width: 100%;
   max-width: 100%;
   height: 100%;
+}
+
+.full-width {
+  width: 100%;
 }
 </style>

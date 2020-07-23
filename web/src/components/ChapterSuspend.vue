@@ -8,7 +8,7 @@
         Se si desidera, immettere una data previsionale di ripresa capitolo.
       </p>
       <MonthPicker
-        :defLabel="'Data ripresa capitolo'"
+        :defLabel="'Data prevista riavvio capitolo'"
         v-on:setdate="setPrevResumeDate(chapterData)"
         :defDate.sync="prevResumeDate"
       />
@@ -51,10 +51,10 @@ export default {
   },
   methods: {
     async doSuspend() {
-      let res1 = await ApiServer.put("chapter/" + this.chapter.id + "/suspend");
+      let res1 = await ApiServer.put("api/" + "chapter/" + this.chapter.id + "/suspend");
 
       if (this.chapterData.prevResumeDate) {
-        let result = await ApiServer.put(
+        let result = await ApiServer.put("api/" + 
           "chapter/" + this.chapter.id,
           this.chapterData
         );

@@ -7,6 +7,8 @@ use App\Entity\Randa;
 use App\Entity\Chapter;
 use App\Entity\NewMember;
 use App\Entity\Retention;
+use App\Repository\NewMemberRepository;
+use App\Repository\RetentionRepository;
 use App\Repository\RanaRepository;
 use App\Repository\UserRepository;
 use App\Repository\RandaRepository;
@@ -20,9 +22,6 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
-/**
- * @Route("/api")
- */
 class UtilsController extends AbstractController
 {
     /** @var ChapterRepository */
@@ -49,6 +48,13 @@ class UtilsController extends AbstractController
      /** @var RanaLifecycleRepository */
      private $ranaLifecycleRepository;
 
+     /** @var RetentionRepository */
+     private $retentionRepository;
+
+     /** @var NewMemberRepository */
+     private $newMemberRepository;
+
+
 
     public function __construct(
         ChapterRepository $chapterRepository,
@@ -58,7 +64,10 @@ class UtilsController extends AbstractController
         UserRepository $userRepository,
         RanaRepository $ranaRepository,
         RandaRepository $randaRepository,
-        RanaLifecycleRepository $ranaLifecycleRepository
+        RanaLifecycleRepository $ranaLifecycleRepository,
+        NewMemberRepository $newMemberRepository,
+        RetentionRepository $retentionRepository
+
     ) {
         $this->chapterRepository = $chapterRepository;
         $this->directorRepository = $directorRepository;
@@ -68,6 +77,8 @@ class UtilsController extends AbstractController
         $this->ranaRepository = $ranaRepository;
         $this->randaRepository = $randaRepository;
         $this->ranaLifecycleRepository = $ranaLifecycleRepository;
+        $this->retentionRepository = $retentionRepository;
+        $this->newMemberRepository = $newMemberRepository;
     }
 
 
@@ -330,4 +341,73 @@ class UtilsController extends AbstractController
         // }
         return new JsonResponse("");
     }
+
+
+    /**
+     * Importer for chapters from the old DB
+     *
+     * @Route(path="/removeTestChapters", name="removeTestChapters", methods={"GET"})
+     *
+     */
+    public function removeTestChapters(): Response
+    {
+
+        $chapters = $this->chapterRepository->findBy([
+            "name" => "test_"
+        ]);
+
+
+        foreach($chapters as $chapter) {
+
+            $rana = $this->ranaRepository->findOneBy([
+                "chapter" => $chapter
+            ]);
+            $rana_lifecycle = $this->ranaLifecycleRepository->findBy([
+                "rana" => $rana
+            ]);
+            foreach($rana_lifecycle as $rlc) {
+                $this->entityManager->remove($rlc);
+            }
+            $retentions = $this->retentionRepository->findBy([
+                "rana" => $rana
+            ]);
+            foreach($retentions as $r) {
+                $this->entityManager->remove($r);
+            }
+            $new_members = $this->newMemberRepository->findBy([
+                "rana" => $rana
+            ]);
+            foreach($new_members as $nm) {
+                $this->entityManager->remove($nm);
+            }
+            $this->entityManager->remove($rana);
+            $this->entityManager->remove($chapter);
+            $this->entityManager->flush();
+        }
+
+        // $approved_randas = $this->randaRepository->findBy([
+        //     "currentState" => "APPR"
+        // ]);
+        // $i = 0;
+        // foreach($approved_randas as $approved_randa) {
+        //     $ranas = $this->ranaRepository->findBy([
+        //         "randa" => $approved_randa
+        //     ]);
+        //     foreach($ranas as $rana) {
+        //         $lifecycles = $this->ranaLifecycleRepository->findBy([
+        //             "rana" => $rana,
+        //             "currentTimeslot" => $approved_randa->getCurrentTimeslot()
+        //             ]);
+        //             foreach($lifecycles as $lifecycle) {
+        //                 if($lifecycle->getCurrentState() !== "APPR") {
+        //                     echo $approved_randa->getRegion()->getName() . " --- ";
+        //                     echo $rana->getChapter()->getName() . ": ";
+        //                 echo $lifecycle->getCurrentState() . "<br>";
+        //             }
+        //         }
+        //     }
+        // }
+        return new JsonResponse("");
+    }
+
 }

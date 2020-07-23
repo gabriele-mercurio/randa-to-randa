@@ -1,0 +1,11 @@
+{% extends "emails/base.html.twig" %}
+
+{% block title %}{% endblock %}
+
+{% block body %}
+Ciao {{ fullName }}, ecco la tua password: {{ tempPassword }}. 
+Potrai cambiarla in ogni momento accedendo al sistema (come username dovrai utilizzare l'indirizzo email corrente) cliccando sull'icona utente in alto a destra e selezionando <i>Cambia password</i>.
+
+Un saluto.
+
+{% endblock %}

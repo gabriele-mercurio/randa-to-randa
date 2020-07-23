@@ -33,7 +33,7 @@ export default {
   },
   methods: {
     async fetchStandardDashboard() {
-      this.standardDashboard = await ApiServer.get(this.$store.getters["getRegion"].id + "/standardDashboard");
+      this.standardDashboard = await ApiServer.get("api/" + this.$store.getters["getRegion"].id + "/standardDashboard");
     }
   },
   created() {

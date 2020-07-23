@@ -63,7 +63,7 @@ export default {
   },
   methods: {
     async fetchNationalDashboard() {
-      this.nationalDashboard = await ApiServer.get("nationalDashboard");
+      this.nationalDashboard = await ApiServer.get("api/" + "nationalDashboard");
     }
   },
   created() {

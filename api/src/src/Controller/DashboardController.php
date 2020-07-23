@@ -1,5 +1,6 @@
 <?php
 
+
 namespace App\Controller;
 
 use Exception;
@@ -34,6 +35,10 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
+
+/**
+* @Route("/api")
+**/
 class DashboardController extends AbstractController
 {
     /** @var DirectorRepository */
@@ -307,7 +312,7 @@ class DashboardController extends AbstractController
     /**
      * Get dashboard
      *
-     * @Route(path="{id}/standardDashboard", name="get_standard_dashboard", methods={"GET"})
+     * @Route(path="/{id}/standardDashboard", name="get_standard_dashboard", methods={"GET"})
      *
      * **/
     public function getStandardDashboard(Request $request, Region $region): Response

@@ -142,7 +142,7 @@ export default {
     },
 
     async fetchChapters() {
-      let res = await ApiServer.get(this.$store.getters["getRegion"].id + "/chapters");
+      let res = await ApiServer.get("api/" + this.$store.getters["getRegion"].id + "/chapters");
       if(!res.error) {
         this.chapters = res.chapters;
       }
@@ -198,11 +198,11 @@ export default {
       if (!chapterId) {
         alert("Nessun capitolo specificato");
       }
-      this.chapter = await ApiServer.get("chapter/" + chapterId);
+      this.chapter = await ApiServer.get("api/" + "chapter/" + chapterId);
     },
     async fetchChaptersStatistics() {
       let region_id = this.$store.getters["getRegion"].id;
-      this.chapter_stats = await ApiServer.get(
+      this.chapter_stats = await ApiServer.get("api/" + 
         region_id + "/chapters-statistics"
       );
     },
@@ -213,10 +213,10 @@ export default {
       if (!chapterId) {
         chapterId = this.$route.params.chapterId || false;
       }
-      this.ranas = await ApiServer.get(chapterId + "/rana");
+      this.ranas = await ApiServer.get("api/" + chapterId + "/rana");
       this.fetchChaptersStatistics();
       // if (this.ranas.errorCode && this.ranas.errorCode == 404) {
-      //   this.ranas = await ApiServer.post(chapterId + "/rana");
+      //   this.ranas = await ApiServer.post("api/" + chapterId + "/rana");
       //   this.fetchChaptersStatistics();
       // } else {
       // }

@@ -19,6 +19,9 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
+/**
+* @Route("/api")
+**/
 class UserController extends AbstractController
 {
     /** @var DirectorRepository */
@@ -250,7 +253,7 @@ class UserController extends AbstractController
     /**
      * Get all users for a specific region
      *
-     * @Route("{id}/users", name="users_list_per_region", methods={"GET"})
+     * @Route("/{id}/users", name="users_list_per_region", methods={"GET"})
      *
      * @SWG\Response(
      *      response=200,
@@ -286,7 +289,7 @@ class UserController extends AbstractController
     /**
      * Change password
      *
-     * @Route("changePassword", name="change_password", methods={"PUT"})
+     * @Route("/changePassword", name="change_password", methods={"PUT"})
      *
      */
     public function changePassword(Request $request): Response
@@ -309,53 +312,7 @@ class UserController extends AbstractController
         return new JsonResponse(true, Response::HTTP_OK);
     }
 
-    /**
-     * Change password
-     *
-     * @Route("resetPassword", name="reset_password", methods={"POST"})
-     *
-     */
-    public function resetPassword(Request $request): Response
-    {
-
-        file_put_contents("log", "uno\n", FILE_APPEND);
-        $request = Util::normalizeRequest($request);
-        $email = $request->get("email");
-        header("email: " . $email);
-        $user = $this->userRepository->findOneBy([
-            "email" => $email
-        ]);
-        file_put_contents("log", "due\n", FILE_APPEND);
-
-        $tempPassword = Util::generatePassword();
-        $user->securePassword($tempPassword);
-
-        header("tempPassword: " . $user->getFullName());
-        header("fullName: " . $user->getfillName);
-        file_put_contents("log", "ter\n", FILE_APPEND);
-
-        $data = [
-            "fullName" => $user->getFullName(),
-            "tempPassword" => $tempPassword
-        ];
-
-        $email = (new TemplatedEmail())
-            ->from('rosbi@studio-mercurio.it')
-            ->to($email)
-            ->subject("Recupero password")
-            ->htmlTemplate('emails/password-recovery/html.twig')
-            ->context($data);
-
-        $this->mailer->send($email);
-
-        file_put_contents("log", "quattro\n", FILE_APPEND);
-        $response = null;
-        if(!$user) {
-            $response =  new JsonResponse(["message" => "Email not found"], Response::HTTP_BAD_REQUEST);
-        }
-        $response = new JsonResponse(true, Response::HTTP_OK);
-        return $response;
-    }
+   
 
 
     /**

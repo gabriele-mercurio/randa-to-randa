@@ -33,6 +33,9 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
+/**
+ * @Route("/api")
+ **/
 class RandaController extends AbstractController
 {
     /** @var DirectorRepository */
@@ -253,6 +256,7 @@ class RandaController extends AbstractController
             $ranas = $randa->getRanas();
             $chapters = $region->getChapters();
 
+
             $data = [
                 "chapters" => []
             ];
@@ -271,7 +275,7 @@ class RandaController extends AbstractController
                     "currentState" => "APPR"
                 ]);
 
-                if (!$lifecycle) {
+                if ($chapter->getCurrentState() !== "CLOSED" && !$lifecycle) {
                     $all_approved = false;
                 }
 
@@ -917,6 +921,35 @@ class RandaController extends AbstractController
             $randa->setCurrentState("REFUSED");
             $randa->setRefuseNote($refuseNote);
             $this->randaRepository->save($randa);
+
+            $title = "RANDA rifiutato: " . $region->getName() . " " . $randa->getYear() . " " . $randa->getCurrentTimeslot();
+
+            $data = [
+                "randa_year" => $randa->getYear(),
+                "randa_timeslot" => $randa->getCurrentTimeslot(),
+                "randa_region" => $region->getName()
+            ];
+
+            $distinct_directors = [];
+            $directors = $this->directorRepository->findBy([
+                "role" => "EXECUTIVE",
+                "region" => $region
+            ]);
+            foreach($directors as $director) {
+                if(!in_array($director->getId(), $distinct_directors)) {
+                    $distinct_directors[] = $director->getId();
+                    $email = (new TemplatedEmail())
+                    ->from('rosbi@studio-mercurio.it')
+                    ->to($director->getUser()->getEmail())
+                    ->subject($title)
+                    ->htmlTemplate('emails/randa-refused/html.twig')
+                    ->context($data);
+    
+                $this->mailer->send($email);
+                }
+            }
+
+            
         }
         return new JsonResponse(true);
     }
@@ -962,6 +995,8 @@ class RandaController extends AbstractController
                 "region" => $region
             ]);
 
+            $directors = [];
+
             foreach ($chapters as $chapter) {
                 $rana = $this->ranaRepository->findOneBy([
                     "randa" => $randa,
@@ -989,27 +1024,32 @@ class RandaController extends AbstractController
                 }
 
                 $director = $chapter->getDirector();
-                $to_email = $director->getUser()->getEmail();
-                $to_name = $director->getUser()->getFullName();
-                //$temp_subject = $to_email . " ---- " . $to_name; //toremove
 
-                $title = "Inizio compilazione RANDA " . $randa->getYear() . " " . $randa->getCurrentTimeslot();
+                if (!in_array($director->getId(), $directors)) {
+                    $directors[] = $director->getId();
 
-                $data = [
-                    "randa_year" => $randa->getYear(),
-                    "randa_timeslot" => $randa->getCurrentTimeslot(),
-                    "randa_region" => $region->getName(),
-                    "title" => $title
-                ];
+                    $to_email = $director->getUser()->getEmail();
+                    $to_name = $director->getUser()->getFullName();
+                    //$temp_subject = $to_email . " ---- " . $to_name; //toremove
 
-                $email = (new TemplatedEmail())
-                    ->from('rosbi@studio-mercurio.it')
-                    ->to($to_email)
-                    ->subject($title)
-                    ->htmlTemplate('emails/next-randa-start/html.twig')
-                    ->context($data);
+                    $title = "Inizio compilazione RANDA " . $randa->getYear() . " " . $randa->getCurrentTimeslot();
 
-                $this->mailer->send($email);
+                    $data = [
+                        "randa_year" => $randa->getYear(),
+                        "randa_timeslot" => $randa->getCurrentTimeslot(),
+                        "randa_region" => $region->getName(),
+                        "title" => $title
+                    ];
+
+                    $email = (new TemplatedEmail())
+                        ->from('rosbi@studio-mercurio.it')
+                        ->to($to_email)
+                        ->subject($title)
+                        ->htmlTemplate('emails/next-randa-start/html.twig')
+                        ->context($data);
+
+                    $this->mailer->send($email);
+                }
             }
             return new JsonResponse(true, Response::HTTP_OK);
         } catch (Exception $e) {
@@ -1444,12 +1484,12 @@ class RandaController extends AbstractController
                                     "data" => [],
                                     "initial" => $clo->getMembers()
                                 ];
-                                    $chapter_element_act = [
-                                        "name" => $clo->getName(),
-                                        "data" => [],
-                                        "initial" => $clo->getMembers()
-                                    ];
-                                
+                                $chapter_element_act = [
+                                    "name" => $clo->getName(),
+                                    "data" => [],
+                                    "initial" => $clo->getMembers()
+                                ];
+
 
                                 $chapter_element_new = [
                                     "name" => $clo->getName(),
@@ -1503,7 +1543,6 @@ class RandaController extends AbstractController
                                             $chapter_element_new["data"][] = null;
                                             $chapter_element_ret["data"][] = null;
                                             $chapter_element_act["data"][] = null;
-
                                         }
 
                                         $new_members = 0;

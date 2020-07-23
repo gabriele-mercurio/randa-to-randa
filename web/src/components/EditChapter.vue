@@ -67,7 +67,6 @@
       <v-icon color="green">mdi-check</v-icon>
       {{snackbarMessage}}
     </v-snackbar>
-
   </v-card>
 </template>
 <script>
@@ -89,12 +88,12 @@ const chapterSkeleton = {
   actualLaunchCoregroupDate: null,
   prevLaunchCoregroupDate: null,
   director: null,
-  members: 0
+  members: 0,
 };
 
 export default {
   components: {
-    MonthPicker
+    MonthPicker,
   },
   data() {
     return {
@@ -106,22 +105,22 @@ export default {
       error: false,
       timeout: 3000,
       snackbarMessage: "",
-      snackbarSuccess: false
+      snackbarSuccess: false,
     };
   },
   props: {
     editChapter: {
       type: Object,
-      default: null
+      default: null,
     },
     users: {
       type: Array,
-      default: null
+      default: null,
     },
     freeAccount: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
   },
   computed: {
     isEditing() {
@@ -129,10 +128,11 @@ export default {
     },
     isCreating() {
       return !this.editMode;
-    }
+    },
   },
   methods: {
     addDay(date) {
+      if(!date) return "";
       return date + "-01";
     },
     getEditMode() {
@@ -147,6 +147,8 @@ export default {
       return label;
     },
     setChapterLaunch(value) {
+
+      debugger;
       let d = new Date(value);
       let today = new Date();
 
@@ -183,55 +185,42 @@ export default {
       if (!this.freeAccount) {
         data["director"] = this.chapter["director"].id;
       } else {
-        data["director"] = JSON.parse(JSON.stringify(this.$store.getters["getUser"].id));
+        data["director"] = JSON.parse(
+          JSON.stringify(this.$store.getters["getUser"].id)
+        );
       }
 
-      if (this.chapter.coreGroupLaunch) {
-        if (this.chapter.coreGroupLaunchType === "actual") {
-          data["actualLaunchCoregroupDate"] = this.addDay(
-            this.chapter.coreGroupLaunch
-          );
-        } else {
-          data["prevLaunchCoregroupDate"] = this.addDay(
-            this.chapter.coreGroupLaunch
-          );
-        }
-      } else {
-        data["prevLaunchCoregroupDate"] = null;
-      }
+      data["prevLaunchCoregroupDate"] = this.addDay(
+        this.chapter.coreGroupLaunch
+      );
 
-      if (this.chapter.chapterLaunch) {
-        if (this.chapter["chapterLaunchType"] === "actual") {
-          data["actualLaunchChapterDate"] = this.addDay(
-            this.chapter.chapterLaunch
-          );
-        } else {
-          data["prevLaunchChapterDate"] = this.addDay(
-            this.chapter.chapterLaunch
-          );
-        }
-      } else {
-        data["prevLaunchChapterDate"] = null;
-      }
+      data["prevLaunchChapterDate"] = this.addDay(
+        this.chapter.chapterLaunch
+      );
+
       try {
         let result;
         if (this.editMode) {
-          result = await ApiServer.put("chapter/" + this.chapter.id, data);
+          result = await ApiServer.put(
+            "api/" + "chapter/" + this.chapter.id,
+            data
+          );
         } else {
           let region = this.$store.getters["getRegion"];
-          result = await ApiServer.post(region.id + "/chapter", data);
+          result = await ApiServer.post("api/" + region.id + "/chapter", data);
         }
 
         let updatedChapter = { ...this.chapter };
+        this.chapter = { ...chapterSkeleton };
 
         let cgLaunch = {
           prev: null,
-          actual: null
+          actual: null,
         };
 
         let cLaunch = {
           prev: null,
-          actual: null
+          actual: null,
         };
 
         if (updatedChapter.coreGroupLaunchType === "actual") {
@@ -285,11 +274,12 @@ export default {
         return "Attenzione, la data di lancio capitolo deve essere superiore a quella del lancio core group.";
       }
       return "";
-    }
+    },
   },
   watch: {
     editChapter: {
-      handler: function(newVal, oldVal) {
+      handler: function (newVal, oldVal) {
+        this.chapter = { ...this.chapterSkeleton };
         if (this.editChapter) {
           this.editMode = true;
           this.chapter = { ...this.editChapter };
@@ -325,9 +315,9 @@ export default {
         }
       },
       deep: true,
-      immediate: true
-    }
-  }
+      immediate: true,
+    },
+  },
 };
 </script>
 <style lang="scss">

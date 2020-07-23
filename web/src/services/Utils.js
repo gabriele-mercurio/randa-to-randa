@@ -1,8 +1,9 @@
 class Utils {
   static getMonthYear(date) {
-    let d = date ? new Date(date) : new Date();
-    let month = (d.getMonth() + 1).toString().padStart(2, "0");
-    let year = d.getFullYear();
+    if(!date) return "";
+    date = new Date(date);
+    let month = (date.getMonth() + 1).toString().padStart(2, "0");
+    let year = date.getFullYear();
     return year + "-" + month;
   }
 
@@ -67,6 +68,8 @@ class Utils {
         return "Progetto";
       case "CLOSED":
         return "Chiuso";
+      case "SUSPENDED":
+        return "Sospeso";
     }
   }
 

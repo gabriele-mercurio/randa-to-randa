@@ -134,7 +134,6 @@ class ApiServer {
     };
 
     switch (status) {
-      
       case 401:
         store.commit("setToken", null);
         store.commit("setRegion", null);
@@ -146,6 +145,8 @@ class ApiServer {
       case 403:
         errorResponse.message = "Non autorizzato";
         break;
+      default:
+        errorResponse.message = error.response ? (error.response.data ?? '') : '';
     }
     return errorResponse;
   }

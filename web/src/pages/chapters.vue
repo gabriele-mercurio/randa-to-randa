@@ -1,22 +1,24 @@
 <template>
   <div class="ma-4 fill-height">
-    <!-- <v-btn @click="showStartRanda = true"> VAI</v-btn> -->
-    <template>
+    <div v-if="chapters.length">
       <div v-if="randa_info" class="my-3 d-flex flex-column">
         <span>
           <span class="font-weight-black">Randa</span>
           :
           {{ randa_info.timeslot }} {{ randa_info.year }}
+          <span
+            class="font-italic font-weight-light"
+          >({{ getState(randa_info.state) }})</span>
         </span>
         <div
           v-if="
-            (randa_info.state === 'TODO' || randa_info.state === 'REFUSED') &&
-              allChaptersApproved()
-          "
+              (randa_info.state === 'TODO' || randa_info.state === 'REFUSED') &&
+                allChaptersApproved()
+            "
         >
-          <v-btn color="primary" @click="goToRanda()">Apporavazione randa</v-btn>
+          <v-btn class="pa-0" color="primary" text @click="goToRanda()">Vai a randa...</v-btn>
         </div>
-        <span class="font-italic font-weight-light">({{ getState(randa_info.state) }})</span>
+
         <v-tooltip left v-if="randa_info.state === 'APPR' && !canStartNextRanda()">
           <template v-slot:activator="{ on }">
             <span v-on="on">
@@ -33,6 +35,7 @@
           >Avvia compilazione randa {{ getNextTimeslotLabel() }}</v-btn>
         </div>
       </div>
+
       <div v-if="randa_info && randa_info.state === 'REFUSED'">
         <v-icon small class="primary--text">mdi-alert</v-icon>
         Nota BNI:
@@ -44,26 +47,37 @@
         :classSpec="'elevation-3'"
         v-on:edit="openEditModal"
         v-on:updateChapters="fetchChapters()"
-        v-if="!noChaptersFound"
+        v-if="chapters.length"
       />
 
-      <div v-else>
-        <NoData :message="'Nessun capitolo trovato'" />Nessun capitolo trovato :(
-      </div>
       <div class="mb-12"></div>
-    </template>
 
-    <v-dialog :persistent="false" v-model="showEditChapter" width="500" :scrollable="false">
-      <EditChapter
-        :show="showEditChapter"
-        :editChapter.sync="editChapter"
-        :users="users"
-        :freeAccount.sync="freeAccount"
-        v-on:close="showEditChapter = false"
-        v-on:saveChapter="updateChapters"
+      <v-dialog :persistent="false" v-model="showEditChapter" width="500" :scrollable="false">
+        <EditChapter
+          :show="showEditChapter"
+          :editChapter.sync="editChapter"
+          :users="users"
+          :freeAccount.sync="freeAccount"
+          v-on:close="showEditChapter = false"
+          v-on:saveChapter="updateChapters"
+        />
+      </v-dialog>
+
+      <Confirm
+        :message="'Avviare compilazione randa?'"
+        :show.sync="showStartRanda"
+        v-on:dialogResponse="createNextTimeslot"
       />
-    </v-dialog>
 
+      <v-snackbar v-model="snackbarSuccess" :timeout="timeout" top right>
+        {{snackbarMessage}}
+        <v-icon color="green">mdi-success</v-icon>
+      </v-snackbar>
+    </div> 
+    <template v-else>
+      <Loader v-if="loading" />
+      <NoData v-else :message="'Nessun capitolo per questa region'" />
+    </template>
     <v-tooltip bottom>
       <template v-slot:activator="{ on, attrs }">
         <v-btn
@@ -82,17 +96,6 @@
       </template>
       <span>Nuovo capitolo</span>
     </v-tooltip>
-
-    <Confirm
-      :message="'Avviare compilazione randa?'"
-      :show.sync="showStartRanda"
-      v-on:dialogResponse="createNextTimeslot"
-    />
-
-    <v-snackbar v-model="snackbarSuccess" :timeout="timeout" top right>
-      {{snackbarMessage}}
-      <v-icon color="green">mdi-success</v-icon>
-    </v-snackbar>
   </div>
 </template>
 
@@ -102,6 +105,7 @@ import Utils from "../services/Utils";
 import EditChapter from "../components/EditChapter";
 import ChaptersList from "../components/ChaptersList";
 import NoData from "../components/NoData";
+import Loader from "../components/Loader";
 import Confirm from "../components/Confirm";
 
 export default {
@@ -120,14 +124,16 @@ export default {
       cantStartNextRanaMessage: "",
       timeout: 3000,
       snackbarSuccess: false,
-      snackbarMessage: ""
+      snackbarMessage: "",
+      loading: true,
     };
   },
   components: {
     EditChapter,
     ChaptersList,
     NoData,
-    Confirm
+    Confirm,
+    Loader,
   },
   methods: {
     canStartNextRanda() {
@@ -178,8 +184,8 @@ export default {
     async createNextTimeslot(response) {
       this.showStartRanda = false;
       if (response) {
-        let response = await ApiServer.put("api/" + 
-          this.regionId + "/create-next-timeslot"
+        let response = await ApiServer.put(
+          "api/" + this.regionId + "/create-next-timeslot"
         );
         location.reload();
       }
@@ -202,13 +208,13 @@ export default {
           return "Approvare randa";
         }
       } else {
-        return Utils.getRandaState(randa_state);
+        return Utils.getRandaState(randa_state, this.isNational);
       }
     },
 
     allChaptersApproved() {
       let all_approved = true;
-      this.chapters.forEach(c => {
+      this.chapters.forEach((c) => {
         if (c.state != "APPR") {
           all_approved = false;
         }
@@ -233,6 +239,7 @@ export default {
 
     async fetchUsersPerRegion() {
       this.users = await ApiServer.get("api/" + this.regionId + "/users");
+      return true;
     },
 
     async fetchChapters() {
@@ -244,18 +251,21 @@ export default {
         this.chapters = response.chapters;
         this.randa_info = response.randa;
       }
-    }
+      return true;
+    },
   },
   created() {
     setTimeout(async () => {
       this.regionId = this.$store.getters["getRegion"].id;
       let role = this.$store.getters["getRegion"].role;
+      this.isNational = this.$store.getters["getIsNational"];
       this.role = role;
       if (role !== "NATIONAL") {
-        this.fetchChapters();
-        this.fetchUsersPerRegion();
+        await this.fetchChapters();
+        await this.fetchUsersPerRegion();
+        this.loading = false;
       }
     });
-  }
+  },
 };
 </script>

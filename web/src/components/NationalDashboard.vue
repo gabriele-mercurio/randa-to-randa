@@ -14,6 +14,7 @@
         ><span> In corso</span>
       </div>
     </div>
+   
     <DashboardTable
       v-if="
         nationalDashboard.regions.current_t_approved &&
@@ -22,6 +23,16 @@
       :data="nationalDashboard.regions.current_t_approved"
       :link="true"
     />
+
+     <DashboardTable
+      v-if="
+        nationalDashboard.regions.current_t_verified &&
+          nationalDashboard.regions.current_t_verified.length
+      "
+      :data="nationalDashboard.regions.current_t_verified"
+      :link="true"
+    />
+
     <DashboardTable
       v-if="
         nationalDashboard.regions.current_t_refused &&
@@ -68,7 +79,9 @@ export default {
   },
   created() {
     this.Utils = Utils;
-    this.fetchNationalDashboard();
+    setTimeout(() => {
+      this.fetchNationalDashboard();
+    });
   }
 };
 </script>

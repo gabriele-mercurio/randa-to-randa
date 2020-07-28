@@ -450,8 +450,6 @@ class ChapterController extends AbstractController
             // }
 
             // // Date constraints
-            $coregroupDate = $prevLaunchCoregroupDate ? $prevLaunchCoregroupDate : $actualLaunchCoregroupDate;
-            $chapterDate = $prevLaunchChapterDate ? $prevLaunchChapterDate : $actualLaunchChapterDate;
             // if (!is_null($coregroupDate) && !is_null($chapterDate) && $chapterDate < $coregroupDate) {
             //     $errorFields['launchChapterDate'] = "invalid";
             //     $errorFields['launchCoregroupDate'] = "invalid";
@@ -529,23 +527,17 @@ class ChapterController extends AbstractController
             $rana->setRanda($randa);
             $this->ranaRepository->save($rana);
 
-            file_put_contents("chapter_log", "Chapter name: " . $chapter->getName() . "\n", FILE_APPEND);
-            file_put_contents("chapter_log", "RANA ID: " . $rana->getId() . "\n", FILE_APPEND);
-
-            $return_values = ChapterController::initializeRetentionsAndNewMembers($randa_timeslot, $rana);
+            $return_values = ChapterController::initializeRetentionsAndNewMembers($randa_timeslot, $randa->getCurrentState(), $rana);
             $this->retentionRepository->save($return_values[0]);
             $this->retentionRepository->save($return_values[1]);
             $this->newMemberRepository->save($return_values[2]);
             $this->newMemberRepository->save($return_values[3]);
             $this->ranaLifecycleRepository->save($return_values[4]);
 
-            file_put_contents("chapter_log", "Retentions and new members initialized...\n", FILE_APPEND);
-
             if (isset($return_values[5]) && isset($return_values[6]) && isset($return_values[7])) {
                 $this->retentionRepository->save($return_values[5]);
                 $this->newMemberRepository->save($return_values[6]);
                 $this->ranaLifecycleRepository->save($return_values[7]);
-                file_put_contents("chapter_log", "T is grater than 0, so i set the t - 1 values...\n", FILE_APPEND);
             }
 
             return new JsonResponse($this->chapterFormatter->formatFull($chapter), Response::HTTP_CREATED);
@@ -555,7 +547,7 @@ class ChapterController extends AbstractController
         }
     }
 
-    public static function initializeRetentionsAndNewMembers($timeslot, $rana)
+    public static function initializeRetentionsAndNewMembers($timeslot, $randa_state, $rana)
     {
         $numeric_timeslot = (int) substr($timeslot, -1);
 
@@ -571,18 +563,18 @@ class ChapterController extends AbstractController
 
         $retentions = new Retention();
         $retentions->setRana($rana);
-        $retentions->setValueType("TODO");
+        $retentions->setValueType($randa_state);
         $retentions->setTimeslot($timeslot);
 
         $new_members = new NewMember();
         $new_members->setRana($rana);
-        $new_members->setValueType("TODO");
+        $new_members->setValueType($randa_state);
         $new_members->setTimeslot($timeslot);
 
         $rana_lifecycle = new RanaLifecycle();
         $rana_lifecycle->setRana($rana);
+        $rana_lifecycle->setCurrentState($randa_state);
         $rana_lifecycle->setCurrentTimeslot($timeslot);
-        $rana_lifecycle->setCurrentState("TODO");
 
 
         if ($numeric_timeslot > 0) {
@@ -1355,11 +1347,11 @@ class ChapterController extends AbstractController
                 $today = Util::UTCDateTime();
                 $warning = null;
 
-                if (is_null($c->getActualLaunchCoregroupDate()) && $c->getPrevLaunchCoregroupDate() <= $today) {
-                    $warning = "CORE_GROUP";
-                } elseif (is_null($c->getActualLaunchChapterDate()) && $c->getPrevLaunchChapterDate() <= $today) {
-                    $warning = "CHAPTER";
-                }
+                // if (is_null($c->getActualLaunchCoregroupDate()) && $c->getPrevLaunchCoregroupDate() <= $today) {
+                //     $warning = "CORE_GROUP";
+                // } elseif (is_null($c->getActualLaunchChapterDate()) && $c->getPrevLaunchChapterDate() <= $today) {
+                //     $warning = "CHAPTER";
+                // }
 
 
                 if ($randa) {

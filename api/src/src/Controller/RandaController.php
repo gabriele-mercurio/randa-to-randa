@@ -275,7 +275,7 @@ class RandaController extends AbstractController
                     "currentState" => "APPR"
                 ]);
 
-                if ($chapter->getCurrentState() !== "CLOSED" && !$lifecycle) {
+                if (!$lifecycle) {
                     $all_approved = false;
                 }
 
@@ -398,6 +398,7 @@ class RandaController extends AbstractController
                 $data["timeslot"] = $timeslot;
                 $data["all_approved"] = $all_approved;
                 $data["randa_state"] = $randa->getCurrentState();
+                $data["randa_verified"] = $randa->getVerified();
                 $data["region"] = $randa->getRegion()->getName();
                 $data["note"] = $randa->getNote();
                 $data["directors_previsions"] = $randa->getDirectorsPrevisions();
@@ -927,7 +928,8 @@ class RandaController extends AbstractController
             $data = [
                 "randa_year" => $randa->getYear(),
                 "randa_timeslot" => $randa->getCurrentTimeslot(),
-                "randa_region" => $region->getName()
+                "randa_region" => $region->getName(),
+                "title" => $title
             ];
 
             $distinct_directors = [];
@@ -935,24 +937,49 @@ class RandaController extends AbstractController
                 "role" => "EXECUTIVE",
                 "region" => $region
             ]);
-            foreach($directors as $director) {
-                if(!in_array($director->getId(), $distinct_directors)) {
+            foreach ($directors as $director) {
+                if (!in_array($director->getId(), $distinct_directors)) {
                     $distinct_directors[] = $director->getId();
                     $email = (new TemplatedEmail())
-                    ->from('rosbi@studio-mercurio.it')
-                    ->to($director->getUser()->getEmail())
-                    ->subject($title)
-                    ->htmlTemplate('emails/randa-refused/html.twig')
-                    ->context($data);
-    
-                $this->mailer->send($email);
+                        ->from('rosbi@studio-mercurio.it')
+                        ->to($director->getUser()->getEmail())
+                        ->subject($title)
+                        ->htmlTemplate('emails/randa-refused/html.twig')
+                        ->context($data);
+
+                    $this->mailer->send($email);
                 }
             }
-
-            
         }
         return new JsonResponse(true);
     }
+
+
+    /**
+     * Get a Randa
+     *
+     * @Route(path="/{id}/verify-randa", name="verify_randa", methods={"PUT"})
+     *
+     * 
+     *
+     * @return Response
+     */
+    public function verifyRanda(Region $region, Request $request): Response
+    {
+        $currentYear = (int) date("Y");
+        $randa = $this->randaRepository->findOneBy([
+            "region" => $region,
+            "year" => $currentYear
+        ]);
+
+        if ($randa) {
+            $randa->setVerified(true);
+            $randa->setCurrentState("APPR");
+            $this->randaRepository->save($randa);
+        }
+        return new JsonResponse(true);
+    }
+
 
 
     /**
@@ -1096,6 +1123,8 @@ class RandaController extends AbstractController
                 $data["chapters_act"] = [];
                 // $data["chapters_average"] = [];
                 // $data["core_groups_average"] = [];
+				
+
                 $data["directors"] = null;
                 $data["num_chapters"] = [0, 0, 0, 0];
                 $data["note"] = $randa->getNote() ? $randa->getNote() : "Nessuna nota";
@@ -1124,16 +1153,17 @@ class RandaController extends AbstractController
 
                 foreach ($core_groups as $core_group) {
 
+
                     if ($core_group->getPrevLaunchChapterDate()) {
                         $year = $core_group->getPrevLaunchChapterDate()->format("Y");
                         $month = $core_group->getPrevLaunchChapterDate()->format("m");
                     } else {
-                        $year = 2020;
+                        $year = 2021;
                         $month = 13;
                     }
 
                     $initial_members = $core_group->getMembers();
-                    if ($year == (int) date("Y")) {
+                    if ($year >= (int) date("Y")) {
 
                         $chapter_element_cg_ret = [
                             "name" => $core_group->getName(),
@@ -1166,6 +1196,8 @@ class RandaController extends AbstractController
                             "data" => [],
                             "initial" => $core_group->getMembers()
                         ];
+						
+
 
                         $rana = $this->ranaRepository->findOneBy([
                             "chapter" => $core_group,
@@ -1205,24 +1237,41 @@ class RandaController extends AbstractController
 
                             if ($i % 3 == 0) {
                                 // è ancora un core group
-                                if ($i < $month) {
+                                if ($i < $month || $year > $currentYear) {
+
+                                    
                                     $chapter_element_cg_new["data"][] = $new_members;
                                     $chapter_element_cg_ret["data"][] = $ret_members;
                                     $cg_len = sizeof($chapter_element_cg_act["data"]);
                                     $initial_cg_members = $cg_len ? $chapter_element_cg_act["data"][$cg_len - 1] : $core_group->getMembers();
                                     $chapter_element_cg_act["data"][] = $initial_cg_members + ($new_members - $ret_members);
+                                    if($month == 13 && $core_group->getName() == "BNI Topaz") {
+                                        header("chapter:" . $initial_cg_members);
+                                    }
 
                                     $chapter_element_new["data"][] = null;
                                     $chapter_element_ret["data"][] = null;
                                     $chapter_element_act["data"][] = null;
+
                                 } else {
+
+                                    $slot = ceil($i / 3) - 1;
+
                                     $chapter_element_new["data"][] = $new_members;
                                     $chapter_element_ret["data"][] = $ret_members;
                                     $c_len = sizeof($chapter_element_cg_act["data"]);
-                                    $initial_members = $c_len ? $chapter_element_cg_act["data"][$c_len - 1] : $core_group->getMembers();
+                                    $was_chapter_in_prev_slot = $slot > 0 && sizeof($chapter_element_act["data"]) && $chapter_element_act["data"][$slot - 1] !== null;
+                                    if ($was_chapter_in_prev_slot) {
+                                        $prev_val = $chapter_element_act["data"][$slot - 1];
+                                    } else if (sizeof($chapter_element_cg_act["data"])) {
+                                        $prev_val = $chapter_element_cg_act["data"][$slot - 1];
+                                    } else {
+                                        $prev_val = $core_group->getMembers();
+                                    }
+                                    $initial_members = $prev_val;
                                     $chapter_element_act["data"][] = $initial_members + ($new_members - $ret_members);
 
-                                    $slot = ceil($i / 3) - 1;
+
                                     $data["num_chapters"][$slot]++;
 
                                     $chapter_element_cg_act["data"][] = null;
@@ -1350,6 +1399,23 @@ class RandaController extends AbstractController
                     if ($month_cg < 13) {
 
                         $initial_members = $project->getMembers();
+						
+						$chapter_element_p_ret = [
+                            "name" => $project->getName(),
+                            "data" => [],
+                            "initial" => $project->getMembers()
+                        ];
+                        $chapter_element_p_new = [
+                            "name" => $project->getName(),
+                            "data" => [],
+                            "initial" => $project->getMembers()
+                        ];
+                        $chapter_element_p_act = [
+                            "name" => $project->getName(),
+                            "data" => [],
+                            "initial" => $project->getMembers()
+                        ];
+						
 
                         $chapter_element_cg_ret = [
                             "name" => $project->getName(),
@@ -1390,7 +1456,6 @@ class RandaController extends AbstractController
 
                         $new_cons = $this->newMemberRepository->findOneBy([
                             "rana" => $rana,
-                            "timeslot" => $timeslot,
                             "valueType" => "CONS"
                         ]);
                         $new_appr = $this->newMemberRepository->findOneBy([
@@ -1400,7 +1465,6 @@ class RandaController extends AbstractController
                         ]);
                         $ret_cons = $this->retentionRepository->findOneBy([
                             "rana" => $rana,
-                            "timeslot" => $timeslot,
                             "valueType" => "CONS"
                         ]);
                         $ret_appr = $this->retentionRepository->findOneBy([
@@ -1431,16 +1495,44 @@ class RandaController extends AbstractController
                                     $chapter_element_cg_ret["data"][] = null;
                                 } else if ($i >= $month_cg) {
 
+									$slot = ceil($i / 3) - 1;
+							
                                     $chapter_element_cg_new["data"][] = $new_members;
                                     $chapter_element_cg_ret["data"][] = $ret_members;
-                                    $cg_len = sizeof($chapter_element_cg_act["data"]);
-                                    $initial_members = $cg_len ? $chapter_element_cg_act["data"][$cg_len - 1] : $initial_members;
+									
+
+									$cg_len = sizeof($chapter_element_cg_act["data"]);
+                                    $was_core_in_prev_slot = $slot > 0 && sizeof($chapter_element_cg_act["data"]) && (isset($chapter_element_cg_act["data"][$slot - 1]) && $chapter_element_cg_act["data"][$slot - 1] !== null);
+									
+									$was_project_in_prev_slot = $slot > 0 && sizeof($chapter_element_p_act["data"]) && (isset($chapter_element_p_act["data"][$slot - 1]) && $chapter_element_p_act["data"][$slot - 1] !== null);
+
+                                    if ($was_core_in_prev_slot) {
+                                        $prev_val = $chapter_element_cg_act["data"][$slot - 1];
+                                    } else if($was_project_in_prev_slot) {
+										$prev_val = $chapter_element_p_act["data"][$slot - 1];
+									} else {
+                                        $prev_val = $project->getMembers();
+                                    }
+                                    $initial_members = $prev_val;
                                     $chapter_element_cg_act["data"][] = $initial_members + ($new_members - $ret_members);
 
+
+									
+                                    
                                     $chapter_element_new["data"][] = null;
                                     $chapter_element_ret["data"][] = null;
                                     $chapter_element_act["data"][] = null;
                                 } else {
+									
+									$chapter_element_p_new["data"][] = $new_members;
+                            $chapter_element_p_ret["data"][] = $ret_members;
+									
+									
+                                    $p_len = sizeof($chapter_element_p_act["data"]);
+                                    $initial_members = $p_len ? $chapter_element_p_act["data"][$p_len - 1] : $initial_members;
+									$val = $initial_members + ($new_members - $ret_members);;
+                                    $chapter_element_p_act["data"][] = $val;
+
 
                                     $chapter_element_new["data"][] = null;
                                     $chapter_element_ret["data"][] = null;
@@ -1448,6 +1540,7 @@ class RandaController extends AbstractController
                                     $chapter_element_cg_act["data"][] = null;
                                     $chapter_element_cg_new["data"][] = null;
                                     $chapter_element_cg_ret["data"][] = null;
+					
                                 }
 
                                 $new_members = 0;
@@ -1461,6 +1554,7 @@ class RandaController extends AbstractController
                         $data["chapters_new"][] = $chapter_element_new;
                         $data["chapters_ret"][] = $chapter_element_ret;
                         $data["chapters_act"][] = $chapter_element_act;
+						
                     }
                 }
 
@@ -1504,7 +1598,6 @@ class RandaController extends AbstractController
 
                                 $new_cons = $this->newMemberRepository->findOneBy([
                                     "rana" => $rana,
-                                    "timeslot" => $timeslot,
                                     "valueType" => "CONS"
                                 ]);
                                 $new_appr = $this->newMemberRepository->findOneBy([
@@ -1514,7 +1607,6 @@ class RandaController extends AbstractController
                                 ]);
                                 $ret_cons = $this->retentionRepository->findOneBy([
                                     "rana" => $rana,
-                                    "timeslot" => $timeslot,
                                     "valueType" => "CONS"
                                 ]);
                                 $ret_appr = $this->retentionRepository->findOneBy([
@@ -1640,7 +1732,7 @@ class RandaController extends AbstractController
                 $data["directors"] = explode(",", $directors);
                 $data["randa_state"] = $randa->getCurrentState();
                 $data["region"] = $randa->getRegion()->getName();
-
+                $data["randa_verified"] = $randa->getVerified();
 
 
                 return new JsonResponse($data);
@@ -1648,7 +1740,7 @@ class RandaController extends AbstractController
                 return new JsonResponse(false);
             }
         } catch (Exception $e) {
-            return new JsonResponse($e->getMessage() . $e->getLine());
+            return new JsonResponse("E" . $e->getMessage() . $e->getLine());
         }
     }
 }

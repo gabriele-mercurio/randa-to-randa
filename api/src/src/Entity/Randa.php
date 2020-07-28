@@ -39,7 +39,7 @@ class Randa
     private $currentTimeslot;
 
     /**
-     *  @ORM\Column(name="note", type="string") 
+     * @ORM\Column(name="note", type="string") 
      * @ORM\JoinColumn(nullable=true) 
      */
     private $note;
@@ -50,7 +50,12 @@ class Randa
      */
     private $refuseNote;
 
-
+    /**
+     * @ORM\Column(name="verified", type="string") 
+     * @ORM\JoinColumn(nullable=true) 
+     * 
+     */
+    private $verified;
 
     /** 
      * @ORM\Column(name="directors_previsions", type="string") 
@@ -148,6 +153,20 @@ class Randa
         $this->refuseNote = $refuseNote;
         return $this;
     }
+
+
+     /** Get the value of verified */
+     public function getVerified(): bool
+     {
+         return $this->verified ? $this->verified : false;
+     }
+ 
+     /** Set the value of region */
+     public function setVerified(bool $verified): self
+     {
+         $this->verified = $verified;
+         return $this;
+     }
 
     /** Get the value of directorsPrevisions\ */
     public function getDirectorsPrevisions(): string

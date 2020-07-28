@@ -23,7 +23,8 @@
             <td class="pa-2 text-center">{{ region.n_members_total }}</td>
             <td class="pa-2">
               {{ region.randa_timeslot }}
-              {{ Utils.getRandaState(region.randa_state) }}
+              <span v-if="region.randa_verified">Approvato</span>
+              <span v-else>{{ Utils.getRandaState(region.randa_state, isNational) }}</span>
             </td>
             <td v-if="link" class="text-right">
               <v-btn @click="goToRanda(region)" color="primary" normal text>Vai a randa</v-btn>
@@ -40,69 +41,74 @@ export default {
   data() {
     return {
       Utils: Utils,
+      isNational: false,
       headers: [
         {
           text: "Region",
           value: "name",
-          sortable: false
+          sortable: false,
         },
         {
           text: "Capitoli",
           align: "center",
-          sortable: false
+          sortable: false,
         },
         {
           text: "Membri capitoli",
           align: "center",
-          sortable: false
+          sortable: false,
         },
         {
           text: "Core groups",
           align: "center",
-          sortable: false
+          sortable: false,
         },
         {
           text: "Membri core group",
           align: "center",
-          sortable: false
+          sortable: false,
         },
         {
           text: "Progetti",
           align: "center",
-          sortable: false
+          sortable: false,
         },
         {
           text: "Tutti",
           align: "center",
-          sortable: false
+          sortable: false,
         },
         {
           text: "Membri totali",
           align: "center",
-          sortable: false
+          sortable: false,
         },
         {
           text: "Stato randa",
-          sortable: false
-        }
-      ]
+          sortable: false,
+        },
+      ],
     };
   },
   props: {
     data: null,
     others: false,
     link: {
-      default: false
-    }
+      default: false,
+    },
   },
   created() {
     if (this.link) {
       this.headers.push({
         text: "",
         value: "",
-        sortable: false
+        sortable: false,
       });
     }
+    setTimeout(() => {
+      this.isNational = this.$store.getters["getIsNational"];
+      debugger;
+    });
   },
   methods: {
     getTitle() {
@@ -111,9 +117,12 @@ export default {
         return (
           this.data[0].randa_timeslot +
           " " +
-          Utils.getRandaState(this.data[0].randa_state)
+          this.getRandaState()
         );
       }
+    },
+    getRandaState() {
+      return this.data[0].randa_verified ? 'Approvati' : Utils.getRandaState(this.data[0].randa_state, this.isNational);
     },
     goToRanda(region_data) {
       let region = {};
@@ -122,7 +131,7 @@ export default {
       setTimeout(() => {
         this.$router.push("/randa/randa-revised");
       });
-    }
-  }
+    },
+  },
 };
 </script>

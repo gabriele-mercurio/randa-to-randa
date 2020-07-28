@@ -1,12 +1,11 @@
 <template>
   <div class="ma-4 fill-height">
-    <DirectorsList
-      v-on:edit="openEditModal"
-      :directors.sync="directors"
-      v-if="!noDirectorsFound"
-    />
+    <DirectorsList v-on:edit="openEditModal" :directors.sync="directors" v-if="directors.length" />
 
-    <NoData v-else :message="'Nessun director da mostrare'" />
+    <template v-else>
+      <Loader v-if="loading" />
+      <NoData v-else :message="'Nessun director da mostrare'" />
+    </template>
 
     <v-dialog
       :persistent="false"
@@ -50,6 +49,7 @@ import Utils from "../services/Utils";
 import EditDirector from "../components/EditDirector";
 import DirectorsList from "../components/DirectorsList";
 import NoData from "../components/NoData";
+import Loader from "../components/Loader";
 
 export default {
   data() {
@@ -61,18 +61,24 @@ export default {
       successSnackbar: false,
       snackbarMessage: "",
       timeout: 3000,
-      noDirectorsFound: false
+      noDirectorsFound: false,
+      loading: true
     };
   },
   props: {},
   components: {
     EditDirector,
     DirectorsList,
-    NoData
+    NoData,
+    Loader
   },
   methods: {
     canSeeDirectors() {
-      return this.$store.getters["getRegion"] && (this.$store.getters["getRegion"].role === "ADMIN" || this.$store.getters["getRegion"].role === "EXECUTIVE");
+      return (
+        this.$store.getters["getRegion"] &&
+        (this.$store.getters["getRegion"].role === "ADMIN" ||
+          this.$store.getters["getRegion"].role === "EXECUTIVE")
+      );
     },
     openEditModal(director) {
       this.editDirector = { ...director };
@@ -93,16 +99,17 @@ export default {
     async fetchAreaDirectors() {
       try {
         let region = await this.$store.getters["getRegion"].id;
-        this.areaDirectors = await ApiServer.get("api/" + 
-          region + "/directors?onlyArea=1"
+        this.areaDirectors = await ApiServer.get(
+          "api/" + region + "/directors?onlyArea=1"
         );
       } catch (e) {
         console.log(e);
       }
+      return true;
     },
     async fetchDirectors() {
-      let response = await ApiServer.get("api/" + 
-        this.$store.getters["getRegion"].id + "/directors"
+      let response = await ApiServer.get(
+        "api/" + this.$store.getters["getRegion"].id + "/directors"
       );
       if (response.errorCode === 404) {
         this.noDirectorsFound = true;
@@ -110,6 +117,7 @@ export default {
         this.directors = response;
         this.$store.commit("directors/setDirectors", this.directors);
       }
+      return true;
     },
     saveDirector(response) {
       this.successSnackbar = true;
@@ -117,13 +125,14 @@ export default {
       this.snackbarMessage = response.edtiMode
         ? this.$t("director_edited")
         : this.$t("director_created");
-    }
+    },
   },
   async created() {
-    setTimeout(() => {
-      this.fetchAreaDirectors();
-      this.fetchDirectors();
+    setTimeout(async () => {
+      await this.fetchAreaDirectors();
+      await this.fetchDirectors();
+      this.loading = false;
     });
-  }
+  },
 };
 </script>

@@ -139,6 +139,7 @@ class DashboardController extends AbstractController
                 "year" => $currentYear
             ]);
             $current_t_approved = [];
+            $current_t_verified = [];
             $current_t_refused = [];
             $current_t_doing = [];
             $previous_t_approved = [];
@@ -258,6 +259,7 @@ class DashboardController extends AbstractController
                     "n_projects" => $n_projects,
                     "randa_timeslot" => $randa_timeslot,
                     "randa_state" => $randa_state,
+                    "randa_verified" => $randa->getVerified(),
                     "n_members_per_chapters" => $n_members_per_chapters,
                     "n_members_per_core_groups" => $n_members_per_core_groups,
                     "n_members_per_projects" => $n_members_per_projects,
@@ -268,7 +270,11 @@ class DashboardController extends AbstractController
                     case $current_timeslot:
                         switch ($randa_state) {
                             case "APPR":
-                                $current_t_approved[] = $region_data;
+                                if($randa->getVerified()) {
+                                    $current_t_verified[] = $region_data;    
+                                } else {
+                                    $current_t_approved[] = $region_data;
+                                }
                                 break;
                             case "REFUSED":
                                 $current_t_refused[] = $region_data;
@@ -294,8 +300,21 @@ class DashboardController extends AbstractController
                 $data_regions[] = $region_data;
             }
 
+
+            usort($current_t_approved, function ($c1, $c2) {
+                $name1 = $c1["name"];
+                $name2 = $c2["name"];
+                return $name1 < $name2 ? -1 : ($name1 > $name2 ? 1 : 0);
+            });
+            usort($current_t_refused, function ($c1, $c2) {
+                $name1 = $c1["name"];
+                $name2 = $c2["name"];
+                return $name1 < $name2 ? -1 : ($name1 > $name2 ? 1 : 0);
+            });
+
             $d = [
                 "current_t_approved" => $current_t_approved,
+                "current_t_verified" => $current_t_verified,
                 "current_t_refused" => $current_t_refused,
                 "current_t_doing" => array_merge($current_t_doing, $previous_t_approved),
                 "others" => $others

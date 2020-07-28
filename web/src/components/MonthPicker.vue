@@ -60,7 +60,6 @@ export default {
   methods: {
     setDate() {
       this.$refs.menu.save(this.date);
-      debugger;
       this.$emit("setdate", this.date);
       this.menu = false;
     },

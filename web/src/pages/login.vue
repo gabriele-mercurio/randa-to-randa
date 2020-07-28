@@ -24,10 +24,9 @@
             <v-btn type="submit" normal text color="primary">Accedi</v-btn>
           </v-row>
         </v-card-actions>
-        <div
-          class="d-flex justify-center pb-3"
-          @click="promptEmail()"
-        ><small class="font-italic font-weight-light link">Password dimenticata?</small></div>
+        <div class="d-flex justify-center pb-3" @click="promptEmail()">
+          <small class="font-italic font-weight-light link">Password dimenticata?</small>
+        </div>
       </v-card>
     </v-form>
     <v-form v-else @submit.prevent="selectRegion()">
@@ -59,7 +58,7 @@
         <v-icon>mdi-close</v-icon>
       </v-btn>
     </v-snackbar>
-        <v-snackbar v-model="passwordRecoveredMessageError" :timeout="timeout" top right>
+    <v-snackbar v-model="passwordRecoveredMessageError" :timeout="timeout" top right>
       <v-icon color="primary">mdi-alert</v-icon>L'indirizzo email inserito non è presente nel sistema...
       <v-btn color="white" icon @click="passwordRecoveredMessageError = false">
         <v-icon>mdi-close</v-icon>
@@ -113,7 +112,7 @@ export default {
       showPromptEmail: false,
       resetPasswordEmail: "",
       passwordRecoveredMessage: false,
-      passwordRecoveredMessageError: false
+      passwordRecoveredMessageError: false,
     };
   },
   created() {
@@ -155,9 +154,11 @@ export default {
         await this.fetchRegions();
         let isNational = false;
         for (let region of this.regions) {
-          if (region.role === "NATIONAL") {
-            isNational = true;
-            this.$store.commit("setRegion", region);
+          if (!isNational) {
+            if (region.role === "NATIONAL") {
+              isNational = true;
+              this.$store.commit("setRegion", region);
+            }
           }
         }
         if (isNational) {

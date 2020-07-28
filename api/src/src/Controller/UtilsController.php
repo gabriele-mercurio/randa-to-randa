@@ -352,8 +352,9 @@ class UtilsController extends AbstractController
     public function removeTestChapters(): Response
     {
 
+        $region = $this->regionRepository->find("015cb62d-5136-4eef-b24e-1b6891a21cd2");
         $chapters = $this->chapterRepository->findBy([
-            "name" => "test_"
+            "region" => $region
         ]);
 
 

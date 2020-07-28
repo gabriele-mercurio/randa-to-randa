@@ -73,10 +73,10 @@ class Utils {
     }
   }
 
-  static getRandaState(state) {
+  static getRandaState(state, isNational) {
     switch (state) {
       case "APPR":
-        return "Approvato";
+        return isNational ? "Da verificare" : "Approvato"; 
       case "TODO":
         return "Compilazione in corso";
       case "REFUSED":

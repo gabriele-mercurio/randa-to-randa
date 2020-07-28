@@ -20,13 +20,13 @@ class Rana
     private $id;
 
     /**
-     * @ORM\OneToOne(targetEntity="Chapter", cascade={"all"}, fetch="LAZY")
+     * @ORM\OneToOne(targetEntity="Chapter", fetch="LAZY")
      * @ORM\JoinColumn(nullable=false)
      */
     private $chapter;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Randa", cascade={"all"}, fetch="LAZY")
+     * @ORM\ManyToOne(targetEntity="Randa", fetch="LAZY")
      * @ORM\JoinColumn(nullable=false)
      */
     private $randa;

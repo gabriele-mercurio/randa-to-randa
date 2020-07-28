@@ -1,39 +1,54 @@
 <template>
   <div id="randa_" v-if="randa" class="px-6">
-    <div class="pt-6" v-if="layout !== 'split'">
-      <h3>
-        {{ title }}
-        <small>{{ randa.timeslot }} {{ randa.year }}</small>
-      </h3>
-      <div class="d-flex flex-column align-start my-4">
-        <div class="d-flex flex-row align-center">
-          <div class="circle background-lightred"></div>
-          <div class="ml-1">Core group</div>
-        </div>
-        <div class="d-flex flex-row align-center">
-          <div class="circle background-red"></div>
-          <div class="ml-1">Chapter</div>
-        </div>
-        <div class="d-flex flex-row align-center">
-          <div>
-            <v-icon style="font-size:16px">mdi-diameter-variant</v-icon>
+    <div v-if="layout !== 'split'">
+        <div class="d-flex flex-row align-end justify-start my-4">
+          <div class="d-flex flex-row align-center">
+            <div class="circle background-lightred"></div>
+            <div class="ml-1">Core group</div>
           </div>
-          <div class="ml-1">Sospeso</div>
-        </div>
-        <div class="d-flex flex-row align-center">
-          <div>
-            <v-icon style="font-size:16px">mdi-close</v-icon>
+          <div class="ml-3 d-flex flex-row align-center">
+            <div class="circle background-red"></div>
+            <div class="ml-1">Chapter</div>
           </div>
-          <div class="ml-1">Chiuso</div>
+          <div class="ml-3 d-flex flex-row align-center">
+            <div>
+              <v-icon style="font-size:16px">mdi-diameter-variant</v-icon>
+            </div>
+            <div class="ml-1">Sospeso</div>
+          </div>
+          <div class="ml-3 d-flex flex-row align-center">
+            <div>
+              <v-icon style="font-size:16px">mdi-close</v-icon>
+            </div>
+            <div class="ml-1">Chiuso</div>
+          </div>
+          <div class="ml-3 d-flex flex-row align-center">
+            <div class="stripe background-green"></div>
+            <div class="ml-1">Approvato</div>
+          </div>
         </div>
-        <div class="d-flex flex-row align-center">
-          <div class="circle background-green"></div>
-          <div class="ml-1">Approvato</div>
-        </div>
+      </div>
+    <div class="invisible d-flex justify-space-between">
+      <div>
+        <span class="font-italic font-weight-bold">
+          {{
+          randa.region
+          }}
+        </span>
+        <div class="text-cetner">Randa {{ randa.year }} {{ randa.timeslot }}</div>
+      </div>
+
+      <div class="d-flex px-6 mt-3 d-print-none justify-end">
+        <v-btn icon @click="getXLSX()">
+          <v-icon>mdi-file-excel</v-icon>
+        </v-btn>
+        <v-btn icon @click="print()">
+          <v-icon>mdi-cloud-print</v-icon>
+        </v-btn>
       </div>
     </div>
 
-    <v-data-table disable-pagination hide-default-footer v-if="layout !== 'split'">
+    <v-data-table disable-pagination hide-default-footer v-if="layout !== 'split'" class="pb-6">
       <template v-slot:body>
         <tbody>
           <tr>
@@ -213,39 +228,11 @@
     </v-data-table>
 
     <template v-else>
-      <table id="table_wrapper" class="invisible">
-        <table class="invisible">
-          <tbody>
-            <tr>
-              <td colspan="6" class="text-cetner">
-                <span class="font-italic font-weight-bold">
-                  {{
-                  randa.region
-                  }}
-                </span>
-              </td>
-            </tr>
-            <tr>
-              <td colspan="6" class="text-cetner">Randa {{ randa.year }} {{ randa.timeslot }}</td>
-            </tr>
-          </tbody>
-        </table>
-        <RandaTable
-          :chapters="randa.chapters_ret"
-          :randaType="'chapters_ret'"
-          :id="'chapters_ret'"
-        />
+      <table id="table_wrapper">
+        <RandaTable :chapters="randa.chapters_ret" :randaType="'chapters_ret'" :id="'chapters_ret'" />
         <RandaTable :plainData.sync="avg" :randaType="'chapters_average'" :id="'chapters_average'" />
-        <RandaTable
-          :plainData="randa.num_chapters"
-          :randaType="'num_chapters'"
-          :id="'num_chapters'"
-        />
-        <RandaTable
-          :chapters="randa.chapters_new"
-          :randaType="'chapters_new'"
-          :id="'chapters_new'"
-        />
+        <RandaTable :plainData="randa.num_chapters" :randaType="'num_chapters'" :id="'num_chapters'" />
+        <RandaTable :chapters="randa.chapters_new" :randaType="'chapters_new'" :id="'chapters_new'" />
         <RandaTable :plainData="randa.directors" :randaType="'directors'" />
         <RandaTable :singleValue="randa.note" :randaType="'note'" />
         <RandaTable
@@ -263,16 +250,17 @@
 import Utils from "../services/Utils";
 import ApiServer from "../services/ApiServer";
 import RandaTable from "../components/RandaTable";
+import XLSX from "xlsx";
 
 export default {
   components: {
-    RandaTable
+    RandaTable,
   },
   data() {
     return {
       totals: null,
       avg: [],
-      regionName: null
+      regionName: null,
     };
   },
   created() {
@@ -282,10 +270,10 @@ export default {
       initial: 0,
       new: [0, 0, 0, 0],
       ret: [0, 0, 0, 0],
-      act: [0, 0, 0, 0]
+      act: [0, 0, 0, 0],
     };
     if (this.randa && this.randa.chapters) {
-      this.randa.chapters.forEach(chapter => {
+      this.randa.chapters.forEach((chapter) => {
         totals["initial"] += chapter.initialMembers;
         for (let i = 0; i < 4; i++) {
           totals["new"][i] += chapter["newMembers"][i]
@@ -308,18 +296,18 @@ export default {
   props: {
     title: {
       type: String,
-      default: null
+      default: null,
     },
     randa: {
-      default: null
+      default: null,
     },
     layout: {
       default: "",
-      type: String
+      type: String,
     },
     showTotal: {
-      default: true
-    }
+      default: true,
+    },
   },
   methods: {
     evaluateTotal(chapter) {
@@ -332,11 +320,29 @@ export default {
           : 0;
       }
       return sum;
+    },
+     async getXLSX() {
+      var workbook = XLSX.utils.book_new();
+      var table = document.querySelector("#table_wrapper");
+      var sheet = XLSX.utils.table_to_sheet(table);
+      XLSX.utils.book_append_sheet(workbook, sheet, "Sheet");
+      var wbout = XLSX.writeFile(
+        workbook,
+        "RANDA_" + this.randa.year + "_" + this.randa.timeslot + ".xlsx",
+        {
+          type: "file",
+          bookType: "xlsx",
+        }
+      );
+    },
+
+    print() {
+      print();
     }
   },
   watch: {
     randa: {
-      handler: function(newVal, oldVal) {
+      handler: function (newVal, oldVal) {
         if (newVal && newVal.chapters_act) {
           let sum = [0, 0, 0, 0];
           let count = [0, 0, 0, 0];
@@ -363,23 +369,22 @@ export default {
             sum[3] += element.data[3];
           }
           let avg = [];
-          avg[0] = Math.round((sum[0] / count[0]) * 100) / 100;
-          avg[1] = Math.round((sum[1] / count[1]) * 100) / 100;
-          avg[2] = Math.round((sum[2] / count[2]) * 100) / 100;
-          avg[3] = Math.round((sum[3] / count[3]) * 100) / 100;
+          avg[0] = sum[0] ? (Math.round((sum[0] / count[0]) * 100) / 100) : 0;
+          avg[1] = sum[1] ? (Math.round((sum[1] / count[1]) * 100) / 100) : 0;
+          avg[2] = sum[2] ? (Math.round((sum[2] / count[2]) * 100) / 100) : 0;
+          avg[3] = sum[3] ? (Math.round((sum[3] / count[3]) * 100) / 100) : 0;
 
           this.avg = avg;
         }
       },
       deep: true,
-      immediate: true
-    }
-  }
+      immediate: true,
+    },
+  },
 };
 </script>
 <style lang="scss">
 @import "../assets/variables.scss";
-
 #randa_ {
   table {
     border: 1px solid lightgray;
@@ -451,6 +456,13 @@ export default {
     margin: 0 auto;
     display: block;
   }
+  .stripe {
+    width: 35px !important;
+    height: 15px !important;
+    margin-right: 5px;
+    margin: 0 auto;
+    display: block;
+  }
   .v-data-table-header-mobile {
     display: none;
   }
@@ -487,6 +499,7 @@ export default {
   }
   #table_wrapper {
     width: 100%;
+    border-style: none;
   }
 
   @media print {

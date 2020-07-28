@@ -247,7 +247,7 @@
             color="primary"
             @click="disapproveRana()"
             v-if="
-              (role == 'ADMIN' || role == 'EXECUTIVE') && rana.state === 'APPR' && (chapter_stats && chapter_stats.randa_state !== 'APPR')
+             (rana.randa_timeslot == rana.timeslot) &&  (role == 'ADMIN' || role == 'EXECUTIVE') && rana.state === 'APPR' && (chapter_stats && chapter_stats.randa_state !== 'APPR')
             "
           >{{ $t("disapprove_rana") }}</v-btn>
         </div>

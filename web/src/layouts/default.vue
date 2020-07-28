@@ -10,6 +10,7 @@
               </v-list-item-icon>
               <v-list-item-title>{{ $t("home") }}</v-list-item-title>
             </v-list-item>
+            
             <!-- 
             <v-list-item to="/login">
               <v-list-item-icon>
@@ -18,7 +19,7 @@
               <v-list-item-title>{{ $t("account") }}</v-list-item-title>
             </v-list-item>-->
 
-            <v-list-item @click="changeRegion()">
+            <v-list-item @click="changeRegion()" v-if="!isNational()">
               <v-list-item-icon>
                 <v-icon>mdi-account</v-icon>
               </v-list-item-icon>
@@ -83,10 +84,7 @@
               <v-btn text to="/randa/randa-dream">{{ $t("randa_dream") }}</v-btn>
             </v-list-item>
             <v-list-item v-if="!isNational()">
-              <v-btn text to="/randa/randa-revised">{{ $t("randa_revised") }}</v-btn>
-            </v-list-item>
-            <v-list-item v-if="!isNational()">
-              <v-btn text to="/randa/randa">{{ $t("randa") }}</v-btn>
+              <v-btn text to="/randa/randa-revised">{{ $t("randa") }}</v-btn>
             </v-list-item>
           </v-list>
         </v-menu>

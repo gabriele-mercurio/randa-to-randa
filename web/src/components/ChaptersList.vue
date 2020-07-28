@@ -79,7 +79,7 @@
                 </v-btn>
               </template>
               <v-list>
-                <v-list-item @click="goToRana(item)" :disabled="item.currentState === 'SUSPENDED'">
+                <v-list-item @click="goToRana(item)">
                   <v-icon class="mr-1">mdi-text</v-icon>
                   <v-list-item-title v-if="iAmAssistant">
                     {{
@@ -93,7 +93,7 @@
                   </v-list-item-title>
                 </v-list-item>
 
-                <v-list-item @click="edit(item)" :disabled="item.currentState === 'SUSPENDED'">
+                <v-list-item @click="edit(item)">
                   <v-icon class="mr-1">mdi-pencil-outline</v-icon>
                   <v-list-item-title>Modifica capitolo</v-list-item-title>
                 </v-list-item>
@@ -148,7 +148,7 @@
         </tr>
       </template>
     </v-data-table>
-    <Confirm :message="'Lanciare capitolo?'" :show.sync="showConfirmLaunchChapter" v-on:dialogResponse="launchChapter" />
+    
     <Confirm :message="'Lanciare core group?'" :show.sync="showConfirmLaunchCoreGroup" v-on:dialogResponse="launchCoreGroup" />
 
     <Confirm :message="confirmMessage" :show.sync="showConfirmClose" v-on:dialogResponse="close" />
@@ -165,42 +165,10 @@
     </v-dialog>
 
     <v-dialog v-model="launchChapterDateDialog" width="500" v-if="launchChapterDateDialog">
-      <v-card>
-        <v-card-title>Lancia capitolo</v-card-title>
-        <v-card-text>
-          <MonthPicker
-            :defLabel="'Data lancio capitolo'"
-            :defDate="getDefaultLaunchChapterDate()"
-            v-on:setdate="setCurrentChapterLaunchDate"
-            launchType="CHAPTER"
-            :appendMessage="false"
-            :invalidInterval="invalidChapterLaunchDate"
-          />
-        </v-card-text>
-        <v-card-actions class="d-flex justify-end pa-3">
-          <v-btn @click="launchChapterDateDialog = false; invalidChapterLaunchDate = false">Annulla</v-btn>
-          <v-btn color="primary" :disabled="invalidChapterLaunchDate" @click="showConfirmLaunchChapter = true">Lancia</v-btn>
-        </v-card-actions>
-      </v-card>
+      <Launch :currentItem="currentItem" v-on:close="launchChapterDateDialog = false" v-on:launch="launchChapter" :chapterState="'capitolo'"/>
     </v-dialog>
     <v-dialog v-model="launchCoreGroupDateDialog" width="500" v-if="launchCoreGroupDateDialog">
-      <v-card>
-        <v-card-title>Lancia core group</v-card-title>
-        <v-card-text>
-          <MonthPicker
-            :defLabel="'Data lancio core group'"
-            :defDate="getDefaultLaunchCoreGroupDate()"
-            v-on:setdate="setCurrentCoreGroupLaunchDate"
-            launchType="CORE_GROUP"
-            :appendMessage="false"
-            :invalidInterval="invalidCoreGroupLaunchDate"
-          />
-        </v-card-text>
-        <v-card-actions class="d-flex justify-end pa-3">
-          <v-btn @click="launchCoreGroupDateDialog = false; invalidCoreGroupLaunchDate = false">Annulla</v-btn>
-          <v-btn :disabled="invalidCoreGroupLaunchDate" color="primary" @click="showConfirmLaunchCoreGroup = true">Lancia</v-btn>
-        </v-card-actions>
-      </v-card>
+      <Launch :currentItem="currentItem" v-on:close="launchCoreGroupDateDialog = false" v-on:launch="launchCoreGroup" :chapterState="'core group'"/>
     </v-dialog>
 
     <v-snackbar v-model="showLaunchedChapterSnackbar" :timeout="timeout" top right>
@@ -229,12 +197,14 @@ import Snackbar from "../components/Snackbar";
 import Confirm from "../components/Confirm";
 import ChapterSuspend from "../components/ChapterSuspend";
 import MonthPicker from "../components/MonthPicker";
+import Launch from "../components/Launch";
 export default {
   components: {
     Snackbar,
     ChapterSuspend,
     Confirm,
     MonthPicker,
+    Launch
   },
   data() {
     return {
@@ -374,7 +344,7 @@ export default {
       this.currentItem = item;
     },
     getMenuLabel(item) {
-      this.role = this.$store.getters["getRegion"].role;
+      
       switch (item.state) {
         case "APPR":
           return "Vai a rana...";
@@ -458,20 +428,19 @@ export default {
       }
     },
 
-    async close(item) {
+    async close() {
+
       let response = await ApiServer.put(
-        "api/" + "chapter/" + item.id + "/close"
+        "api/" + "chapter/" + this.currentItem.id + "/close"
       );
       if (!response.error) {
-        item = response;
+        this.$emit("updateChapters");
       }
-      debugger;
     },
 
     confirmLaunch(item, type) {
       this.showConfirmLaunch = true;
       let label = type === "PROJECT" ? "core group" : "capitolo";
-      debugger;
       this.confirmMessage = "Si sta per lanciare il " + label + ". Proseguire?";
       this.currentItem = item;
       this.currentType = type;
@@ -483,7 +452,7 @@ export default {
       if (result) {
         let response = await ApiServer.put(
           "api/" + "chapter/" + this.currentItem.id + "/launch-coregroup", {
-            date: this.currentCoreGroupLaunchDate
+            date: result
           }
         );
         this.showSnackbar = true;
@@ -502,7 +471,7 @@ export default {
       if (result) {
         let response = await ApiServer.put(
           "api/" + "chapter/" + this.currentItem.id + "/launch", {
-            date: this.currentChapterLaunchDate
+            date: result
           }
         );
         debugger;
@@ -555,6 +524,7 @@ export default {
   },
   created() {
     setTimeout(() => {
+      this.role = this.$store.getters["getRegion"].role;
       if (this.short) {
         this.headers = this.headers.filter((h) => {
           return this.shortFields.includes(h.value);

@@ -56,9 +56,10 @@
       </div>
     </v-card-actions>
 
-    <v-snackbar v-model="error" :timeout="timeout" top right>
-      <v-icon color="primary">mdi-alert</v-icon>Errore nel salvataggio del capitolo
-      <v-btn color="white" icon @click="error = false">
+    <v-snackbar v-model="errorSnackbar" :timeout="timeout" top right>
+      <v-icon color="primary">mdi-alert</v-icon>
+      {{errorMessage}}
+      <v-btn color="white" icon @click="errorSnackbar = false">
         <v-icon>mdi-close</v-icon>
       </v-btn>
     </v-snackbar>
@@ -102,7 +103,8 @@ export default {
       states: ["PROJECT", "CORE_GROUP", "CHAPTER"],
       coreGroupMessage: "",
       chapterMessage: "",
-      error: false,
+      errorSnackbar: false,
+      errorMessage: "",
       timeout: 3000,
       snackbarMessage: "",
       snackbarSuccess: false,
@@ -132,7 +134,7 @@ export default {
   },
   methods: {
     addDay(date) {
-      if(!date) return "";
+      if (!date) return "";
       return date + "-01";
     },
     getEditMode() {
@@ -147,7 +149,6 @@ export default {
       return label;
     },
     setChapterLaunch(value) {
-
       debugger;
       let d = new Date(value);
       let today = new Date();
@@ -194,9 +195,7 @@ export default {
         this.chapter.coreGroupLaunch
       );
 
-      data["prevLaunchChapterDate"] = this.addDay(
-        this.chapter.chapterLaunch
-      );
+      data["prevLaunchChapterDate"] = this.addDay(this.chapter.chapterLaunch);
 
       try {
         let result;
@@ -211,7 +210,7 @@ export default {
         }
 
         let updatedChapter = { ...this.chapter };
-        this.chapter = { ...chapterSkeleton };
+        
 
         let cgLaunch = {
           prev: null,
@@ -243,10 +242,21 @@ export default {
           let label = this.editMode ? "modificato" : "creato";
           this.snackbarMessage = "Capitolo " + label + " correttamente";
           this.snackbarSuccess = true;
+          this.chapter = { ...chapterSkeleton };
           this.$emit("saveChapter", updatedChapter);
+        } else {
+          if (result.message && result.message.name) {
+            this.errorMessage =
+              "Nome capitolo in uso. Inserire un nome diverso";
+            this.errorSnackbar = true;
+          } else {
+            this.errorMessage = "Errore nel salvataggio del capitolo...";
+            this.errorSnackbar = true;
+          }
         }
       } catch (e) {
-        this.error = true;
+        this.errorMessage = "Errore nel salvataggio del capitolo...";
+        this.errorSnackbar = true;
       }
     },
     isCoreGroupOrChapter(item) {

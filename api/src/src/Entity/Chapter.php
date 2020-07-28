@@ -27,13 +27,13 @@ class Chapter
     private $currentState;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Region", cascade={"all"}, fetch="LAZY")
+     * @ORM\ManyToOne(targetEntity="Region", fetch="LAZY")
      * @ORM\JoinColumn(nullable=false)
      */
     private $region;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Director", cascade={"all"}, fetch="LAZY")
+     * @ORM\ManyToOne(targetEntity="Director", fetch="LAZY")
      * @ORM\JoinColumn(nullable=false)
      */
     private $director;
@@ -64,6 +64,16 @@ class Chapter
 
     /** @ORM\Column(name="closure_date", type="date", nullable=true) */
     private $closureDate;
+
+    /**
+     * @ORM\OneToOne(targetEntity=Members::class, mappedBy="chapter", cascade={"persist", "remove"})
+     */
+    private $members_history;
+
+    /**
+     * @ORM\OneToOne(targetEntity=States::class, mappedBy="chapter", cascade={"persist", "remove"})
+     */
+    private $states;
 
     /**
      * Chapter constructor.
@@ -247,6 +257,40 @@ class Chapter
     public function setClosureDate(?DateTime $closureDate): self
     {
         $this->closureDate = $closureDate;
+        return $this;
+    }
+
+    public function getMembersHistory(): ?Members
+    {
+        return $this->members_history;
+    }
+
+    public function setMembersHistory(Members $members_history): self
+    {
+        $this->members_history = $members_history;
+
+        // set the owning side of the relation if necessary
+        if ($members_history->getChapter() !== $this) {
+            $members_history->setChapter($this);
+        }
+
+        return $this;
+    }
+
+    public function getStates(): ?States
+    {
+        return $this->states;
+    }
+
+    public function setStates(States $states): self
+    {
+        $this->states = $states;
+
+        // set the owning side of the relation if necessary
+        if ($states->getChapter() !== $this) {
+            $states->setChapter($this);
+        }
+
         return $this;
     }
 }

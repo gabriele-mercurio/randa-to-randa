@@ -13,7 +13,7 @@
   },
   "author": "MirkoDomenici",
   "dependencies": {
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "dockerize-project": "git+https://git.iamdev.it/IAMdev/dockerize-project.git#v2.1.1",
     "vue-router": "^3.2.0"
   }

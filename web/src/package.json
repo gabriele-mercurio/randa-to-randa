@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@nuxtjs/auth": "^4.9.1",
-    "chart.js": "^2.9.3",
+    "chart.js": "^2.9.4",
     "nuxt": "^2.0.0",
     "nuxt-i18n": "^6.12.2",
     "vue-chartjs": "^3.5.0",
